@@ -1,7 +1,6 @@
 "use client"
 
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+
 import { useState, useEffect, useRef } from "react"
 import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
@@ -949,8 +948,7 @@ export default function HomePage() {
           </>
         )}
       </div>
-      <Analytics />
-      <SpeedInsights />
+
     </WatchLaterProvider>
   )
 }

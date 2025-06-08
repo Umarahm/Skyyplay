@@ -1,3 +1,5 @@
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
     "Click, watch, enjoy. SkyyPlay breaks down the paywall, ensuring that quality content is accessible to everyone.",
   keywords:
     "free movies, free streaming, watch movies online, free tv shows, streaming service, watch movies free, online streaming, SkyyPlay, free movies online, free series online",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -29,6 +31,8 @@ export default function RootLayout({
           <ParticlesBackground />
           {children}
         </WatchLaterProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

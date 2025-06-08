@@ -65,7 +65,8 @@ export default function WatchPage() {
       setContent(data)
 
       if (type === "tv" && "number_of_seasons" in data) {
-        const seasonNumbers = Array.from({ length: data.number_of_seasons }, (_, i) => i + 1)
+        const seasonCount = typeof data.number_of_seasons === "number" && data.number_of_seasons > 0 ? data.number_of_seasons : 0
+        const seasonNumbers = Array.from({ length: seasonCount }, (_, i) => i + 1)
         setSeasons(seasonNumbers)
         await updateEpisodes(id, 1)
       }
@@ -158,7 +159,10 @@ export default function WatchPage() {
       removeFromWatchLater(content.id)
     } else {
       addToWatchLater({
-        ...content,
+        ...(() => {
+          const { similar, ...rest } = content as any
+          return rest
+        })(),
         type: contentType!,
         title: "title" in content ? content.title : undefined,
         name: "name" in content ? content.name : undefined,
@@ -509,11 +513,14 @@ export default function WatchPage() {
                         try {
                           // Get runtime from movie or TV show
                           const runtime =
-                            content.runtime ||
-                            (content.episode_run_time && content.episode_run_time.length > 0
-                              ? content.episode_run_time[0]
-                              : null) ||
-                            0
+                            ("runtime" in content && typeof content.runtime === "number"
+                              ? content.runtime
+                              : contentType === "tv" &&
+                                "episode_run_time" in content &&
+                                Array.isArray(content.episode_run_time) &&
+                                content.episode_run_time.length > 0
+                                ? content.episode_run_time[0]
+                                : 0)
 
                           if (runtime && runtime > 0) {
                             const now = new Date()

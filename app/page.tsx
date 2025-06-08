@@ -1,5 +1,6 @@
 "use client"
 
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { useState, useEffect, useRef } from "react"
 import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
@@ -250,6 +251,7 @@ export default function HomePage() {
   const currentCarouselItem = carouselItems[currentCarouselIndex]
 
   return (
+
     <WatchLaterProvider>
       <div className="min-h-screen">
         <Navbar showTabSwitcher={true} currentTab={currentTab} onTabChange={setCurrentTab} />
@@ -587,8 +589,8 @@ export default function HomePage() {
                             onClick={() => goToCarouselSlide(index)}
                             disabled={isCarouselAnimating}
                             className={`carousel-dot h-2 rounded-full transition-all duration-300 disabled:cursor-not-allowed hover:scale-110 ${index === currentCarouselIndex
-                                ? "bg-purple-500 w-8 hover:bg-purple-400"
-                                : "bg-gray-500 hover:bg-gray-400 w-2 hover:w-4"
+                              ? "bg-purple-500 w-8 hover:bg-purple-400"
+                              : "bg-gray-500 hover:bg-gray-400 w-2 hover:w-4"
                               }`}
                             aria-label={`Go to slide ${index + 1}`}
                             aria-current={index === currentCarouselIndex ? "true" : "false"}
@@ -613,8 +615,8 @@ export default function HomePage() {
                             key={genre.id}
                             onClick={() => selectGenre(genre)}
                             className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 border whitespace-nowrap genre-pill ${selectedGenre === genre.id
-                                ? "brand-gradient text-white border-purple-500"
-                                : "bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700 hover:text-white"
+                              ? "brand-gradient text-white border-purple-500"
+                              : "bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700 hover:text-white"
                               } ${visibleSections.has("genres") ? "animate-fade-in-up" : "opacity-0"}`}
                             style={{ animationDelay: `${index * 0.1}s` }}
                           >
@@ -946,6 +948,7 @@ export default function HomePage() {
           </>
         )}
       </div>
+      <SpeedInsights />
     </WatchLaterProvider>
   )
 }

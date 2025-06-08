@@ -41,7 +41,7 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 md:space-x-8">
               <Link href="/" className="flex items-center space-x-3">
-                <Image src="logo.png" alt="Logo" width={40} height={40} className="animate-pulse" />
+                <Image src="logo.avif" alt="Logo" width={40} height={40} className="animate-pulse" />
                 <span className="hidden sm:inline text-2xl md:text-3xl font-bold logo-text">SkyyPlay</span>
               </Link>
 

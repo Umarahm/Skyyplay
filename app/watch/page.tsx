@@ -374,7 +374,7 @@ export default function WatchPage() {
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center pointer-events-none">
           <div className="text-center">
             <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
-              <img src="/logo.png" alt="SkyyPlay Logo" className="w-24 h-24 loading-logo" />
+              <img src="/logo.avif" alt="SkyyPlay Logo" className="w-24 h-24 loading-logo" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2 logo-text">Loading Content</h2>
             <p className="text-gray-400">Please wait while we fetch your content...</p>

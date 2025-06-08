@@ -168,7 +168,7 @@ export default function LiveSportsPage() {
       <div className="fixed inset-0 z-[100] bg-black bg-opacity-95 flex items-center justify-center backdrop-blur-sm">
         <div className="text-center">
           <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
-            <img src="/logo.png" alt="SkyyPlay Logo" className="w-24 h-24 loading-logo" />
+            <img src="/logo.avif" alt="SkyyPlay Logo" className="w-24 h-24 loading-logo" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2 logo-text">Loading Sports</h2>
           <p className="text-gray-400">Please wait while we fetch live matches...</p>
@@ -188,7 +188,7 @@ export default function LiveSportsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 md:space-x-8">
               <div className="flex items-center space-x-3">
-                <img src="/logo.png" alt="Logo" className="h-8 w-8 md:h-10 md:w-10 animate-pulse" />
+                <img src="/logo.avif" alt="Logo" className="h-8 w-8 md:h-10 md:w-10 animate-pulse" />
                 <span className="text-2xl md:text-3xl font-bold logo-text">SkyyPlay</span>
               </div>
               <div className="hidden md:flex space-x-6">

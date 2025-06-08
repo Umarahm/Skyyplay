@@ -59,7 +59,7 @@ export default function SettingsPage() {
       <div className="fixed inset-0 z-[100] bg-black bg-opacity-95 flex items-center justify-center backdrop-blur-sm">
         <div className="text-center">
           <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
-            <img src="/logo.png" alt="SkyyPlay Logo" className="w-24 h-24 loading-logo" />
+            <img src="/logo.avif" alt="SkyyPlay Logo" className="w-24 h-24 loading-logo" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2 logo-text">Loading Settings</h2>
           <p className="text-gray-400">Please wait while we prepare your settings...</p>
@@ -229,9 +229,8 @@ function SourceOption({ source, index }: { source: any; index: number }) {
   return (
     <div
       onClick={() => setSource(source.id)}
-      className={`source-option rounded-lg p-4 cursor-pointer stagger-animation ${
-        selectedSource === source.id ? "selected" : ""
-      }`}
+      className={`source-option rounded-lg p-4 cursor-pointer stagger-animation ${selectedSource === source.id ? "selected" : ""
+        }`}
       style={{ "--stagger": index } as React.CSSProperties}
     >
       <div className="flex items-center justify-between">
@@ -240,9 +239,8 @@ function SourceOption({ source, index }: { source: any; index: number }) {
           <div className="text-sm text-gray-400">{source.isFrench ? "French Content" : "English Content"}</div>
         </div>
         <div
-          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-            selectedSource === source.id ? "border-purple-500 bg-purple-500" : "border-gray-600"
-          }`}
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedSource === source.id ? "border-purple-500 bg-purple-500" : "border-gray-600"
+            }`}
         >
           {selectedSource === source.id && <div className="w-3 h-3 rounded-full bg-white"></div>}
         </div>

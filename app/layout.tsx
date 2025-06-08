@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/x-icon" href="/logo.png" />
+        <link rel="icon" type="image/x-icon" href="/logo." />
         <meta name="theme-color" content="#A855F7" />
       </head>
       <body className="bg-black text-white min-h-screen">

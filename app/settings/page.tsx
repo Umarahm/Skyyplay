@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Navbar } from "@/components/Navbar"
 import { availableSources } from "@/lib/sources"

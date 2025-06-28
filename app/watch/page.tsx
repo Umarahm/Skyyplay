@@ -6,11 +6,10 @@ import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
 import { TMDBApi, type Movie, type TVShow, type Season } from "@/lib/tmdb"
 import { availableSources } from "@/lib/sources"
-import { useWatchLater } from "@/contexts/WatchLaterContext"
+// import { AdblockerModal } from "@/components/AdblockerModal"
 
 export default function WatchPage() {
   const searchParams = useSearchParams()
-  const { addToWatchLater, removeFromWatchLater, isInWatchLater } = useWatchLater()
   const [content, setContent] = useState<Movie | TVShow | null>(null)
   const [contentId, setContentId] = useState<number | null>(null)
   const [contentType, setContentType] = useState<"movie" | "tv" | null>(null)
@@ -152,24 +151,6 @@ export default function WatchPage() {
     }))
   }
 
-  const handleWatchLaterClick = () => {
-    if (!content) return
-
-    if (isInWatchLater(content.id)) {
-      removeFromWatchLater(content.id)
-    } else {
-      addToWatchLater({
-        ...(() => {
-          const { similar, ...rest } = content as any
-          return rest
-        })(),
-        type: contentType!,
-        title: "title" in content ? content.title : undefined,
-        name: "name" in content ? content.name : undefined,
-      })
-    }
-  }
-
   const handleSeasonChange = async (season: number) => {
     setSelectedSeason(season)
     if (contentId) {
@@ -203,10 +184,10 @@ export default function WatchPage() {
                     key={i}
                     className="absolute w-1 h-1 bg-purple-400/30 rounded-full animate-pulse"
                     style={{
-                      left: `${Math.random() * 100}%`,
-                      top: `${Math.random() * 100}%`,
-                      animationDelay: `${Math.random() * 2}s`,
-                      animationDuration: `${2 + Math.random() * 2}s`,
+                      left: `${(i * 47 + 13) % 100}%`,
+                      top: `${(i * 31 + 7) % 100}%`,
+                      animationDelay: `${(i * 0.1) % 2}s`,
+                      animationDuration: `${2 + (i * 0.2) % 2}s`,
                     }}
                   />
                 ))}
@@ -486,25 +467,12 @@ export default function WatchPage() {
                 <div className="relative pt-[56.25%] z-10">
                   <iframe
                     src={currentVideoUrl}
-                    className="absolute top-0 left-0 w-full h-full rounded-lg shadow-2xl"
+                    className="absolute top-0 left-0 w-full h-full rounded-lg"
                     frameBorder="0"
                     scrolling="no"
                     allowFullScreen
+                    referrerPolicy="no-referrer"
                   />
-                  <button
-                    onClick={handleWatchLaterClick}
-                    className={`absolute top-2 right-2 p-1.5 md:p-2 bg-gray-900 bg-opacity-75 rounded-full hover:bg-purple-600 transition-colors duration-300 z-20 ${isInWatchLater(content.id) ? "text-purple-400" : "text-white"
-                      }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 md:h-6 md:w-6"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" />
-                    </svg>
-                  </button>
                 </div>
                 <div className="p-3 md:p-4 relative z-10">
                   <div className="flex items-center justify-between text-xs md:text-sm text-gray-400">

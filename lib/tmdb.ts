@@ -1,5 +1,4 @@
-const API_KEY = "1070730380f5fee0d87cf0382670b255"
-const BASE_URL = "https://api.themoviedb.org/3"
+const BASE_URL = "/api/tmdb"
 
 export interface Movie {
   id: number
@@ -134,33 +133,27 @@ export interface Episode {
 
 export class TMDBApi {
   static async getPopularMovies(page = 1, language = "en"): Promise<{ results: Movie[]; total_pages: number }> {
-    const response = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=${language}&page=${page}`)
+    const response = await fetch(`${BASE_URL}/movies/popular?language=${language}&page=${page}`)
     return response.json()
   }
 
   static async getPopularTVShows(page = 1, language = "en"): Promise<{ results: TVShow[]; total_pages: number }> {
-    const response = await fetch(`${BASE_URL}/tv/popular?api_key=${API_KEY}&language=${language}&page=${page}`)
+    const response = await fetch(`${BASE_URL}/tv/popular?language=${language}&page=${page}`)
     return response.json()
   }
 
   static async getMovieDetails(id: number, language = "en"): Promise<Movie> {
-    const response = await fetch(
-      `${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=${language}&append_to_response=credits,similar,videos,reviews,release_dates,keywords,images`,
-    )
+    const response = await fetch(`${BASE_URL}/movies/${id}?language=${language}`)
     return response.json()
   }
 
   static async getTVShowDetails(id: number, language = "en"): Promise<TVShow> {
-    const response = await fetch(
-      `${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=${language}&append_to_response=credits,similar,videos,reviews,keywords,images`,
-    )
+    const response = await fetch(`${BASE_URL}/tv/${id}?language=${language}`)
     return response.json()
   }
 
   static async getSeasonDetails(tvId: number, seasonNumber: number, language = "en"): Promise<Season> {
-    const response = await fetch(
-      `${BASE_URL}/tv/${tvId}/season/${seasonNumber}?api_key=${API_KEY}&language=${language}`,
-    )
+    const response = await fetch(`${BASE_URL}/tv/${tvId}/season/${seasonNumber}?language=${language}`)
     return response.json()
   }
 
@@ -170,7 +163,7 @@ export class TMDBApi {
     language = "en",
   ): Promise<{ results: Movie[]; total_pages: number }> {
     const response = await fetch(
-      `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=${language}&page=${page}`,
+      `${BASE_URL}/search/movies?query=${encodeURIComponent(query)}&language=${language}&page=${page}`,
     )
     return response.json()
   }
@@ -181,7 +174,7 @@ export class TMDBApi {
     language = "en",
   ): Promise<{ results: TVShow[]; total_pages: number }> {
     const response = await fetch(
-      `${BASE_URL}/search/tv?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=${language}&page=${page}`,
+      `${BASE_URL}/search/tv?query=${encodeURIComponent(query)}&language=${language}&page=${page}`,
     )
     return response.json()
   }
@@ -193,7 +186,6 @@ export class TMDBApi {
     sort_by?: string
   }): Promise<{ results: Movie[]; total_pages: number }> {
     const searchParams = new URLSearchParams({
-      api_key: API_KEY,
       language: params.language || "en",
       page: (params.page || 1).toString(),
       sort_by: params.sort_by || "popularity.desc",
@@ -211,7 +203,6 @@ export class TMDBApi {
     sort_by?: string
   }): Promise<{ results: TVShow[]; total_pages: number }> {
     const searchParams = new URLSearchParams({
-      api_key: API_KEY,
       language: params.language || "en",
       page: (params.page || 1).toString(),
       sort_by: params.sort_by || "popularity.desc",
@@ -223,12 +214,12 @@ export class TMDBApi {
   }
 
   static async getMovieGenres(language = "en"): Promise<{ genres: Genre[] }> {
-    const response = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=${language}`)
+    const response = await fetch(`${BASE_URL}/genre/movie/list?language=${language}`)
     return response.json()
   }
 
   static async getTVGenres(language = "en"): Promise<{ genres: Genre[] }> {
-    const response = await fetch(`${BASE_URL}/genre/tv/list?api_key=${API_KEY}&language=${language}`)
+    const response = await fetch(`${BASE_URL}/genre/tv/list?language=${language}`)
     return response.json()
   }
 }

@@ -4,7 +4,10 @@ import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
+import SearchAutocomplete from "@/components/SearchAutocomplete"
+import { SearchFilters } from "@/components/SearchFilters"
 import { TMDBApi, type Movie, type TVShow, type Genre } from "@/lib/tmdb"
+import { useDebounce } from "@/hooks/useDebounce"
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
@@ -21,21 +24,29 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = useState("popularity.desc")
   const [currentPage, setCurrentPage] = useState(1)
 
+  // Debounce search query to improve performance
+  const debouncedSearchQuery = useDebounce(searchQuery, 500)
+
   useEffect(() => {
     const query = searchParams.get("q")
     if (query) {
       setSearchQuery(query)
-      searchContent(query)
     }
     fetchGenres()
   }, [searchParams])
 
   useEffect(() => {
     fetchGenres()
-    if (searchQuery.trim()) {
-      searchContent(searchQuery)
-    }
   }, [currentTab])
+
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      searchContent(debouncedSearchQuery)
+    } else {
+      setContent([])
+      setFilteredContent([])
+    }
+  }, [debouncedSearchQuery, currentTab])
 
   useEffect(() => {
     applyFilters()
@@ -154,33 +165,20 @@ export default function SearchPage() {
             </p>
           </div>
 
-          {/* Search Input */}
+          {/* Advanced Search Input */}
           <div className="flex justify-center mb-6 animate-slide-in-right">
-            <div className="search-container w-full max-w-3xl">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && searchContent(searchQuery)}
+            <div className="w-full max-w-3xl">
+              <SearchAutocomplete
                 placeholder="Search for movies, TV shows, or people..."
-                className="search-input bg-gray-800 rounded-full px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-purple-400 w-full"
+                initialValue={searchQuery}
+                searchType={currentTab === "movies" ? "movie" : (currentTab === "shows" ? "tv" : "multi")}
+                size="lg"
+                onSearch={(query) => {
+                  setSearchQuery(query)
+                  searchContent(query)
+                }}
+                className="search-container"
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
             </div>
           </div>
 
@@ -189,9 +187,8 @@ export default function SearchPage() {
             <div className="bg-gray-800 p-1 rounded-full inline-flex">
               <button
                 onClick={() => setCurrentTab("movies")}
-                className={`px-6 py-2 rounded-full transition-all duration-300 flex items-center space-x-2 ${
-                  currentTab === "movies" ? "bg-purple-600 text-white" : "text-gray-300 hover:text-white"
-                }`}
+                className={`px-6 py-2 rounded-full transition-all duration-300 flex items-center space-x-2 ${currentTab === "movies" ? "bg-purple-600 text-white" : "text-gray-300 hover:text-white"
+                  }`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -211,9 +208,8 @@ export default function SearchPage() {
               </button>
               <button
                 onClick={() => setCurrentTab("shows")}
-                className={`px-6 py-2 rounded-full transition-all duration-300 flex items-center space-x-2 ${
-                  currentTab === "shows" ? "bg-purple-600 text-white" : "text-gray-300 hover:text-white"
-                }`}
+                className={`px-6 py-2 rounded-full transition-all duration-300 flex items-center space-x-2 ${currentTab === "shows" ? "bg-purple-600 text-white" : "text-gray-300 hover:text-white"
+                  }`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -346,94 +342,32 @@ export default function SearchPage() {
                 </div>
               </div>
 
-              {/* Filters */}
-              <div className="mb-8 space-y-4">
-                <div className="flex flex-wrap gap-4 items-center justify-center">
-                  {/* Genre filter */}
-                  <div className="relative">
-                    <select
-                      value={selectedGenre}
-                      onChange={(e) => setSelectedGenre(e.target.value)}
-                      className="bg-gray-800 text-white rounded-lg px-4 py-2 pr-8 appearance-none hover:bg-gray-700 transition-colors duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                    >
-                      <option value="">All Genres</option>
-                      {genres.map((genre) => (
-                        <option key={genre.id} value={genre.id}>
-                          {genre.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              {/* Advanced Search Filters */}
+              <div className="mb-8">
+                <SearchFilters
+                  currentTab={currentTab}
+                  genres={genres}
+                  selectedGenre={selectedGenre}
+                  minRating={minRating}
+                  yearRange={yearRange}
+                  sortBy={sortBy}
+                  onGenreChange={setSelectedGenre}
+                  onRatingChange={setMinRating}
+                  onYearChange={setYearRange}
+                  onSortChange={setSortBy}
+                  onQuickSearch={(query) => {
+                    setSearchQuery(query)
+                    searchContent(query)
+                  }}
+                  clearAllFilters={clearAllFilters}
+                  hasActiveFilters={hasActiveFilters}
+                />
 
-                  {/* Rating filter */}
-                  <div className="relative">
-                    <select
-                      value={minRating}
-                      onChange={(e) => setMinRating(e.target.value)}
-                      className="bg-gray-800 text-white rounded-lg px-4 py-2 pr-8 appearance-none hover:bg-gray-700 transition-colors duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                    >
-                      <option value="">Any Rating</option>
-                      <option value="8">8+ ⭐</option>
-                      <option value="7">7+ ⭐</option>
-                      <option value="6">6+ ⭐</option>
-                      <option value="5">5+ ⭐</option>
-                    </select>
-                  </div>
-
-                  {/* Year filter */}
-                  <div className="relative">
-                    <select
-                      value={yearRange}
-                      onChange={(e) => setYearRange(e.target.value)}
-                      className="bg-gray-800 text-white rounded-lg px-4 py-2 pr-8 appearance-none hover:bg-gray-700 transition-colors duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                    >
-                      <option value="">Any Year</option>
-                      <option value="2020,2024">2020s</option>
-                      <option value="2010,2019">2010s</option>
-                      <option value="2000,2009">2000s</option>
-                      <option value="1990,1999">1990s</option>
-                    </select>
-                  </div>
-
-                  {/* Active filters */}
-                  <div className="flex flex-wrap gap-2">
-                    {selectedGenre && (
-                      <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                        <span>{getGenreName(selectedGenre)}</span>
-                        <button onClick={() => setSelectedGenre("")} className="hover:text-gray-300">
-                          ×
-                        </button>
-                      </span>
-                    )}
-                    {minRating && (
-                      <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                        <span>{minRating}+ ⭐</span>
-                        <button onClick={() => setMinRating("")} className="hover:text-gray-300">
-                          ×
-                        </button>
-                      </span>
-                    )}
-                    {yearRange && (
-                      <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                        <span>{getYearRangeName(yearRange)}</span>
-                        <button onClick={() => setYearRange("")} className="hover:text-gray-300">
-                          ×
-                        </button>
-                      </span>
-                    )}
-                    {hasActiveFilters && (
-                      <button
-                        onClick={clearAllFilters}
-                        className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2 transition-colors duration-300"
-                      >
-                        <span>Clear All Filters</span>
-                      </button>
-                    )}
-                  </div>
-
+                {/* Random Pick Button */}
+                <div className="flex justify-center mt-6">
                   <button
                     onClick={pickRandom}
-                    className="bg-gradient-to-r from-purple-600 to-violet-600 text-white px-4 py-2 rounded-lg hover:brightness-110 transition-all duration-300 flex items-center space-x-2"
+                    className="bg-gradient-to-r from-purple-600 to-violet-600 text-white px-6 py-3 rounded-lg hover:brightness-110 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-purple-500/25"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

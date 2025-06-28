@@ -5,8 +5,17 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useWatchLater } from "@/contexts/WatchLaterContext"
-import { WatchLaterModal } from "./WatchLaterModal"
+import dynamic from "next/dynamic"
+
+const SearchAutocomplete = dynamic(() => import("./SearchAutocomplete"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full bg-gray-900 border border-purple-500/20 rounded-full px-4 py-2 text-sm text-gray-400">
+      Loading...
+    </div>
+  )
+})
+
 
 interface NavbarProps {
   showSearch?: boolean
@@ -16,23 +25,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab = "shows", onTabChange }: NavbarProps) {
-  const [searchQuery, setSearchQuery] = useState("")
   const [mobileMenu, setMobileMenu] = useState(false)
-  const [showWatchLater, setShowWatchLater] = useState(false)
-  const { watchLaterCount } = useWatchLater()
-  const router = useRouter()
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
-    }
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch()
-    }
-  }
 
   return (
     <>
@@ -41,20 +34,17 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 md:space-x-8">
               <Link href="/" className="flex items-center space-x-3">
-                <Image src="logo.avif" alt="Logo" width={40} height={40} className="animate-pulse" />
+                <Image src="/logo.avif" alt="Logo" width={40} height={40} className="animate-pulse" />
                 <span className="hidden sm:inline text-2xl md:text-3xl font-bold logo-text">SkyyPlay</span>
               </Link>
 
               {/* Mobile search bar */}
               {showSearch && (
-                <div className="md:hidden relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                <div className="md:hidden">
+                  <SearchAutocomplete
                     placeholder="Search..."
-                    className="w-32 bg-gray-900 border border-purple-500/20 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    size="sm"
+                    className="w-32"
                   />
                 </div>
               )}
@@ -74,35 +64,18 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
                 <Link href="/search" className="nav-link">
                   Search
                 </Link>
-                <button onClick={() => setShowWatchLater(true)} className="nav-link flex items-center space-x-2">
-                  <span>Watch Later</span>
-                  {watchLaterCount > 0 && (
-                    <span className="bg-purple-600 text-white text-xs flex items-center justify-center rounded-full w-6 h-6 animate-pulse">
-                      {watchLaterCount}
-                    </span>
-                  )}
-                </button>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
               {/* Desktop search */}
               {showSearch && (
-                <div className="relative hidden md:block">
-                  <div className="search-container w-64">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Search..."
-                      className="search-input bg-gray-900 rounded-full px-6 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400 w-full pr-20"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1 text-gray-400 pointer-events-none select-none">
-                      <span className="text-xs bg-gray-700 rounded px-1.5 py-0.5">⌘</span>
-                      <span className="text-xs bg-gray-700 rounded px-1.5 py-0.5">K</span>
-                    </div>
-                  </div>
+                <div className="hidden md:block">
+                  <SearchAutocomplete
+                    placeholder="Search..."
+                    size="md"
+                    className="w-64"
+                  />
                 </div>
               )}
 
@@ -165,20 +138,6 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
                 <Link href="/search" className="px-4 py-2 hover:bg-gray-800 rounded-lg transition-colors">
                   Search
                 </Link>
-                <button
-                  onClick={() => {
-                    setShowWatchLater(true)
-                    setMobileMenu(false)
-                  }}
-                  className="flex items-center justify-between px-4 py-2 hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <span>Watch Later</span>
-                  {watchLaterCount > 0 && (
-                    <span className="bg-purple-600 text-white text-xs flex items-center justify-center rounded-full w-6 h-6">
-                      {watchLaterCount}
-                    </span>
-                  )}
-                </button>
                 <Link
                   href="/settings"
                   className="px-4 py-2 hover:bg-gray-800 rounded-lg transition-colors flex items-center space-x-2"
@@ -210,8 +169,6 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
           )}
         </div>
       </nav>
-
-      <WatchLaterModal isOpen={showWatchLater} onClose={() => setShowWatchLater(false)} />
     </>
   )
 }

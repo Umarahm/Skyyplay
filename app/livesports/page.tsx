@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Info, Settings, Menu, ChevronDown, Star } from "lucide-react"
+import { Info, Settings, Menu, ChevronDown, Star, Play } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -30,10 +30,17 @@ interface Stream {
   hd?: boolean
 }
 
+interface CategorySection {
+  title: string
+  matches: Match[]
+  type: 'live' | 'popular' | 'sport'
+  sportFilter?: string
+}
+
 export default function LiveSportsPage() {
   const [sports, setSports] = useState<Sport[]>([])
-  const [matches, setMatches] = useState<Match[]>([])
-  const [filteredMatches, setFilteredMatches] = useState<Match[]>([])
+  const [allMatches, setAllMatches] = useState<Match[]>([])
+  const [categorizedMatches, setCategorizedMatches] = useState<CategorySection[]>([])
   const [selectedSport, setSelectedSport] = useState("")
   const [matchType, setMatchType] = useState("live")
   const [showPopular, setShowPopular] = useState(false)
@@ -52,16 +59,13 @@ export default function LiveSportsPage() {
   }, [])
 
   useEffect(() => {
-    filterMatches()
-  }, [selectedSport, matches])
-
-  useEffect(() => {
-    loadMatches()
-  }, [matchType, showPopular])
+    if (allMatches.length > 0) {
+      organizeCategorizedContent()
+    }
+  }, [allMatches, selectedSport, matchType, showPopular])
 
   const init = async () => {
-    await loadSports()
-    await loadMatches()
+    await Promise.all([loadSports(), loadAllMatches()])
     hideLoading()
   }
 
@@ -80,41 +84,117 @@ export default function LiveSportsPage() {
     }
   }
 
-  const loadMatches = async () => {
+  const loadAllMatches = async () => {
     setIsLoadingMatches(true)
-
-    let endpoint = ""
-    switch (matchType) {
-      case "live":
-        endpoint = showPopular ? "/api/matches/live/popular" : "/api/matches/live"
-        break
-      case "today":
-        endpoint = showPopular ? "/api/matches/all-today/popular" : "/api/matches/all-today"
-        break
-      case "all":
-        endpoint = showPopular ? "/api/matches/all/popular" : "/api/matches/all"
-        break
-    }
-
     try {
-      const response = await fetch(`https://streamed.su${endpoint}`)
-      const data = await response.json()
+      // Load different types of matches from streamed.su API
+      const [liveResponse, popularResponse, todayResponse, allResponse] = await Promise.all([
+        fetch("https://streamed.su/api/matches/live"),
+        fetch("https://streamed.su/api/matches/live/popular"),
+        fetch("https://streamed.su/api/matches/all-today"),
+        fetch("https://streamed.su/api/matches/all")
+      ])
 
-      // Simulate minimum loading time for better UX
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      const [liveData, popularData, todayData, allData] = await Promise.all([
+        liveResponse.json(),
+        popularResponse.json(),
+        todayResponse.json(),
+        allResponse.json()
+      ])
 
-      setMatches(data)
+      // Combine all matches with enhanced metadata
+      const combinedMatches = [
+        ...liveData.map((m: Match) => ({ ...m, _type: 'live', _priority: 1 })),
+        ...popularData.map((m: Match) => ({ ...m, _type: 'popular', _priority: 2 })),
+        ...todayData.map((m: Match) => ({ ...m, _type: 'today', _priority: 3 })),
+        ...allData.slice(0, 50).map((m: Match) => ({ ...m, _type: 'all', _priority: 4 }))
+      ]
+
+      // Remove duplicates based on match ID, keeping higher priority ones
+      const uniqueMatches = combinedMatches.reduce((acc: any[], current) => {
+        const existing = acc.find(item => item.id === current.id)
+        if (!existing || current._priority < existing._priority) {
+          return acc.filter(item => item.id !== current.id).concat(current)
+        }
+        return acc
+      }, [])
+
+      setAllMatches(uniqueMatches)
     } catch (error) {
       console.error("Error loading matches:", error)
-      setMatches([])
+      setAllMatches([])
     } finally {
       setIsLoadingMatches(false)
     }
   }
 
-  const filterMatches = () => {
-    const filtered = selectedSport ? matches.filter((match) => match.category === selectedSport) : matches
-    setFilteredMatches(filtered)
+  const organizeCategorizedContent = () => {
+    let filteredMatches = allMatches
+
+    // Apply sport filter
+    if (selectedSport) {
+      filteredMatches = filteredMatches.filter(m => m.category === selectedSport)
+    }
+
+    // Apply match type filter
+    if (matchType !== "all") {
+      filteredMatches = filteredMatches.filter(m => (m as any)._type === matchType)
+    }
+
+    // Apply popular filter
+    if (showPopular) {
+      filteredMatches = filteredMatches.filter(m => (m as any)._type === 'popular')
+    }
+
+    const liveMatches = filteredMatches.filter(m => (m as any)._type === 'live')
+    const popularMatches = filteredMatches.filter(m => (m as any)._type === 'popular')
+
+    // Create main categories
+    const categories: CategorySection[] = []
+
+    // Add popular live section if there are popular matches
+    if (popularMatches.length > 0) {
+      categories.push({
+        title: "Popular Live",
+        matches: popularMatches.slice(0, 8),
+        type: 'popular'
+      })
+    }
+
+    // Add live sports section
+    if (liveMatches.length > 0) {
+      categories.push({
+        title: "Live Sports",
+        matches: liveMatches.slice(0, 12),
+        type: 'live'
+      })
+    }
+
+    // Add sport-specific categories for popular sports (only if no specific sport is selected)
+    if (!selectedSport) {
+      const popularSports = ['football', 'basketball', 'american-football', 'hockey', 'baseball', 'fighting', 'motorsports']
+
+      popularSports.forEach(sportId => {
+        const sportMatches = allMatches.filter(m =>
+          m.category?.toLowerCase().includes(sportId) ||
+          m.category?.toLowerCase().includes(sportId.replace('-', ' '))
+        )
+        if (sportMatches.length > 0) {
+          const sportName = sportId.split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' ')
+
+          categories.push({
+            title: `Popular ${sportName}`,
+            matches: sportMatches.slice(0, 6),
+            type: 'sport',
+            sportFilter: sportId
+          })
+        }
+      })
+    }
+
+    setCategorizedMatches(categories)
   }
 
   const togglePopular = () => {
@@ -142,25 +222,211 @@ export default function LiveSportsPage() {
     setAvailableStreams([])
     setShowModal(true)
 
-    const streams: Stream[] = []
-    for (const source of match.sources) {
-      try {
-        const response = await fetch(`https://streamed.su/api/stream/${source.source}/${source.id}`)
-        const sourceStreams = await response.json()
-        streams.push(...sourceStreams)
-      } catch (error) {
-        console.error(`Error loading stream for ${source.source}:`, error)
-      }
-    }
+    try {
+      const streams: Stream[] = []
 
-    setAvailableStreams(streams)
-    if (streams.length > 0) {
-      selectStream(streams[0])
+      // Enhanced streaming with better error handling and source prioritization
+      for (const source of match.sources) {
+        try {
+          const response = await fetch(`https://streamed.su/api/stream/${source.source}/${source.id}`, {
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'SkyyPlay/1.0'
+            }
+          })
+
+          if (response.ok) {
+            const sourceStreams = await response.json()
+
+            // Process and enhance streams from streamed.su API
+            const processedStreams = Array.isArray(sourceStreams)
+              ? sourceStreams.map((stream: any) => ({
+                ...stream,
+                source: source.source,
+                quality: stream.quality || 'Auto',
+                hd: stream.quality?.includes('HD') || stream.hd || false
+              }))
+              : [sourceStreams].map((stream: any) => ({
+                ...stream,
+                source: source.source,
+                quality: stream.quality || 'Auto',
+                hd: stream.quality?.includes('HD') || stream.hd || false
+              }))
+
+            streams.push(...processedStreams)
+          } else {
+            console.warn(`Failed to load stream from ${source.source}: ${response.status}`)
+          }
+        } catch (error) {
+          console.error(`Error loading stream for ${source.source}:`, error)
+        }
+      }
+
+      // Sort streams by quality (HD first, then by source priority)
+      const sortedStreams = streams.sort((a, b) => {
+        if (a.hd && !b.hd) return -1
+        if (!a.hd && b.hd) return 1
+        return 0
+      })
+
+      setAvailableStreams(sortedStreams)
+
+      // Auto-select the best quality stream
+      if (sortedStreams.length > 0) {
+        const bestStream = sortedStreams.find(s => s.hd) || sortedStreams[0]
+        selectStream(bestStream)
+      }
+    } catch (error) {
+      console.error('Error loading streams:', error)
+      setAvailableStreams([])
     }
   }
 
   const selectStream = (stream: Stream) => {
     setSelectedStream(stream)
+  }
+
+  // Enhanced component for rendering match cards with streamed.su API thumbnails
+  const MatchCard = ({ match }: { match: Match }) => {
+    const [imageError, setImageError] = useState(false)
+    const [badgeErrors, setBadgeErrors] = useState({ home: false, away: false })
+
+    const handleImageError = () => setImageError(true)
+    const handleBadgeError = (team: 'home' | 'away') => {
+      setBadgeErrors(prev => ({ ...prev, [team]: true }))
+    }
+
+    // Get optimal image URL from streamed.su API
+    const getImageUrl = () => {
+      if (match.poster && !imageError) {
+        // Try multiple image formats from streamed.su
+        return `https://streamed.su/api/images/proxy/${match.poster}.webp`
+      }
+      return null
+    }
+
+    const getBadgeUrl = (team: 'home' | 'away') => {
+      const badge = team === 'home' ? match.teams?.home?.badge : match.teams?.away?.badge
+      if (badge && !badgeErrors[team]) {
+        return `https://streamed.su/api/images/badge/${badge}.webp`
+      }
+      return "/placeholder.svg?height=40&width=40"
+    }
+
+    return (
+      <div className="match-card match-card-animated rounded-lg overflow-hidden group hover:scale-105 transition-transform duration-300">
+        {/* Enhanced Thumbnail with streamed.su API */}
+        <div className="relative h-32 bg-gray-800 overflow-hidden">
+          {getImageUrl() ? (
+            <div className="relative w-full h-full">
+              <Image
+                src={getImageUrl()!}
+                alt={match.title}
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-300"
+                onError={handleImageError}
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+pED3H8C/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA="
+              />
+              {/* Gradient overlay for better text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            </div>
+          ) : match.teams ? (
+            <div className="flex items-center justify-center h-full space-x-4 p-4 bg-gradient-to-br from-gray-700 to-gray-800">
+              <div className="flex flex-col items-center">
+                <div className="relative w-10 h-10 mb-1">
+                  <Image
+                    src={getBadgeUrl('home')}
+                    alt={match.teams.home?.name || "Home Team"}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 object-contain"
+                    onError={() => handleBadgeError('home')}
+                  />
+                </div>
+                <span className="text-xs text-center truncate w-16 text-gray-200">{match.teams.home?.name}</span>
+              </div>
+              <span className="text-sm text-gray-400 font-bold">VS</span>
+              <div className="flex flex-col items-center">
+                <div className="relative w-10 h-10 mb-1">
+                  <Image
+                    src={getBadgeUrl('away')}
+                    alt={match.teams.away?.name || "Away Team"}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 object-contain"
+                    onError={() => handleBadgeError('away')}
+                  />
+                </div>
+                <span className="text-xs text-center truncate w-16 text-gray-200">{match.teams.away?.name}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full bg-gradient-to-br from-purple-600 to-blue-600">
+              <div className="text-center">
+                <span className="text-white font-bold text-2xl">{match.category.charAt(0).toUpperCase()}</span>
+                <div className="text-xs text-white/80 mt-1">{match.category}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Live indicator overlay */}
+          <div className="absolute top-2 right-2">
+            <span className="flex items-center space-x-1 bg-red-500 px-2 py-1 rounded-full shadow-lg backdrop-blur-sm">
+              <span className="w-2 h-2 bg-white rounded-full live-indicator animate-pulse"></span>
+              <span className="text-white text-xs font-medium">LIVE</span>
+            </span>
+          </div>
+
+          {/* Enhanced Category badge */}
+          <div className="absolute bottom-2 left-2">
+            <span className="text-xs text-white bg-black/80 px-2 py-1 rounded-full backdrop-blur-sm">
+              {match.category}
+            </span>
+          </div>
+
+          {/* Quality indicator if available */}
+          {match.sources?.some(s => s.source.includes('hd')) && (
+            <div className="absolute top-2 left-2">
+              <span className="text-xs text-white bg-blue-500 px-2 py-1 rounded-full">HD</span>
+            </div>
+          )}
+        </div>
+
+        {/* Enhanced Content */}
+        <div className="p-3 bg-gray-900">
+          {/* Title */}
+          <div className="mb-3">
+            {match.teams ? (
+              <h3 className="font-medium text-sm text-center truncate text-white">
+                {match.teams.home?.name} vs {match.teams.away?.name}
+              </h3>
+            ) : (
+              <h3 className="font-medium text-sm text-center truncate text-white">{match.title}</h3>
+            )}
+            {match.date && (
+              <p className="text-xs text-gray-400 text-center mt-1">
+                {new Date(match.date).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+
+          {/* Enhanced Watch button with stream count */}
+          <button
+            onClick={() => openStream(match)}
+            className="w-full btn-primary text-white px-3 py-2 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 text-sm group-hover:bg-purple-600 relative overflow-hidden"
+          >
+            <Play className="h-4 w-4" />
+            <span>Watch</span>
+            {match.sources && match.sources.length > 0 && (
+              <span className="text-xs bg-white/20 px-1 rounded-full ml-2">
+                {match.sources.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (isLoading) {
@@ -237,31 +503,39 @@ export default function LiveSportsPage() {
 
       {/* Main content */}
       <div className="pt-24 pb-12 px-6 animate-fade-in-up">
-        <div className="container mx-auto">
-          {/* Enhanced notice banner */}
-          <div className="notice-banner text-white text-center p-4 rounded-lg mb-6 z-10">
-            <div className="flex items-center justify-center space-x-2">
-              <Info className="h-5 w-5" />
-              <strong>Notice:</strong>
+        <div className="container mx-auto max-w-7xl">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold logo-text mb-4">Live Sports</h1>
+
+            {/* Notice banner */}
+            <div className="notice-banner text-white text-center p-4 rounded-lg mb-6 z-10 max-w-4xl mx-auto">
+              <div className="flex items-center justify-center space-x-2">
+                <Info className="h-5 w-5" />
+                <strong>Notice:</strong>
+              </div>
+              <p className="mt-2">
+                You may experience Content Fetch Difficulties if you are utilizing <strong>UBlock Origin</strong> or{" "}
+                <strong>Mozilla Firefox</strong>
+              </p>
             </div>
-            <p className="mt-2">
-              You may experience Content Fetch Difficulties if you are utilizing <strong>UBlock Origin</strong> or{" "}
-              <strong>Mozilla Firefox</strong>
-            </p>
           </div>
 
-          {/* Enhanced filters */}
-          <div className="mb-8 space-y-4">
-            <div className="filter-container rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 logo-text">Filter Matches</h3>
-              <div className="flex flex-wrap gap-4 items-center">
+          {/* Filters */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold logo-text">Filters</h3>
+            </div>
+
+            <div className="filter-container rounded-lg p-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Sports filter */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-300 mb-2">Sport</label>
                   <select
                     value={selectedSport}
                     onChange={(e) => setSelectedSport(e.target.value)}
-                    className="bg-gray-800 text-white rounded-lg px-4 py-2 pr-8 appearance-none hover:bg-gray-700 transition-colors duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none min-w-[150px]"
+                    className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 pr-8 appearance-none hover:bg-gray-700 transition-colors duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
                   >
                     <option value="">All Sports</option>
                     {sports.map((sport) => (
@@ -270,206 +544,97 @@ export default function LiveSportsPage() {
                       </option>
                     ))}
                   </select>
-                  <div className="absolute right-2 top-9 pointer-events-none">
-                    <ChevronDown className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <ChevronDown className="absolute right-2 top-9 h-5 w-5 text-gray-400 pointer-events-none" />
                 </div>
 
                 {/* Match type filter */}
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Match Type</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
                   <select
                     value={matchType}
                     onChange={(e) => setMatchType(e.target.value)}
-                    className="bg-gray-800 text-white rounded-lg px-4 py-2 pr-8 appearance-none hover:bg-gray-700 transition-colors duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none min-w-[150px]"
+                    className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 pr-8 appearance-none hover:bg-gray-700 transition-colors duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
                   >
-                    <option value="live">Live Matches</option>
-                    <option value="today">{"Today's Matches"}</option>
-                    <option value="all">All Matches</option>
+                    <option value="live">Live</option>
+                    <option value="popular">Popular</option>
+                    <option value="today">Today</option>
+                    <option value="all">All</option>
                   </select>
-                  <div className="absolute right-2 top-9 pointer-events-none">
-                    <ChevronDown className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <ChevronDown className="absolute right-2 top-9 h-5 w-5 text-gray-400 pointer-events-none" />
                 </div>
 
                 {/* Popular toggle */}
                 <div className="flex flex-col">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Options</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Popular</label>
                   <button
                     onClick={togglePopular}
-                    className={`px-4 py-2 rounded-lg transition-colors duration-300 ${showPopular ? "btn-primary" : "btn-secondary"}`}
+                    className={`px-4 py-2 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2 ${showPopular ? "btn-primary" : "btn-secondary"}`}
                   >
-                    <span className="flex items-center space-x-2">
-                      <Star className="h-5 w-5" />
-                      <span>Popular</span>
-                    </span>
+                    <Star className="h-4 w-4" />
+                    <span>{showPopular ? 'Popular Only' : 'Include All'}</span>
+                  </button>
+                </div>
+
+                {/* Clear filters */}
+                <div className="flex flex-col">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Reset</label>
+                  <button
+                    onClick={() => {
+                      setSelectedSport("")
+                      setMatchType("live")
+                      setShowPopular(false)
+                    }}
+                    className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors duration-300 text-white"
+                  >
+                    Clear All
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Matches grid */}
-          <div className="matches-container">
-            {/* Loading skeletons */}
-            {isLoadingMatches && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div
-                    key={`skeleton-${i}`}
-                    className="match-skeleton rounded-lg overflow-hidden skeleton-grid-item"
-                    style={{ animationDelay: `${i * 0.1}s` }}
-                  >
-                    <div className="p-4 space-y-4">
-                      <div className="flex justify-between items-center">
-                        <div className="h-4 bg-gray-600 rounded w-20 skeleton-shimmer skeleton-delay-1"></div>
-                        <div className="h-4 bg-gray-600 rounded w-16 skeleton-shimmer skeleton-delay-2"></div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gray-600 rounded skeleton-shimmer skeleton-delay-3"></div>
-                            <div className="h-4 bg-gray-600 rounded w-20 skeleton-shimmer skeleton-delay-1"></div>
-                          </div>
-                          <div className="h-4 bg-gray-600 rounded w-8 skeleton-shimmer skeleton-delay-4"></div>
-                          <div className="flex items-center space-x-2">
-                            <div className="h-4 bg-gray-600 rounded w-20 skeleton-shimmer skeleton-delay-2"></div>
-                            <div className="w-8 h-8 bg-gray-600 rounded skeleton-shimmer skeleton-delay-5"></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="h-10 bg-gray-600 rounded skeleton-shimmer skeleton-delay-3"></div>
-                    </div>
+          {/* Categorized Content - Streamed.su style */}
+          <div className="space-y-12">
+            {categorizedMatches.map((category, categoryIndex) => (
+              <div key={`category-${categoryIndex}`} className="animate-fade-in-up" style={{ animationDelay: `${categoryIndex * 0.1}s` }}>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl md:text-3xl font-bold flex items-center space-x-3">
+                    {category.type === 'live' && <span className="w-3 h-3 bg-red-500 rounded-full live-indicator"></span>}
+                    {category.type === 'popular' && <Star className="h-6 w-6 text-yellow-500" />}
+                    {category.type === 'sport' && <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">{category.title.charAt(0)}</span>}
+                    <span className="logo-text">{category.title}</span>
+                  </h2>
+                  <div className="text-sm text-gray-400 flex items-center space-x-1">
+                    <span>{category.matches.length} matches</span>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
 
-            {/* Actual matches */}
-            {!isLoadingMatches && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredMatches.map((match) => (
-                  <div key={match.id} className="match-card match-card-animated rounded-lg overflow-hidden">
-                    {/* Add poster background if available */}
-                    <div className="relative">
-                      {match.poster && (
-                        <div
-                          className="absolute inset-0 bg-cover bg-center opacity-20"
-                          style={{ backgroundImage: `url(https://streamed.su/api/images/proxy/${match.poster}.webp)` }}
-                        ></div>
-                      )}
-                    </div>
-                    <div className="p-4 relative">
-                      {/* Match header */}
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm text-gray-400">{match.category}</span>
-                        {matchType === "live" ? (
-                          <span className="flex items-center space-x-1">
-                            <span className="w-2 h-2 bg-red-500 rounded-full live-indicator"></span>
-                            <span className="text-red-500 text-sm font-medium">LIVE</span>
-                          </span>
-                        ) : (
-                          <span className="text-sm text-gray-400">{formatDate(match.date)}</span>
-                        )}
-                      </div>
-
-                      {/* Teams */}
-                      <div className="flex items-center justify-between mb-4">
-                        {match.teams ? (
-                          <div className="flex items-center justify-between w-full">
-                            {/* Home team */}
-                            <div className="flex items-center space-x-2">
-                              <Image
-                                src={
-                                  match.teams.home?.badge
-                                    ? `https://streamed.su/api/images/badge/${match.teams.home.badge}.webp`
-                                    : "/placeholder.svg?height=32&width=32"
-                                }
-                                alt={match.teams.home?.name || "Team"}
-                                width={32}
-                                height={32}
-                                className="w-8 h-8 object-contain"
-                                onError={(e) => {
-                                  e.currentTarget.src = "/placeholder.svg?height=32&width=32"
-                                }}
-                              />
-                              <span className="text-sm font-medium">{match.teams.home?.name}</span>
-                            </div>
-                            <span className="text-gray-400 font-bold">VS</span>
-                            {/* Away team */}
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm font-medium">{match.teams.away?.name}</span>
-                              <Image
-                                src={
-                                  match.teams.away?.badge
-                                    ? `https://streamed.su/api/images/badge/${match.teams.away.badge}.webp`
-                                    : "/placeholder.svg?height=32&width=32"
-                                }
-                                alt={match.teams.away?.name || "Team"}
-                                width={32}
-                                height={32}
-                                className="w-8 h-8 object-contain"
-                                onError={(e) => {
-                                  e.currentTarget.src = "/placeholder.svg?height=32&width=32"
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center w-full">
-                            {match.poster && (
-                              <Image
-                                src={`https://streamed.su/api/images/poster/${match.poster}.webp`}
-                                alt={match.title}
-                                width={32}
-                                height={32}
-                                className="w-32 h-32 object-contain mx-auto mb-2"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = "none"
-                                }}
-                              />
-                            )}
-                            <span className="font-medium">{match.title}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Watch button */}
-                      <button
-                        onClick={() => openStream(match)}
-                        className="w-full btn-primary text-white px-4 py-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span>Watch Stream</span>
-                      </button>
-                    </div>
+                {category.matches.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    {category.matches.map((match, matchIndex) => (
+                      <MatchCard key={`cat-${categoryIndex}-match-${match.id}-${matchIndex}`} match={match} />
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="text-center py-8 text-gray-400 bg-gray-900 rounded-lg">
+                    No live matches available in {category.title}
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
 
+          {/* Loading state */}
+          {isLoadingMatches && (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-6"></div>
+              <h3 className="text-xl font-semibold text-white mb-2">Loading Matches</h3>
+              <p className="text-gray-400">Fetching live sports from streamed.su...</p>
+            </div>
+          )}
+
           {/* No matches message */}
-          {!isLoadingMatches && filteredMatches.length === 0 && (
+          {!isLoadingMatches && categorizedMatches.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-400 text-lg">
                 <svg
@@ -493,61 +658,274 @@ export default function LiveSportsPage() {
         </div>
       </div>
 
-      {/* Enhanced stream modal */}
+      {/* Enhanced Aesthetic Stream Modal */}
       {showModal && (
         <div
-          className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-90 flex items-center justify-center"
+          className="fixed inset-0 z-50 overflow-hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"
           onClick={closeModal}
         >
-          <div className="modal-animation rounded-lg w-full max-w-6xl p-6 m-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold logo-text">{selectedMatch?.title || "Live Stream"}</h2>
-              <button onClick={closeModal} className="text-gray-500 hover:text-white transition-colors">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+          <div
+            className="bg-gray-900/95 backdrop-blur-xl rounded-2xl w-full max-w-7xl shadow-2xl border border-gray-700/50 overflow-hidden modal-animation max-h-[95vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Enhanced Header */}
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-700/50 bg-gradient-to-r from-gray-800 to-gray-900 flex-shrink-0">
+              <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+                <div className="relative min-w-0 flex-1">
+                  {selectedMatch?.teams ? (
+                    <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                      <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
+                        <img
+                          src={selectedMatch.teams.home?.badge
+                            ? `https://streamed.su/api/images/badge/${selectedMatch.teams.home.badge}.webp`
+                            : "/placeholder.svg?height=32&width=32"
+                          }
+                          alt={selectedMatch.teams.home?.name}
+                          className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0"
+                        />
+                        <span className="text-sm sm:text-lg font-semibold text-white truncate">{selectedMatch.teams.home?.name}</span>
+                      </div>
+                      <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">VS</span>
+                      <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
+                        <span className="text-sm sm:text-lg font-semibold text-white truncate">{selectedMatch.teams.away?.name}</span>
+                        <img
+                          src={selectedMatch.teams.away?.badge
+                            ? `https://streamed.su/api/images/badge/${selectedMatch.teams.away.badge}.webp`
+                            : "/placeholder.svg?height=32&width=32"
+                          }
+                          alt={selectedMatch.teams.away?.name}
+                          className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <h2 className="text-lg sm:text-2xl font-bold logo-text text-white truncate">{selectedMatch?.title || "Live Stream"}</h2>
+                  )}
+                </div>
+                <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                  <span className="flex items-center space-x-1 bg-red-500 px-2 sm:px-3 py-1 rounded-full">
+                    <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                    <span className="text-white text-xs sm:text-sm font-medium">LIVE</span>
+                  </span>
+                  {selectedMatch?.category && (
+                    <span className="bg-gray-700 text-gray-300 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm hidden sm:block">
+                      {selectedMatch.category}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                {/* Fullscreen Toggle */}
+                <button
+                  onClick={() => {
+                    const elem = document.getElementById('streamContainer');
+                    if (elem?.requestFullscreen) {
+                      elem.requestFullscreen();
+                    }
+                  }}
+                  className="p-1.5 sm:p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-gray-300 hover:text-white"
+                  title="Fullscreen"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                </button>
 
-            {/* Stream selection */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3 text-gray-300">Available Streams</h3>
-              <div className="flex flex-wrap gap-3">
-                {availableStreams.map((source) => (
-                  <button
-                    key={source.id}
-                    onClick={() => selectStream(source)}
-                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${selectedStream?.id === source.id ? "btn-primary" : "btn-secondary"}`}
-                  >
-                    <span>{source.source}</span>
-                    {source.hd && <span className="ml-2 text-xs bg-purple-500 px-2 py-1 rounded-full">HD</span>}
-                  </button>
-                ))}
+                {/* Close Button */}
+                <button
+                  onClick={closeModal}
+                  className="p-1.5 sm:p-2 rounded-lg bg-red-600 hover:bg-red-500 transition-colors text-white"
+                  title="Close"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
 
-            {/* Stream player */}
-            {selectedStream ? (
-              <div className="relative pt-[56.25%] bg-gray-800 rounded-lg overflow-hidden" id="streamContainer">
-                <iframe
-                  src={selectedStream.embedUrl}
-                  className="absolute inset-0 w-full h-full"
-                  frameBorder="0"
-                  allowFullScreen
-                />
+            <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+              {/* Main Stream Area - Fixed for Viewport */}
+              <div className="flex-1 p-2 sm:p-4 lg:p-6 overflow-hidden flex flex-col min-h-0">
+                {selectedStream ? (
+                  <div className="flex flex-col h-full overflow-hidden">
+                    {/* Stream Container with Proper Constraints */}
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                      <div
+                        className="relative bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-600 stream-container-glow w-full h-full"
+                        id="streamContainer"
+                      >
+                        <iframe
+                          src={selectedStream.embedUrl}
+                          className="absolute inset-0 w-full h-full rounded-xl"
+                          frameBorder="0"
+                          allowFullScreen
+                          allow="autoplay; encrypted-media; picture-in-picture"
+                          loading="lazy"
+                          title={`Live stream: ${selectedMatch?.title || 'Sports'}`}
+                        />
+
+                        {/* Enhanced Loading Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center iframe-loading backdrop-blur-sm">
+                          <div className="text-center p-4 sm:p-6 lg:p-8 rounded-xl bg-black/40 backdrop-blur-md border border-purple-500/30 max-w-sm mx-auto">
+                            <div className="relative mb-4 sm:mb-6">
+                              <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-4 border-purple-500 mx-auto"></div>
+                              <div className="absolute inset-0 rounded-full border-2 border-purple-400/20"></div>
+                            </div>
+                            <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Connecting to Stream</h3>
+                            <p className="text-gray-300 text-sm sm:text-base">Loading from streamed.su...</p>
+                            <div className="mt-4 flex items-center justify-center space-x-1">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Enhanced Stream Info Bar - Fixed Height */}
+                    <div className="flex-shrink-0 mt-2 sm:mt-4 p-2 sm:p-4 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700/50 stream-stats">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 min-w-0">
+                          <div className="flex items-center space-x-2 flex-shrink-0">
+                            <div className="w-3 h-3 bg-green-500 rounded-full live-indicator-enhanced"></div>
+                            <span className="text-sm text-gray-300 font-medium">Stream Active</span>
+                          </div>
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <svg className="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-sm text-gray-300 truncate">
+                              Source: <span className="text-white font-medium">{selectedStream.source}</span>
+                            </span>
+                          </div>
+                          <div className="hidden md:flex items-center space-x-2 flex-shrink-0">
+                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <span className="text-xs text-gray-400">Powered by streamed.su</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2 flex-shrink-0">
+                          {selectedStream.hd && (
+                            <span className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-medium quality-badge">
+                              HD
+                            </span>
+                          )}
+                          {(selectedStream as any).quality && (
+                            <span className="bg-gradient-to-r from-gray-600 to-gray-700 text-gray-200 px-2 sm:px-3 py-1 rounded-full text-xs font-medium quality-badge">
+                              {(selectedStream as any).quality}
+                            </span>
+                          )}
+                          <div className="flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-green-400 font-medium">LIVE</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center bg-gray-800 rounded-xl h-full">
+                    <div className="text-center p-4 sm:p-6 max-w-sm mx-auto">
+                      <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-purple-500 mx-auto mb-4 sm:mb-6"></div>
+                      <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Loading Stream</h3>
+                      <p className="text-gray-400 text-sm sm:text-base">Connecting to streamed.su...</p>
+                    </div>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                <p className="text-gray-400">Loading streams...</p>
+
+              {/* Enhanced Stream Selection Sidebar - Optimized for Mobile */}
+              <div className="lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-700/50 bg-gray-800/30 backdrop-blur-sm max-h-96 lg:max-h-none overflow-hidden flex-shrink-0">
+                <div className="p-3 sm:p-4 lg:p-6 h-full flex flex-col min-h-0">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4 flex-shrink-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-white">Stream Sources</h3>
+                    <span className="bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                      {availableStreams.length} available
+                    </span>
+                  </div>
+
+                  {availableStreams.length > 0 ? (
+                    <div className="space-y-2 sm:space-y-3 flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                      {availableStreams.map((stream, index) => (
+                        <button
+                          key={`${stream.id}-${index}`}
+                          onClick={() => selectStream(stream)}
+                          className={`w-full p-3 sm:p-4 rounded-xl transition-all duration-300 text-left border stream-card flex-shrink-0 ${selectedStream?.id === stream.id
+                            ? "bg-purple-600/20 border-purple-500 ring-2 ring-purple-400/30 shadow-lg shadow-purple-500/20"
+                            : "bg-gray-700/50 border-gray-600 hover:bg-gray-600/50 hover:border-gray-500"
+                            }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-white text-sm truncate">{stream.source}</span>
+                            <div className="flex items-center space-x-1 flex-shrink-0">
+                              {selectedStream?.id === stream.id && (
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              )}
+                              {stream.hd && (
+                                <span className="text-xs bg-blue-500 px-2 py-1 rounded-full text-white font-medium">HD</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400 truncate">Quality: {(stream as any).quality || 'Auto'}</span>
+                            {selectedStream?.id === stream.id ? (
+                              <span className="text-green-400 font-medium flex-shrink-0">● Active</span>
+                            ) : (
+                              <span className="text-gray-500 flex-shrink-0">Click to switch</span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 sm:py-12 flex-1 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                      <p className="text-gray-400 text-sm">Loading streams from streamed.su...</p>
+                    </div>
+                  )}
+
+                  {/* Enhanced Stream Stats - Optimized for Mobile */}
+                  {availableStreams.length > 0 && (
+                    <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 stream-stats backdrop-blur-sm flex-shrink-0">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <h4 className="text-sm font-medium text-gray-300">Stream Statistics</h4>
+                      </div>
+                      <div className="space-y-2 sm:space-y-3 text-xs">
+                        <div className="flex justify-between items-center p-2 bg-gray-800/40 rounded">
+                          <span className="text-gray-400 flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            <span>Total Sources:</span>
+                          </span>
+                          <span className="text-white font-medium">{availableStreams.length}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-gray-800/40 rounded">
+                          <span className="text-gray-400 flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <span>HD Sources:</span>
+                          </span>
+                          <span className="text-blue-400 font-medium">{availableStreams.filter(s => s.hd).length}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-gray-800/40 rounded">
+                          <span className="text-gray-400 flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span>Active Source:</span>
+                          </span>
+                          <span className="text-green-400 font-medium truncate max-w-24">{selectedStream?.source || 'None'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}

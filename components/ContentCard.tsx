@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import type { Movie, TVShow } from "@/lib/tmdb"
 
 interface ContentCardProps {
@@ -15,16 +16,20 @@ export function ContentCard({ item, type }: ContentCardProps) {
     <div className="card-hover rounded-lg overflow-hidden bg-gray-800 border border-purple-500/10 relative">
       <a href={`/watch?id=${item.id}&type=${type}`} className="block">
         <div className="relative aspect-[2/3]">
-          <img
-            src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+          <Image
+            src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/placeholder.svg?height=600&width=400"}
             alt={title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover transition-transform duration-300 hover:scale-105"
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
             onError={(e) => {
               const target = e.target as HTMLImageElement
               target.src = "/placeholder.svg?height=600&width=400"
-              target.classList.remove("object-cover")
-              target.classList.add("object-contain")
             }}
+            priority={false}
+            loading="lazy"
           />
           <div className="card-overlay absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
             <h3 className="text-sm font-semibold text-white">{title}</h3>

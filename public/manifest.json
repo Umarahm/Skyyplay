@@ -6,7 +6,7 @@
     "display": "standalone",
     "background_color": "#000000",
     "theme_color": "#A855F7",
-    "orientation": "portrait-primary",
+    "orientation": "any",
     "scope": "/",
     "icons": [
         {
@@ -39,6 +39,12 @@
             "type": "image/jpeg",
             "sizes": "1280x720",
             "form_factor": "wide"
+        },
+        {
+            "src": "/placeholder.jpg",
+            "type": "image/jpeg",
+            "sizes": "750x1334",
+            "form_factor": "narrow"
         }
     ],
     "shortcuts": [

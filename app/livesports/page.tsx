@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Info, Settings, Menu, ChevronDown, Star, Play } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -210,6 +211,98 @@ export default function LiveSportsPage() {
     setSelectedStream(null)
     setSelectedMatch(null)
     setAvailableStreams([])
+  }
+
+  // Framer Motion Animation Variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut" as const,
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const sectionVariants = {
+    hidden: {
+      opacity: 0,
+      y: 50
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut" as const
+      }
+    }
+  }
+
+  const cardVariants = {
+    hidden: {
+      opacity: 0,
+      y: 30,
+      scale: 0.95
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut" as const
+      }
+    },
+    hover: {
+      scale: 1.05,
+      y: -5,
+      transition: {
+        duration: 0.2,
+        ease: "easeOut" as const
+      }
+    }
+  }
+
+  const staggerContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.1
+      }
+    }
+  }
+
+  const modalVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.8,
+      y: 50
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring" as const,
+        damping: 25,
+        stiffness: 300,
+        duration: 0.5
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      y: 50,
+      transition: {
+        duration: 0.3,
+        ease: "easeIn" as const
+      }
+    }
   }
 
   const openStream = async (match: Match) => {
@@ -502,10 +595,18 @@ export default function LiveSportsPage() {
       </nav>
 
       {/* Main content */}
-      <div className="pt-24 pb-12 px-6 animate-fade-in-up">
+      <motion.div
+        className="pt-24 pb-12 px-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <div className="container mx-auto max-w-7xl">
           {/* Header */}
-          <div className="text-center mb-8">
+          <motion.div
+            className="text-center mb-8"
+            variants={sectionVariants}
+          >
             <h1 className="text-4xl md:text-5xl font-bold logo-text mb-4">Live Sports</h1>
 
             {/* Notice banner */}
@@ -519,10 +620,13 @@ export default function LiveSportsPage() {
                 <strong>Mozilla Firefox</strong>
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Filters */}
-          <div className="mb-8">
+          <motion.div
+            className="mb-8"
+            variants={sectionVariants}
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold logo-text">Filters</h3>
             </div>
@@ -591,12 +695,21 @@ export default function LiveSportsPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Categorized Content - Streamed.su style */}
-          <div className="space-y-12">
+          <motion.div
+            className="space-y-12"
+            variants={staggerContainerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {categorizedMatches.map((category, categoryIndex) => (
-              <div key={`category-${categoryIndex}`} className="animate-fade-in-up" style={{ animationDelay: `${categoryIndex * 0.1}s` }}>
+              <motion.div
+                key={`category-${categoryIndex}`}
+                className=""
+                variants={sectionVariants}
+              >
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl md:text-3xl font-bold flex items-center space-x-3">
                     {category.type === 'live' && <span className="w-3 h-3 bg-red-500 rounded-full live-indicator"></span>}
@@ -610,19 +723,30 @@ export default function LiveSportsPage() {
                 </div>
 
                 {category.matches.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  <motion.div
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+                    variants={staggerContainerVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
                     {category.matches.map((match, matchIndex) => (
-                      <MatchCard key={`cat-${categoryIndex}-match-${match.id}-${matchIndex}`} match={match} />
+                      <motion.div
+                        key={`cat-${categoryIndex}-match-${match.id}-${matchIndex}`}
+                        variants={cardVariants}
+                        whileHover="hover"
+                      >
+                        <MatchCard match={match} />
+                      </motion.div>
                     ))}
-                  </div>
+                  </motion.div>
                 ) : (
                   <div className="text-center py-8 text-gray-400 bg-gray-900 rounded-lg">
                     No live matches available in {category.title}
                   </div>
                 )}
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Loading state */}
           {isLoadingMatches && (
@@ -656,279 +780,298 @@ export default function LiveSportsPage() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Enhanced Aesthetic Stream Modal */}
-      {showModal && (
-        <div
-          className="fixed inset-0 z-50 overflow-hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"
-          onClick={closeModal}
-        >
-          <div
-            className="bg-gray-900/95 backdrop-blur-xl rounded-2xl w-full max-w-7xl shadow-2xl border border-gray-700/50 overflow-hidden modal-animation max-h-[95vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence mode="wait">
+        {showModal && (
+          <motion.div
+            className="fixed inset-0 z-50 overflow-hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-1 sm:p-2 md:p-4"
+            onClick={closeModal}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            {/* Enhanced Header */}
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-700/50 bg-gradient-to-r from-gray-800 to-gray-900 flex-shrink-0">
-              <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-                <div className="relative min-w-0 flex-1">
-                  {selectedMatch?.teams ? (
-                    <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-                      <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
-                        <img
-                          src={selectedMatch.teams.home?.badge
-                            ? `https://streamed.su/api/images/badge/${selectedMatch.teams.home.badge}.webp`
-                            : "/placeholder.svg?height=32&width=32"
-                          }
-                          alt={selectedMatch.teams.home?.name}
-                          className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0"
-                        />
-                        <span className="text-sm sm:text-lg font-semibold text-white truncate">{selectedMatch.teams.home?.name}</span>
+            <motion.div
+              className="bg-gray-900/95 backdrop-blur-xl rounded-lg sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-7xl shadow-2xl border border-gray-700/50 overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {/* Enhanced Header - Mobile Optimized */}
+              <div className="flex items-center justify-between p-3 sm:p-4 md:p-6 border-b border-gray-700/50 bg-gradient-to-r from-gray-800 to-gray-900 flex-shrink-0">
+                <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+                  <div className="relative min-w-0 flex-1">
+                    {selectedMatch?.teams ? (
+                      <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 min-w-0">
+                        <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
+                          <img
+                            src={selectedMatch.teams.home?.badge
+                              ? `https://streamed.su/api/images/badge/${selectedMatch.teams.home.badge}.webp`
+                              : "/placeholder.svg?height=32&width=32"
+                            }
+                            alt={selectedMatch.teams.home?.name}
+                            className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 object-contain flex-shrink-0"
+                          />
+                          <span className="text-xs sm:text-sm md:text-lg font-semibold text-white truncate">{selectedMatch.teams.home?.name}</span>
+                        </div>
+                        <span className="text-gray-400 font-bold text-xs sm:text-sm md:text-base flex-shrink-0">VS</span>
+                        <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
+                          <span className="text-xs sm:text-sm md:text-lg font-semibold text-white truncate">{selectedMatch.teams.away?.name}</span>
+                          <img
+                            src={selectedMatch.teams.away?.badge
+                              ? `https://streamed.su/api/images/badge/${selectedMatch.teams.away.badge}.webp`
+                              : "/placeholder.svg?height=32&width=32"
+                            }
+                            alt={selectedMatch.teams.away?.name}
+                            className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 object-contain flex-shrink-0"
+                          />
+                        </div>
                       </div>
-                      <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">VS</span>
-                      <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
-                        <span className="text-sm sm:text-lg font-semibold text-white truncate">{selectedMatch.teams.away?.name}</span>
-                        <img
-                          src={selectedMatch.teams.away?.badge
-                            ? `https://streamed.su/api/images/badge/${selectedMatch.teams.away.badge}.webp`
-                            : "/placeholder.svg?height=32&width=32"
-                          }
-                          alt={selectedMatch.teams.away?.name}
-                          className="w-6 h-6 sm:w-8 sm:h-8 object-contain flex-shrink-0"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <h2 className="text-lg sm:text-2xl font-bold logo-text text-white truncate">{selectedMatch?.title || "Live Stream"}</h2>
-                  )}
-                </div>
-                <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-                  <span className="flex items-center space-x-1 bg-red-500 px-2 sm:px-3 py-1 rounded-full">
-                    <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                    <span className="text-white text-xs sm:text-sm font-medium">LIVE</span>
-                  </span>
-                  {selectedMatch?.category && (
-                    <span className="bg-gray-700 text-gray-300 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm hidden sm:block">
-                      {selectedMatch.category}
+                    ) : (
+                      <h2 className="text-sm sm:text-lg md:text-2xl font-bold logo-text text-white truncate">{selectedMatch?.title || "Live Stream"}</h2>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                    <span className="flex items-center space-x-1 bg-red-500 px-1.5 sm:px-2 md:px-3 py-1 rounded-full">
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-pulse"></span>
+                      <span className="text-white text-xs sm:text-sm font-medium">LIVE</span>
                     </span>
-                  )}
+                    {selectedMatch?.category && (
+                      <span className="bg-gray-700 text-gray-300 px-1.5 sm:px-2 md:px-3 py-1 rounded-full text-xs sm:text-sm hidden sm:block">
+                        {selectedMatch.category}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 flex-shrink-0">
+                  {/* Fullscreen Toggle - Hidden on mobile */}
+                  <button
+                    onClick={() => {
+                      const elem = document.getElementById('streamContainer');
+                      if (elem?.requestFullscreen) {
+                        elem.requestFullscreen();
+                      }
+                    }}
+                    className="p-1.5 sm:p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-gray-300 hover:text-white hidden sm:block"
+                    title="Fullscreen"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                  </button>
+
+                  {/* Close Button - Mobile Optimized */}
+                  <button
+                    onClick={closeModal}
+                    className="p-1.5 sm:p-2 rounded-lg bg-red-600 hover:bg-red-500 transition-colors text-white touch-manipulation"
+                    title="Close"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-                {/* Fullscreen Toggle */}
-                <button
-                  onClick={() => {
-                    const elem = document.getElementById('streamContainer');
-                    if (elem?.requestFullscreen) {
-                      elem.requestFullscreen();
-                    }
-                  }}
-                  className="p-1.5 sm:p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-gray-300 hover:text-white"
-                  title="Fullscreen"
-                >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                  </svg>
-                </button>
-
-                {/* Close Button */}
-                <button
-                  onClick={closeModal}
-                  className="p-1.5 sm:p-2 rounded-lg bg-red-600 hover:bg-red-500 transition-colors text-white"
-                  title="Close"
-                >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
-              {/* Main Stream Area - Fixed for Viewport */}
-              <div className="flex-1 p-2 sm:p-4 lg:p-6 overflow-hidden flex flex-col min-h-0">
-                {selectedStream ? (
-                  <div className="flex flex-col h-full overflow-hidden">
-                    {/* Stream Container with Proper Constraints */}
-                    <div className="flex-1 min-h-0 overflow-hidden">
-                      <div
-                        className="relative bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-600 stream-container-glow w-full h-full"
-                        id="streamContainer"
-                      >
-                        <iframe
-                          src={selectedStream.embedUrl}
-                          className="absolute inset-0 w-full h-full rounded-xl"
-                          frameBorder="0"
-                          allowFullScreen
-                          allow="autoplay; encrypted-media; picture-in-picture"
-                          loading="lazy"
-                          title={`Live stream: ${selectedMatch?.title || 'Sports'}`}
-                        />
-
-                        {/* Enhanced Loading Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center iframe-loading backdrop-blur-sm">
-                          <div className="text-center p-4 sm:p-6 lg:p-8 rounded-xl bg-black/40 backdrop-blur-md border border-purple-500/30 max-w-sm mx-auto">
-                            <div className="relative mb-4 sm:mb-6">
-                              <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-4 border-purple-500 mx-auto"></div>
-                              <div className="absolute inset-0 rounded-full border-2 border-purple-400/20"></div>
-                            </div>
-                            <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Connecting to Stream</h3>
-                            <p className="text-gray-300 text-sm sm:text-base">Loading from streamed.su...</p>
-                            <div className="mt-4 flex items-center justify-center space-x-1">
-                              <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                              <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                              <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Enhanced Stream Info Bar - Fixed Height */}
-                    <div className="flex-shrink-0 mt-2 sm:mt-4 p-2 sm:p-4 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700/50 stream-stats">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 min-w-0">
-                          <div className="flex items-center space-x-2 flex-shrink-0">
-                            <div className="w-3 h-3 bg-green-500 rounded-full live-indicator-enhanced"></div>
-                            <span className="text-sm text-gray-300 font-medium">Stream Active</span>
-                          </div>
-                          <div className="flex items-center space-x-2 min-w-0">
-                            <svg className="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            <span className="text-sm text-gray-300 truncate">
-                              Source: <span className="text-white font-medium">{selectedStream.source}</span>
-                            </span>
-                          </div>
-                          <div className="hidden md:flex items-center space-x-2 flex-shrink-0">
-                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                            <span className="text-xs text-gray-400">Powered by streamed.su</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2 flex-shrink-0">
-                          {selectedStream.hd && (
-                            <span className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-medium quality-badge">
-                              HD
-                            </span>
-                          )}
-                          {(selectedStream as any).quality && (
-                            <span className="bg-gradient-to-r from-gray-600 to-gray-700 text-gray-200 px-2 sm:px-3 py-1 rounded-full text-xs font-medium quality-badge">
-                              {(selectedStream as any).quality}
-                            </span>
-                          )}
-                          <div className="flex items-center space-x-1">
-                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            <span className="text-xs text-green-400 font-medium">LIVE</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center bg-gray-800 rounded-xl h-full">
-                    <div className="text-center p-4 sm:p-6 max-w-sm mx-auto">
-                      <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-purple-500 mx-auto mb-4 sm:mb-6"></div>
-                      <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Loading Stream</h3>
-                      <p className="text-gray-400 text-sm sm:text-base">Connecting to streamed.su...</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Enhanced Stream Selection Sidebar - Optimized for Mobile */}
-              <div className="lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-700/50 bg-gray-800/30 backdrop-blur-sm max-h-96 lg:max-h-none overflow-hidden flex-shrink-0">
-                <div className="p-3 sm:p-4 lg:p-6 h-full flex flex-col min-h-0">
-                  <div className="flex items-center justify-between mb-3 sm:mb-4 flex-shrink-0">
-                    <h3 className="text-base sm:text-lg font-semibold text-white">Stream Sources</h3>
-                    <span className="bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      {availableStreams.length} available
-                    </span>
-                  </div>
-
-                  {availableStreams.length > 0 ? (
-                    <div className="space-y-2 sm:space-y-3 flex-1 overflow-y-auto custom-scrollbar min-h-0">
-                      {availableStreams.map((stream, index) => (
-                        <button
-                          key={`${stream.id}-${index}`}
-                          onClick={() => selectStream(stream)}
-                          className={`w-full p-3 sm:p-4 rounded-xl transition-all duration-300 text-left border stream-card flex-shrink-0 ${selectedStream?.id === stream.id
-                            ? "bg-purple-600/20 border-purple-500 ring-2 ring-purple-400/30 shadow-lg shadow-purple-500/20"
-                            : "bg-gray-700/50 border-gray-600 hover:bg-gray-600/50 hover:border-gray-500"
-                            }`}
+              {/* Responsive Layout - Mobile Vertical, Desktop Horizontal */}
+              <div className="flex flex-col lg:flex-row h-full overflow-hidden">
+                {/* Main Stream Area - Mobile Optimized */}
+                <div className="flex-1 p-1 sm:p-2 md:p-4 lg:p-6 overflow-hidden flex flex-col min-h-0">
+                  {selectedStream ? (
+                    <div className="flex flex-col h-full overflow-hidden">
+                      {/* Stream Container - Mobile Optimized */}
+                      <div className="flex-1 min-h-0 overflow-hidden relative">
+                        <div
+                          className="relative bg-black rounded-lg sm:rounded-xl overflow-hidden shadow-2xl border border-gray-600 stream-container-glow w-full h-full performance-optimized"
+                          id="streamContainer"
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-white text-sm truncate">{stream.source}</span>
-                            <div className="flex items-center space-x-1 flex-shrink-0">
-                              {selectedStream?.id === stream.id && (
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                              )}
-                              {stream.hd && (
-                                <span className="text-xs bg-blue-500 px-2 py-1 rounded-full text-white font-medium">HD</span>
-                              )}
+                          <iframe
+                            src={selectedStream.embedUrl}
+                            className="absolute inset-0 w-full h-full rounded-lg sm:rounded-xl touch-manipulation"
+                            frameBorder="0"
+                            allowFullScreen
+                            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                            loading="lazy"
+                            title={`Live stream: ${selectedMatch?.title || 'Sports'}`}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              minHeight: '200px',
+                              maxHeight: '100vh',
+                              WebkitOverflowScrolling: 'touch',
+                              touchAction: 'manipulation'
+                            }}
+                          />
+
+                          {/* Enhanced Loading Overlay - Mobile Optimized */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center iframe-loading backdrop-blur-sm">
+                            <div className="text-center p-3 sm:p-4 md:p-6 lg:p-8 rounded-lg sm:rounded-xl bg-black/40 backdrop-blur-md border border-purple-500/30 max-w-xs sm:max-w-sm mx-auto">
+                              <div className="relative mb-3 sm:mb-4 md:mb-6">
+                                <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 border-b-4 border-purple-500 mx-auto"></div>
+                                <div className="absolute inset-0 rounded-full border-2 border-purple-400/20"></div>
+                              </div>
+                              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-white mb-2">Connecting to Stream</h3>
+                              <p className="text-gray-300 text-xs sm:text-sm md:text-base">Loading from streamed.su...</p>
+                              <div className="mt-3 sm:mt-4 flex items-center justify-center space-x-1">
+                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                              </div>
                             </div>
                           </div>
+                        </div>
+                      </div>
 
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400 truncate">Quality: {(stream as any).quality || 'Auto'}</span>
-                            {selectedStream?.id === stream.id ? (
-                              <span className="text-green-400 font-medium flex-shrink-0">● Active</span>
-                            ) : (
-                              <span className="text-gray-500 flex-shrink-0">Click to switch</span>
-                            )}
+                      {/* Enhanced Stream Info Bar - Mobile Optimized */}
+                      <div className="flex-shrink-0 mt-1 sm:mt-2 md:mt-4 p-2 sm:p-3 md:p-4 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700/50 stream-stats">
+                        <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-4 min-w-0">
+                            <div className="flex items-center space-x-2 flex-shrink-0">
+                              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full live-indicator-enhanced"></div>
+                              <span className="text-xs sm:text-sm text-gray-300 font-medium">Stream Active</span>
+                            </div>
+                            <div className="flex items-center space-x-2 min-w-0">
+                              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                              <span className="text-xs sm:text-sm text-gray-300 truncate">
+                                Source: <span className="text-white font-medium">{selectedStream.source}</span>
+                              </span>
+                            </div>
+                            <div className="hidden md:flex items-center space-x-2 flex-shrink-0">
+                              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              <span className="text-xs text-gray-400">Powered by streamed.su</span>
+                            </div>
                           </div>
-                        </button>
-                      ))}
+                          <div className="flex items-center space-x-2 flex-shrink-0">
+                            {selectedStream.hd && (
+                              <span className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-1.5 sm:px-2 md:px-3 py-1 rounded-full text-xs font-medium quality-badge">
+                                HD
+                              </span>
+                            )}
+                            {(selectedStream as any).quality && (
+                              <span className="bg-gradient-to-r from-gray-600 to-gray-700 text-gray-200 px-1.5 sm:px-2 md:px-3 py-1 rounded-full text-xs font-medium quality-badge">
+                                {(selectedStream as any).quality}
+                              </span>
+                            )}
+                            <div className="flex items-center space-x-1">
+                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full animate-pulse"></div>
+                              <span className="text-xs text-green-400 font-medium">LIVE</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8 sm:py-12 flex-1 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                      <p className="text-gray-400 text-sm">Loading streams from streamed.su...</p>
-                    </div>
-                  )}
-
-                  {/* Enhanced Stream Stats - Optimized for Mobile */}
-                  {availableStreams.length > 0 && (
-                    <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 stream-stats backdrop-blur-sm flex-shrink-0">
-                      <div className="flex items-center space-x-2 mb-3">
-                        <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        <h4 className="text-sm font-medium text-gray-300">Stream Statistics</h4>
-                      </div>
-                      <div className="space-y-2 sm:space-y-3 text-xs">
-                        <div className="flex justify-between items-center p-2 bg-gray-800/40 rounded">
-                          <span className="text-gray-400 flex items-center space-x-1">
-                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                            <span>Total Sources:</span>
-                          </span>
-                          <span className="text-white font-medium">{availableStreams.length}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-2 bg-gray-800/40 rounded">
-                          <span className="text-gray-400 flex items-center space-x-1">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span>HD Sources:</span>
-                          </span>
-                          <span className="text-blue-400 font-medium">{availableStreams.filter(s => s.hd).length}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-2 bg-gray-800/40 rounded">
-                          <span className="text-gray-400 flex items-center space-x-1">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span>Active Source:</span>
-                          </span>
-                          <span className="text-green-400 font-medium truncate max-w-24">{selectedStream?.source || 'None'}</span>
-                        </div>
+                    <div className="flex items-center justify-center bg-gray-800 rounded-lg sm:rounded-xl h-full">
+                      <div className="text-center p-3 sm:p-4 md:p-6 max-w-xs sm:max-w-sm mx-auto">
+                        <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 border-b-2 border-purple-500 mx-auto mb-3 sm:mb-4 md:mb-6"></div>
+                        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-white mb-2">Loading Stream</h3>
+                        <p className="text-gray-400 text-xs sm:text-sm md:text-base">Connecting to streamed.su...</p>
                       </div>
                     </div>
                   )}
                 </div>
+
+                {/* Enhanced Stream Selection Sidebar - Mobile Optimized */}
+                <div className="border-t lg:border-t-0 lg:border-l border-gray-700/50 bg-gray-800/30 backdrop-blur-sm max-h-48 sm:max-h-64 md:max-h-80 lg:max-h-none lg:w-80 overflow-hidden flex-shrink-0">
+                  <div className="p-2 sm:p-3 md:p-4 lg:p-6 h-full flex flex-col min-h-0">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4 flex-shrink-0">
+                      <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white">Stream Sources</h3>
+                      <span className="bg-purple-600 text-white px-1.5 sm:px-2 py-1 rounded-full text-xs font-medium">
+                        {availableStreams.length} available
+                      </span>
+                    </div>
+
+                    {availableStreams.length > 0 ? (
+                      <div className="space-y-1.5 sm:space-y-2 md:space-y-3 flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                        {availableStreams.map((stream, index) => (
+                          <button
+                            key={`${stream.id}-${index}`}
+                            onClick={() => selectStream(stream)}
+                            className={`w-full p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl transition-all duration-300 text-left border stream-card flex-shrink-0 touch-manipulation ${selectedStream?.id === stream.id
+                              ? "bg-purple-600/20 border-purple-500 ring-2 ring-purple-400/30 shadow-lg shadow-purple-500/20"
+                              : "bg-gray-700/50 border-gray-600 hover:bg-gray-600/50 hover:border-gray-500"
+                              }`}
+                          >
+                            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                              <span className="font-medium text-white text-xs sm:text-sm truncate">{stream.source}</span>
+                              <div className="flex items-center space-x-1 flex-shrink-0">
+                                {selectedStream?.id === stream.id && (
+                                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                )}
+                                {stream.hd && (
+                                  <span className="text-xs bg-blue-500 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-white font-medium">HD</span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-400 truncate">Quality: {(stream as any).quality || 'Auto'}</span>
+                              {selectedStream?.id === stream.id ? (
+                                <span className="text-green-400 font-medium flex-shrink-0">● Active</span>
+                              ) : (
+                                <span className="text-gray-500 flex-shrink-0">Tap to switch</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 sm:py-6 md:py-8 flex-1 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-purple-500 mx-auto mb-3 sm:mb-4"></div>
+                        <p className="text-gray-400 text-xs sm:text-sm">Loading streams from streamed.su...</p>
+                      </div>
+                    )}
+
+                    {/* Enhanced Stream Stats - Mobile Optimized */}
+                    {availableStreams.length > 0 && (
+                      <div className="mt-3 sm:mt-4 md:mt-6 p-2 sm:p-3 md:p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 stream-stats backdrop-blur-sm flex-shrink-0">
+                        <div className="flex items-center space-x-2 mb-2 sm:mb-3">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          <h4 className="text-xs sm:text-sm font-medium text-gray-300">Stream Statistics</h4>
+                        </div>
+                        <div className="space-y-1.5 sm:space-y-2 md:space-y-3 text-xs">
+                          <div className="flex justify-between items-center p-1.5 sm:p-2 bg-gray-800/40 rounded">
+                            <span className="text-gray-400 flex items-center space-x-1">
+                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full"></div>
+                              <span>Total Sources:</span>
+                            </span>
+                            <span className="text-white font-medium">{availableStreams.length}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-1.5 sm:p-2 bg-gray-800/40 rounded">
+                            <span className="text-gray-400 flex items-center space-x-1">
+                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
+                              <span>HD Sources:</span>
+                            </span>
+                            <span className="text-blue-400 font-medium">{availableStreams.filter(s => s.hd).length}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-1.5 sm:p-2 bg-gray-800/40 rounded">
+                            <span className="text-gray-400 flex items-center space-x-1">
+                              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span>Active Source:</span>
+                            </span>
+                            <span className="text-green-400 font-medium truncate max-w-20 sm:max-w-24">{selectedStream?.source || 'None'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Scroll to top button */}
       <button

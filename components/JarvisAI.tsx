@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Movie, TVShow } from "@/lib/tmdb"
 
 interface Message {
@@ -129,136 +130,201 @@ export function JarvisAI({ isOpen, onClose }: JarvisAIProps) {
         }
     }
 
-    if (!isOpen) return null
+    // Animation variants
+    const containerVariants = {
+        hidden: {
+            y: "100%",
+            scale: 0.95,
+            opacity: 0
+        },
+        visible: {
+            y: 0,
+            scale: 1,
+            opacity: 1,
+            transition: {
+                type: "spring" as const,
+                damping: 25,
+                stiffness: 300,
+                duration: 0.4
+            }
+        },
+        exit: {
+            y: "100%",
+            scale: 0.95,
+            opacity: 0,
+            transition: {
+                type: "spring" as const,
+                damping: 25,
+                stiffness: 300,
+                duration: 0.3
+            }
+        }
+    }
+
+    const contentVariants = {
+        hidden: {
+            opacity: 0,
+            y: 20
+        },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                delay: 0.1,
+                duration: 0.3,
+                ease: "easeOut" as const
+            }
+        },
+        exit: {
+            opacity: 0,
+            y: -20,
+            transition: {
+                duration: 0.2
+            }
+        }
+    }
 
     return (
-        <div className="fixed bottom-6 right-6 w-full max-w-md flex flex-col z-50">
-            <div className={`bg-gray-900 border border-purple-500/20 rounded-2xl shadow-2xl w-full flex flex-col transition-all duration-300 ${isMinimized ? 'h-16' : 'h-[600px]'
-                }`}>
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-purple-500/20">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center overflow-hidden">
-                            <img
-                                src="/jarvis-img.png"
-                                alt="Jarvis AI"
-                                className="w-6 h-6 rounded-full"
-                            />
-                        </div>
-                        <div>
-                            <h3 className="text-white font-semibold">Jarvis AI</h3>
-                            <div className="flex items-center space-x-2">
-                                <p className="text-xs text-purple-400">Your Movie Companion</p>
-                                <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full font-medium">BETA</span>
+        <AnimatePresence mode="wait">
+            {isOpen && (
+                <motion.div
+                    className="fixed bottom-4 right-4 left-4 md:left-auto md:w-full md:max-w-md flex flex-col z-50"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                >
+                    <motion.div
+                        className={`bg-gray-900 border border-purple-500/20 rounded-2xl shadow-2xl w-full flex flex-col transition-all duration-300 ease-out ${isMinimized ? 'h-16' : 'h-[70vh] md:h-[600px]'
+                            }`}
+                        variants={contentVariants}
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-3 md:p-4 border-b border-purple-500/20">
+                            <div className="flex items-center space-x-2 md:space-x-3">
+                                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center overflow-hidden">
+                                    <img
+                                        src="/jarvis-img.png"
+                                        alt="Jarvis AI"
+                                        className="w-5 h-5 md:w-6 md:h-6 rounded-full"
+                                    />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-semibold text-sm md:text-base">Jarvis AI</h3>
+                                    <div className="flex items-center space-x-1 md:space-x-2">
+                                        <p className="text-xs text-purple-400">Your Movie Companion</p>
+                                        <span className="text-xs bg-purple-600 text-white px-1.5 md:px-2 py-0.5 rounded-full font-medium">BETA</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        {/* Minimize/Maximize Button */}
-                        <button
-                            onClick={() => setIsMinimized(!isMinimized)}
-                            className="text-gray-400 hover:text-white transition-colors p-1"
-                            title={isMinimized ? "Maximize Chat" : "Minimize Chat"}
-                        >
-                            {isMinimized ? (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                                </svg>
-                            ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                                </svg>
-                            )}
-                        </button>
-                        {/* Clear Chat Button */}
-                        <button
-                            onClick={clearChat}
-                            className="text-gray-400 hover:text-white transition-colors p-1"
-                            title="Clear Chat"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-white transition-colors p-1"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Messages and Input - Only show when not minimized */}
-                {!isMinimized && (
-                    <>
-                        {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                            {messages.map((message) => (
-                                <div
-                                    key={message.id}
-                                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                                >
-                                    <div
-                                        className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.type === 'user'
-                                            ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
-                                            : 'bg-gray-800 text-gray-100 border border-purple-500/20'
-                                            }`}
-                                    >
-                                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                                        <p className="text-xs opacity-70 mt-1">
-                                            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {isLoading && (
-                                <div className="flex justify-start">
-                                    <div className="bg-gray-800 border border-purple-500/20 rounded-2xl px-4 py-3">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="flex space-x-1">
-                                                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
-                                                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                            </div>
-                                            <span className="text-sm text-gray-400">Jarvis is thinking...</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Input */}
-                        <form onSubmit={handleSubmit} className="p-4 border-t border-purple-500/20">
-                            <div className="flex space-x-2">
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    placeholder="Ask Jarvis about movies, mood, or preferences..."
-                                    className="flex-1 bg-gray-800 border border-purple-500/20 rounded-full px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/40 transition-colors"
-                                    disabled={isLoading}
-                                />
+                            <div className="flex items-center space-x-1 md:space-x-2">
+                                {/* Minimize/Maximize Button */}
                                 <button
-                                    type="submit"
-                                    disabled={!inputValue.trim() || isLoading}
-                                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full p-3 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={() => setIsMinimized(!isMinimized)}
+                                    className="text-gray-400 hover:text-white transition-colors p-1"
+                                    title={isMinimized ? "Maximize Chat" : "Minimize Chat"}
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    {isMinimized ? (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                                        </svg>
+                                    )}
+                                </button>
+                                {/* Clear Chat Button */}
+                                <button
+                                    onClick={clearChat}
+                                    className="text-gray-400 hover:text-white transition-colors p-1"
+                                    title="Clear Chat"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                                <button
+                                    onClick={onClose}
+                                    className="text-gray-400 hover:text-white transition-colors p-1"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
-                        </form>
-                    </>
-                )}
-            </div>
-        </div>
+                        </div>
+
+                        {/* Messages and Input - Only show when not minimized */}
+                        {!isMinimized && (
+                            <>
+                                {/* Messages */}
+                                <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
+                                    {messages.map((message) => (
+                                        <div
+                                            key={message.id}
+                                            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                                        >
+                                            <div
+                                                className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-3 md:px-4 py-2 md:py-3 ${message.type === 'user'
+                                                    ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
+                                                    : 'bg-gray-800 text-gray-100 border border-purple-500/20'
+                                                    }`}
+                                            >
+                                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                                <p className="text-xs opacity-70 mt-1">
+                                                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {isLoading && (
+                                        <div className="flex justify-start">
+                                            <div className="bg-gray-800 border border-purple-500/20 rounded-2xl px-3 md:px-4 py-2 md:py-3">
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="flex space-x-1">
+                                                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                                                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                                    </div>
+                                                    <span className="text-sm text-gray-400">Jarvis is thinking...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div ref={messagesEndRef} />
+                                </div>
+
+                                {/* Input */}
+                                <form onSubmit={handleSubmit} className="p-3 md:p-4 border-t border-purple-500/20">
+                                    <div className="flex space-x-2">
+                                        <input
+                                            ref={inputRef}
+                                            type="text"
+                                            value={inputValue}
+                                            onChange={(e) => setInputValue(e.target.value)}
+                                            placeholder="Ask Jarvis about movies, mood, or preferences..."
+                                            className="flex-1 bg-gray-800 border border-purple-500/20 rounded-full px-3 md:px-4 py-2 md:py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/40 transition-colors text-sm md:text-base"
+                                            disabled={isLoading}
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={!inputValue.trim() || isLoading}
+                                            className="bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full p-2 md:p-3 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                                        >
+                                            <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     )
 } 

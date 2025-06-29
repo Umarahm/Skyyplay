@@ -54,7 +54,7 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
 
               {/* Mobile search bar */}
               {showSearch && (
-                <div className="md:hidden relative w-32">
+                <div className="md:hidden relative w-60 sm:w-200">
                   <SearchAutocomplete
                     placeholder="Search..."
                     size="sm"
@@ -83,7 +83,7 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
             <div className="flex items-center space-x-4">
               {/* Desktop search */}
               {showSearch && (
-                <div className="hidden md:block relative w-64">
+                <div className="hidden md:block relative w-64 lg:w-80">
                   <SearchAutocomplete
                     placeholder="Search..."
                     size="md"
@@ -91,7 +91,8 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
                 </div>
               )}
 
-              <Link href="/settings" className="text-gray-400 hover:text-purple-400 transition-colors duration-300">
+              {/* Settings icon - hidden on mobile */}
+              <Link href="/settings" className="hidden md:block text-gray-400 hover:text-purple-400 transition-colors duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6 settings-icon"
@@ -115,10 +116,10 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
               </Link>
 
               {/* Mobile menu button */}
-              <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden text-gray-300 hover:text-white">
+              <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden text-gray-300 hover:text-white transition-colors duration-200">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
+                  className={`h-6 w-6 transition-transform duration-200 ${mobileMenu ? 'rotate-90' : ''}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -129,56 +130,54 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
             </div>
           </div>
 
-          {/* Mobile menu */}
-          {mobileMenu && (
-            <div className="md:hidden mt-4 pb-4">
-              <div className="flex flex-col space-y-4">
-                {showTabSwitcher && onTabChange && (
-                  <button
-                    onClick={() => {
-                      onTabChange(currentTab === "movies" ? "shows" : "movies")
-                      setMobileMenu(false)
-                    }}
-                    className="text-left px-4 py-2 hover:bg-gray-800 rounded-lg transition-colors"
-                  >
-                    {currentTab === "movies" ? "Switch to TV Shows" : "Switch to Movies"}
-                  </button>
-                )}
-                <Link href="/livesports" className="px-4 py-2 hover:bg-gray-800 rounded-lg transition-colors">
-                  Live Sports
-                </Link>
-                <Link href="/search" className="px-4 py-2 hover:bg-gray-800 rounded-lg transition-colors">
-                  Search
-                </Link>
-                <Link
-                  href="/settings"
-                  className="px-4 py-2 hover:bg-gray-800 rounded-lg transition-colors flex items-center space-x-2"
+          {/* Mobile menu with smooth animation */}
+          <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${mobileMenu ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="mt-4 pb-4 space-y-2">
+              {showTabSwitcher && onTabChange && (
+                <button
+                  onClick={() => {
+                    onTabChange(currentTab === "movies" ? "shows" : "movies")
+                    setMobileMenu(false)
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-lg transition-colors duration-200"
                 >
-                  <span>Settings</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                </Link>
-              </div>
+                  {currentTab === "movies" ? "Switch to TV Shows" : "Switch to Movies"}
+                </button>
+              )}
+              <Link href="/livesports" className="block px-4 py-3 hover:bg-gray-800 rounded-lg transition-colors duration-200">
+                Live Sports
+              </Link>
+              <Link href="/search" className="block px-4 py-3 hover:bg-gray-800 rounded-lg transition-colors duration-200">
+                Search
+              </Link>
+              <Link
+                href="/settings"
+                className="block px-4 py-3 hover:bg-gray-800 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              >
+                <span>Settings</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </Link>
             </div>
-          )}
+          </div>
         </div>
       </nav>
     </>

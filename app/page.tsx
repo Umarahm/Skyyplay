@@ -1,7 +1,7 @@
 "use client"
 
-
 import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
 import { SmartGenreTags } from "@/components/SmartGenreTags"
@@ -412,6 +412,98 @@ export default function HomePage() {
 
     const currentCarouselItem = carouselItems[currentCarouselIndex]
 
+    // Framer Motion Animation Variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                duration: 0.6,
+                ease: "easeOut" as const,
+                staggerChildren: 0.1
+            }
+        }
+    }
+
+    const itemVariants = {
+        hidden: {
+            opacity: 0,
+            y: 30,
+            scale: 0.95
+        },
+        visible: {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            transition: {
+                duration: 0.5,
+                ease: "easeOut" as const
+            }
+        }
+    }
+
+    const cardVariants = {
+        hidden: {
+            opacity: 0,
+            y: 20,
+            scale: 0.9
+        },
+        visible: {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            transition: {
+                duration: 0.4,
+                ease: "easeOut" as const
+            }
+        }
+    }
+
+    const staggerContainerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.05,
+                delayChildren: 0.1
+            }
+        }
+    }
+
+    const sectionVariants = {
+        hidden: {
+            opacity: 0,
+            y: 50
+        },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.6,
+                ease: "easeOut" as const
+            }
+        }
+    }
+
+    const carouselVariants = {
+        hidden: {
+            opacity: 0,
+            y: 100,
+            scale: 0.95
+        },
+        visible: {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            transition: {
+                type: "spring" as const,
+                damping: 25,
+                stiffness: 300,
+                duration: 0.8
+            }
+        }
+    }
+
     return (
         <div className="min-h-screen">
             <Navbar showTabSwitcher={true} currentTab={currentTab} onTabChange={setCurrentTab} />
@@ -541,7 +633,12 @@ export default function HomePage() {
             ) : (
                 <>
                     {/* Featured Carousel Section with Enhanced Animations */}
-                    <div className="pt-24 pb-8 animate-fade-in-up">
+                    <motion.div
+                        className="pt-24 pb-8"
+                        variants={carouselVariants}
+                        initial="hidden"
+                        animate="visible"
+                    >
                         <div className="container mx-auto px-4">
                             <div
                                 className="relative carousel-height rounded-2xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500/30 transition-all duration-300"
@@ -558,12 +655,12 @@ export default function HomePage() {
                                                         }`}
                                                 >
                                                     <div
-                                                        className="absolute inset-0 bg-cover bg-center blur-none md:blur-sm opacity-20 md:opacity-30"
+                                                        className="absolute inset-0 bg-cover bg-center blur-sm md:blur-sm opacity-40 "
                                                         style={{
                                                             backgroundImage: `url(https://image.tmdb.org/t/p/original${item.backdrop_path || item.poster_path})`,
                                                         }}
                                                     />
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20 md:from-black/90 md:via-black/70 md:to-black/40" />
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20 md:to-black/40" />
                                                 </div>
                                             ))}
                                         </div>
@@ -753,14 +850,14 @@ export default function HomePage() {
                                         </button>
 
                                         {/* Pagination Dots */}
-                                        <div className="carousel-dot-container absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+                                        <div className="carousel-dot-container absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-0.5 md:space-x-2 z-20">
                                             {carouselItems.map((_, index) => (
                                                 <button
                                                     key={index}
                                                     onClick={() => goToCarouselSlide(index)}
-                                                    className={`carousel-dot h-2 rounded-full transition-all duration-300 hover:scale-110 ${index === currentCarouselIndex
-                                                        ? "bg-purple-500 w-8 hover:bg-purple-400"
-                                                        : "bg-gray-500 hover:bg-gray-400 w-2 hover:w-4"
+                                                    className={`carousel-dot h-1 md:h-2 rounded-full transition-all duration-300 hover:scale-110 ${index === currentCarouselIndex
+                                                        ? "bg-purple-500 w-2 md:w-6 lg:w-8 hover:bg-purple-400"
+                                                        : "bg-gray-500 hover:bg-gray-400 w-1 md:w-2 hover:w-1.5 md:hover:w-3 lg:hover:w-4"
                                                         } ${isCarouselAnimating ? 'opacity-50' : ''}`}
                                                     aria-label={`Go to slide ${index + 1}`}
                                                     aria-current={index === currentCarouselIndex ? "true" : "false"}
@@ -771,47 +868,61 @@ export default function HomePage() {
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* AI-Enhanced Genre Selection */}
-                    <div className="py-8 px-4 animate-fade-in-up" ref={(el) => observeSection(el, "genres")}>
+                    <motion.div
+                        className="py-8 px-4"
+                        ref={(el) => observeSection(el, "genres")}
+                        variants={sectionVariants}
+                        initial="hidden"
+                        animate={visibleSections.has("genres") ? "visible" : "hidden"}
+                        transition={{ duration: 0.6, ease: "easeOut" as const }}
+                    >
                         <div className="container mx-auto">
-                            <div className={`transition-all duration-500 ${visibleSections.has("genres") ? "animate-fade-in-up" : "opacity-0"}`}>
-                                <SmartGenreTags
-                                    genres={genres}
-                                    contentType={currentTab === "movies" ? "movie" : "tv"}
-                                    selectedGenre={selectedGenre}
-                                    onGenreSelect={selectGenre}
-                                    className="justify-center"
-                                />
-                            </div>
+                            <SmartGenreTags
+                                genres={genres}
+                                contentType={currentTab === "movies" ? "movie" : "tv"}
+                                selectedGenre={selectedGenre}
+                                onGenreSelect={selectGenre}
+                                className="justify-center"
+                            />
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Genre Results - Same size as Top 10 with Scroll Animation */}
                     {selectedGenre && genreResults.length > 0 && (
-                        <div className="py-6 px-4 animate-fade-in-up" ref={(el) => observeSection(el, "genre-results")}>
+                        <motion.div
+                            className="py-6 px-4"
+                            ref={(el) => observeSection(el, "genre-results")}
+                            variants={sectionVariants}
+                            initial="hidden"
+                            animate={visibleSections.has("genre-results") ? "visible" : "hidden"}
+                            transition={{ duration: 0.6, ease: "easeOut" as const }}
+                        >
                             <div className="container mx-auto">
                                 <h2 className="text-2xl font-bold brand-text mb-6">
                                     {genres.find((g) => g.id === selectedGenre)?.name} {currentTab === "movies" ? "Movies" : "TV Shows"}
                                 </h2>
                                 <div className="relative overflow-hidden">
-                                    <div
+                                    <motion.div
                                         id="genreResultsContainer"
                                         className="flex space-x-4 overflow-x-auto scrollbar-hide scroll-smooth"
                                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                        variants={staggerContainerVariants}
+                                        initial="hidden"
+                                        animate={visibleSections.has("genre-results") ? "visible" : "hidden"}
                                     >
                                         {genreResults.slice(0, 18).map((item, index) => (
-                                            <div
+                                            <motion.div
                                                 key={item.id}
-                                                className={`flex-shrink-0 w-36 md:w-44 scroll-animate-item ${visibleSections.has("genre-results") ? "animate-fade-in-up" : "opacity-0"
-                                                    }`}
-                                                style={{ animationDelay: `${index * 0.05}s` }}
+                                                className="flex-shrink-0 w-36 md:w-44"
+                                                variants={cardVariants}
                                             >
                                                 <ContentCard item={item} type={currentTab === "movies" ? "movie" : "tv"} />
-                                            </div>
+                                            </motion.div>
                                         ))}
-                                    </div>
+                                    </motion.div>
 
                                     {/* Navigation buttons for genre results */}
                                     <button
@@ -844,11 +955,18 @@ export default function HomePage() {
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
 
                     {/* Top 10 Section with Scroll Animation */}
-                    <div className="py-6 px-0 sm:px-6 animate-fade-in-up" ref={(el) => observeSection(el, "top10")}>
+                    <motion.div
+                        className="py-6 px-0 sm:px-6"
+                        ref={(el) => observeSection(el, "top10")}
+                        variants={sectionVariants}
+                        initial="hidden"
+                        animate={visibleSections.has("top10") ? "visible" : "hidden"}
+                        transition={{ duration: 0.6, ease: "easeOut" as const }}
+                    >
                         <div className="container mx-auto">
                             <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
                                 <h2 className="text-2xl font-bold brand-text">
@@ -856,17 +974,19 @@ export default function HomePage() {
                                 </h2>
                             </div>
                             <div className="relative overflow-hidden">
-                                <div
+                                <motion.div
                                     id="top10Container"
                                     className="flex space-x-4 overflow-x-auto scrollbar-hide scroll-smooth"
                                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                    variants={staggerContainerVariants}
+                                    initial="hidden"
+                                    animate={visibleSections.has("top10") ? "visible" : "hidden"}
                                 >
                                     {top10Items.map((item, index) => (
-                                        <div
+                                        <motion.div
                                             key={item.id}
-                                            className={`flex-shrink-0 relative top10-item scroll-animate-item ${visibleSections.has("top10") ? "animate-fade-in-up" : "opacity-0"
-                                                }`}
-                                            style={{ animationDelay: `${index * 0.1}s` }}
+                                            className="flex-shrink-0 relative top10-item"
+                                            variants={cardVariants}
                                         >
                                             <div className="relative w-36 md:w-44">
                                                 <ContentCard item={item} type={currentTab === "movies" ? "movie" : "tv"} />
@@ -880,9 +1000,9 @@ export default function HomePage() {
                                                     {index + 1}
                                                 </div>
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     ))}
-                                </div>
+                                </motion.div>
 
                                 {/* Navigation buttons for top 10 */}
                                 <button
@@ -915,15 +1035,19 @@ export default function HomePage() {
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Category Sections with Scroll Animation */}
                     <div className="px-0 sm:px-6 py-4 overflow-hidden">
                         {Object.entries(categories).map(([categoryName, items], categoryIndex) => (
-                            <div
+                            <motion.div
                                 key={categoryName}
                                 className="category-section container mx-auto mb-8"
                                 ref={(el) => observeSection(el, `category-${categoryIndex}`)}
+                                variants={sectionVariants}
+                                initial="hidden"
+                                animate={visibleSections.has(`category-${categoryIndex}`) ? "visible" : "hidden"}
+                                transition={{ duration: 0.6, ease: "easeOut" as const }}
                             >
                                 <div className="flex items-center justify-between mb-4 px-4 sm:px-6">
                                     <h2 className="text-xl font-bold brand-text">{categoryName}</h2>
@@ -937,17 +1061,19 @@ export default function HomePage() {
                                     </div>
                                 </div>
                                 <div className="relative overflow-hidden">
-                                    <div
+                                    <motion.div
                                         id={`category-${categoryName.replace(/\s+/g, "")}`}
                                         className="flex space-x-4 overflow-x-auto scrollbar-hide scroll-smooth category-container"
                                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                        variants={staggerContainerVariants}
+                                        initial="hidden"
+                                        animate={visibleSections.has(`category-${categoryIndex}`) ? "visible" : "hidden"}
                                     >
                                         {items.map((item, index) => (
-                                            <div
+                                            <motion.div
                                                 key={item.id}
-                                                className={`flex-shrink-0 w-36 category-item scroll-animate-item ${visibleSections.has(`category-${categoryIndex}`) ? "animate-fade-in-up" : "opacity-0"
-                                                    }`}
-                                                style={{ animationDelay: `${index * 0.05}s` }}
+                                                className="flex-shrink-0 w-36 category-item"
+                                                variants={cardVariants}
                                             >
                                                 <ContentCard
                                                     item={item}
@@ -955,9 +1081,9 @@ export default function HomePage() {
                                                     aiReason={(item as any).aiReason}
                                                     showAIBadge={!!(item as any).aiReason}
                                                 />
-                                            </div>
+                                            </motion.div>
                                         ))}
-                                    </div>
+                                    </motion.div>
 
                                     {/* Navigation buttons for categories */}
                                     <button
@@ -989,14 +1115,18 @@ export default function HomePage() {
                                         </svg>
                                     </button>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
 
                     {/* Streaming Services */}
-                    <div
-                        className="container mx-auto px-4 md:px-6 py-8 md:py-12 animate-fade-in-up"
+                    <motion.div
+                        className="container mx-auto px-4 md:px-6 py-8 md:py-12"
                         ref={(el) => observeSection(el, "streaming")}
+                        variants={sectionVariants}
+                        initial="hidden"
+                        animate={visibleSections.has("streaming") ? "visible" : "hidden"}
+                        transition={{ duration: 0.6, ease: "easeOut" as const }}
                     >
                         <div className="text-center mb-6 md:mb-8">
                             <h2 className="text-xl md:text-2xl font-bold text-gray-300">Content Available From</h2>
@@ -1004,9 +1134,11 @@ export default function HomePage() {
                                 SkyyPlay aggregates content from various premium streaming platforms
                             </p>
                         </div>
-                        <div
-                            className={`grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 items-center justify-items-center opacity-80 ${visibleSections.has("streaming") ? "animate-fade-in-up" : "opacity-0"
-                                }`}
+                        <motion.div
+                            className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 items-center justify-items-center opacity-80"
+                            variants={staggerContainerVariants}
+                            initial="hidden"
+                            animate={visibleSections.has("streaming") ? "visible" : "hidden"}
                         >
                             <a
                                 href="https://netflix.com"
@@ -1080,15 +1212,19 @@ export default function HomePage() {
                                     className="h-6 md:h-8 w-auto grayscale hover:grayscale-0 hover:scale-110 hover:brightness-125 transition-all duration-300"
                                 />
                             </a>
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
 
                     {/* Footer */}
-                    <footer className="text-gray-400 py-4 md:py-6 mt-8 md:mt-12" ref={(el) => observeSection(el, "footer")}>
-                        <div
-                            className={`container mx-auto px-4 md:px-6 text-center ${visibleSections.has("footer") ? "animate-fade-in-up" : "opacity-0"
-                                }`}
-                        >
+                    <motion.footer
+                        className="text-gray-400 py-4 md:py-6 mt-8 md:mt-12"
+                        ref={(el) => observeSection(el, "footer")}
+                        variants={sectionVariants}
+                        initial="hidden"
+                        animate={visibleSections.has("footer") ? "visible" : "hidden"}
+                        transition={{ duration: 0.6, ease: "easeOut" as const }}
+                    >
+                        <div className="container mx-auto px-4 md:px-6 text-center">
                             <p className="text-xs md:text-sm">
                                 All rules and regulations of the respective streaming platforms apply. <br />
                                 This is a personal project and not affiliated with any streaming service.
@@ -1098,7 +1234,7 @@ export default function HomePage() {
                                 Developed and maintained by Umar Ahmed
                             </p>
                         </div>
-                    </footer>
+                    </motion.footer>
 
                     {/* Jarvis AI Button */}
                     <JarvisButton />

@@ -168,8 +168,8 @@ function SearchAutocomplete({
 
     // Size-based styling
     const sizeClasses = {
-        sm: 'px-4 py-2 text-sm',
-        md: 'px-6 py-3 text-base',
+        sm: 'px-3 py-2 text-sm',
+        md: 'px-4 py-2.5 md:px-6 md:py-3 text-sm md:text-base',
         lg: 'px-6 py-4 text-lg'
     }
 
@@ -214,26 +214,26 @@ function SearchAutocomplete({
             {isOpen && (showHistory || suggestions.length > 0) && (
                 <div
                     ref={suggestionsRef}
-                    className="absolute z-50 w-full mt-2 bg-gray-900 border border-purple-500/20 rounded-xl shadow-2xl max-h-96 overflow-y-auto"
+                    className="absolute z-50 w-full mt-2 bg-gray-900 border border-purple-500/20 rounded-xl shadow-2xl max-h-80 md:max-h-96 overflow-y-auto"
                 >
                     {showHistory && (
                         <>
                             {/* Recent Searches */}
                             {recentSearches.length > 0 && (
-                                <div className="p-3 border-b border-gray-700/50">
+                                <div className="p-2 md:p-3 border-b border-gray-700/50">
                                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Recent Searches</h4>
                                     {recentSearches.map((item, index) => (
                                         <button
                                             key={item.id}
                                             onClick={() => executeSearch(item.query)}
-                                            className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors ${selectedIndex === index ? 'bg-gray-800' : ''
+                                            className={`w-full text-left px-2 md:px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors ${selectedIndex === index ? 'bg-gray-800' : ''
                                                 }`}
                                         >
-                                            <div className="flex items-center space-x-3">
+                                            <div className="flex items-center space-x-2 md:space-x-3">
                                                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <span className="text-white">{item.query}</span>
+                                                <span className="text-white text-sm md:text-base">{item.query}</span>
                                                 <span className="text-xs text-gray-500 capitalize">{item.type}</span>
                                             </div>
                                         </button>
@@ -243,20 +243,20 @@ function SearchAutocomplete({
 
                             {/* History-based Suggestions */}
                             {historySuggestions.length > 0 && (
-                                <div className="p-3">
+                                <div className="p-2 md:p-3">
                                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Suggestions</h4>
                                     {historySuggestions.map((item, index) => (
                                         <button
                                             key={item.id}
                                             onClick={() => executeSearch(item.query)}
-                                            className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors ${selectedIndex === recentSearches.length + index ? 'bg-gray-800' : ''
+                                            className={`w-full text-left px-2 md:px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors ${selectedIndex === recentSearches.length + index ? 'bg-gray-800' : ''
                                                 }`}
                                         >
-                                            <div className="flex items-center space-x-3">
+                                            <div className="flex items-center space-x-2 md:space-x-3">
                                                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                                 </svg>
-                                                <span className="text-white">{item.query}</span>
+                                                <span className="text-white text-sm md:text-base">{item.query}</span>
                                             </div>
                                         </button>
                                     ))}
@@ -267,17 +267,17 @@ function SearchAutocomplete({
 
                     {/* API Suggestions */}
                     {!showHistory && suggestions.length > 0 && (
-                        <div className="p-3">
+                        <div className="p-2 md:p-3">
                             {suggestions.map((suggestion, index) => (
                                 <button
                                     key={`${suggestion.type}-${suggestion.id}`}
                                     onClick={() => executeSearch(suggestion.title, suggestion)}
-                                    className={`w-full text-left p-3 rounded-lg hover:bg-gray-800 transition-colors ${selectedIndex === index ? 'bg-gray-800' : ''
+                                    className={`w-full text-left p-2 md:p-3 rounded-lg hover:bg-gray-800 transition-colors ${selectedIndex === index ? 'bg-gray-800' : ''
                                         }`}
                                 >
-                                    <div className="flex items-center space-x-3">
+                                    <div className="flex items-center space-x-2 md:space-x-3">
                                         {/* Poster/Profile Image */}
-                                        <div className="w-12 h-16 bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
+                                        <div className="w-10 h-14 md:w-12 md:h-16 bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
                                             {suggestion.image ? (
                                                 <Image
                                                     src={suggestion.image}
@@ -288,7 +288,7 @@ function SearchAutocomplete({
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-4 h-4 md:w-6 md:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                     </svg>
                                                 </div>
@@ -297,14 +297,14 @@ function SearchAutocomplete({
 
                                         {/* Content Info */}
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center space-x-2">
-                                                <h4 className="font-medium text-white truncate">{suggestion.title}</h4>
+                                            <div className="flex items-center space-x-1 md:space-x-2">
+                                                <h4 className="font-medium text-white truncate text-sm md:text-base">{suggestion.title}</h4>
                                                 {suggestion.year && (
-                                                    <span className="text-sm text-gray-400">({suggestion.year})</span>
+                                                    <span className="text-xs md:text-sm text-gray-400">({suggestion.year})</span>
                                                 )}
                                             </div>
-                                            <div className="flex items-center space-x-2 mt-1">
-                                                <span className="text-sm text-gray-500 capitalize">{suggestion.subtitle}</span>
+                                            <div className="flex items-center space-x-1 md:space-x-2 mt-1">
+                                                <span className="text-xs md:text-sm text-gray-500 capitalize">{suggestion.subtitle}</span>
                                                 {suggestion.rating && (
                                                     <div className="flex items-center space-x-1">
                                                         <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -323,8 +323,8 @@ function SearchAutocomplete({
 
                     {/* No Results */}
                     {!showHistory && !isLoading && query.trim() && suggestions.length === 0 && (
-                        <div className="p-6 text-center">
-                            <div className="text-gray-500 mb-2">No results found</div>
+                        <div className="p-4 md:p-6 text-center">
+                            <div className="text-gray-500 mb-2 text-sm md:text-base">No results found</div>
                             <button
                                 onClick={() => executeSearch(query)}
                                 className="text-purple-400 hover:text-purple-300 text-sm"

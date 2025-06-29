@@ -472,6 +472,37 @@ html {
   .carousel-meta span {
     font-size: 0.875rem !important;
   }
+
+  /* Improve touch scrolling performance */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Optimize horizontal scrolling containers */
+  .scrollbar-hide {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+
+  /* Ensure proper touch targets */
+  button,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Optimize text rendering on mobile */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Improve scrolling performance */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Enhanced genre pills */
@@ -1313,6 +1344,32 @@ select:focus {
   opacity: 1;
 }
 
+/* Mobile-specific carousel dot styles */
+@media (max-width: 768px) {
+  .carousel-dot::after {
+    inset: -2px;
+    /* Reduced padding on mobile */
+  }
+
+  .carousel-dot-container {
+    bottom: 1rem !important;
+  }
+
+  /* Force smaller dots on mobile */
+  .carousel-dot {
+    min-width: 6px !important;
+    min-height: 6px !important;
+    max-width: 8px !important;
+    max-height: 8px !important;
+  }
+
+  /* Active dot on mobile */
+  .carousel-dot.bg-purple-500 {
+    min-width: 12px !important;
+    max-width: 16px !important;
+  }
+}
+
 /* Ensure carousel maintains size on mobile */
 @media (max-width: 768px) {
   .carousel-container {
@@ -1808,4 +1865,195 @@ select:focus {
     0 0 0 1px rgba(168, 85, 247, 0.4),
     0 20px 40px -5px rgba(168, 85, 247, 0.4),
     0 0 80px -15px rgba(168, 85, 247, 0.2);
+}
+
+/* Genre tags navigation buttons */
+.genre-tags-container {
+  position: relative;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 1024px) {
+  .genre-tags-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+/* Mobile optimizations for better touch scrolling */
+@media (max-width: 768px) {
+
+  /* Improve touch scrolling performance */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Optimize horizontal scrolling containers */
+  .scrollbar-hide {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+
+  /* Ensure proper touch targets */
+  button,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Optimize text rendering on mobile */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Improve scrolling performance */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Mobile iframe optimizations */
+@media (max-width: 768px) {
+
+  /* Improve iframe touch interactions */
+  iframe {
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  /* Optimize iframe container for mobile */
+  .stream-container-glow {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+
+  /* Improve modal touch interactions */
+  .modal-animation {
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+
+  /* Optimize stream cards for touch */
+  .stream-card {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* Improve button touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Optimize scrollable areas */
+  .custom-scrollbar {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Improve modal backdrop for mobile */
+  .backdrop-blur-md {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Optimize iframe loading for mobile */
+  .iframe-loading {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  /* Improve text rendering on mobile */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Optimize animations for mobile performance */
+  .animate-spin,
+  .animate-pulse,
+  .animate-bounce {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  /* Improve modal sizing for mobile */
+  .modal-container {
+    max-height: 100vh;
+    max-width: 100vw;
+    overflow: hidden;
+  }
+
+  /* Optimize iframe aspect ratio for mobile */
+  .iframe-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+    /* 16:9 aspect ratio */
+  }
+
+  .iframe-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Improve touch feedback */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Optimize for mobile viewport */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .modal-container {
+      max-height: 100vh;
+      padding: 0.5rem;
+    }
+
+    .stream-container-glow {
+      max-height: 60vh;
+    }
+  }
+
+  /* Improve mobile performance */
+  .performance-optimized {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: auto;
+  }
 }

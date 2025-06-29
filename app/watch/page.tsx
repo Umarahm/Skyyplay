@@ -1141,7 +1141,7 @@ export default function WatchPage() {
             This is a personal project and not affiliated with any streaming service.
           </p>
           <p className="mt-2 text-xs">Made with Next.js, Tailwind CSS, and TMDB API.</p>
-          <p className="mt-2 text-xs text-purple-400">Developed and maintained by Umar Ahmed</p>
+          <p className="mt-2 text-xs text-purple-400">Made with ❤️ by nubDRAKE</p>
         </div>
       </footer>
 

@@ -1231,7 +1231,7 @@ export default function HomePage() {
                             </p>
                             <p className="mt-2 text-xs">Made with Next.js, Tailwind CSS, and TMDB API.</p>
                             <p className="mt-2 text-xs text-purple-400 hover:text-purple-300 transition-colors">
-                                Developed and maintained by Umar Ahmed
+                                Made with ❤️ by nubDRAKE
                             </p>
                         </div>
                     </motion.footer>

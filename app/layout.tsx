@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/x-icon" href="/logo." />
+        <link rel="icon" type="image/x-icon" href="/placeholder-logo.png" />
         <meta name="theme-color" content="#A855F7" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -55,10 +55,10 @@ export default function RootLayout({
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {
-                      console.log('ServiceWorker registration successful');
+                      // ServiceWorker registration successful
                     })
                     .catch(function(err) {
-                      console.log('ServiceWorker registration failed: ', err);
+                      // ServiceWorker registration failed
                     });
                 });
               }

@@ -1,0 +1,35 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle with Gradient -->
+  <defs>
+    <linearGradient id="jarvisGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Main Circle -->
+  <circle cx="32" cy="32" r="28" fill="url(#jarvisGradient)" filter="url(#glow)"/>
+  
+  <!-- AI Brain Circuit Pattern -->
+  <path d="M20 24 L28 24 L28 32 L36 32 L36 40 L44 40" stroke="white" stroke-width="2" fill="none" opacity="0.8"/>
+  <path d="M44 24 L36 24 L36 32 L28 32 L28 40 L20 40" stroke="white" stroke-width="2" fill="none" opacity="0.8"/>
+  
+  <!-- Central AI Node -->
+  <circle cx="32" cy="32" r="4" fill="white" opacity="0.9"/>
+  
+  <!-- Connection Points -->
+  <circle cx="20" cy="24" r="2" fill="white" opacity="0.7"/>
+  <circle cx="44" cy="24" r="2" fill="white" opacity="0.7"/>
+  <circle cx="20" cy="40" r="2" fill="white" opacity="0.7"/>
+  <circle cx="44" cy="40" r="2" fill="white" opacity="0.7"/>
+  
+  <!-- J Letter in Center -->
+  <text x="32" y="36" text-anchor="middle" fill="url(#jarvisGradient)" font-family="Arial, sans-serif" font-weight="bold" font-size="16">J</text>
+</svg> 

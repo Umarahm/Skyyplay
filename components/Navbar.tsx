@@ -10,8 +10,22 @@ import dynamic from "next/dynamic"
 const SearchAutocomplete = dynamic(() => import("./SearchAutocomplete"), {
   ssr: false,
   loading: () => (
-    <div className="w-full bg-gray-900 border border-purple-500/20 rounded-full px-4 py-2 text-sm text-gray-400">
-      Loading...
+    <div className="relative w-full">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search..."
+          className="w-full bg-gray-900 border border-purple-500/20 rounded-full
+            text-gray-400 transition-all duration-200 pr-12 px-4 py-2 text-sm"
+          disabled
+          readOnly
+        />
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
     </div>
   )
 })
@@ -40,11 +54,10 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
 
               {/* Mobile search bar */}
               {showSearch && (
-                <div className="md:hidden">
+                <div className="md:hidden relative w-32">
                   <SearchAutocomplete
                     placeholder="Search..."
                     size="sm"
-                    className="w-32"
                   />
                 </div>
               )}
@@ -70,11 +83,10 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
             <div className="flex items-center space-x-4">
               {/* Desktop search */}
               {showSearch && (
-                <div className="hidden md:block">
+                <div className="hidden md:block relative w-64">
                   <SearchAutocomplete
                     placeholder="Search..."
                     size="md"
-                    className="w-64"
                   />
                 </div>
               )}

@@ -4,6 +4,8 @@
 import { useState, useEffect, useRef } from "react"
 import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
+import { SmartGenreTags } from "@/components/SmartGenreTags"
+import { JarvisButton } from "@/components/JarvisButton"
 import { type Movie, type TVShow, type Genre } from "@/lib/tmdb"
 
 export default function HomePage() {
@@ -18,10 +20,12 @@ export default function HomePage() {
     const [categories, setCategories] = useState<{ [key: string]: (Movie | TVShow)[] }>({})
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
     const [isCarouselAnimating, setIsCarouselAnimating] = useState(false)
+    const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...")
 
     const observerRef = useRef<IntersectionObserver | null>(null)
     const carouselRef = useRef<HTMLDivElement | null>(null)
     const carouselIntervalRef = useRef<NodeJS.Timeout | null>(null)
+    const carouselAnimationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     useEffect(() => {
         initializeContent()
@@ -33,6 +37,9 @@ export default function HomePage() {
             }
             if (carouselIntervalRef.current) {
                 clearInterval(carouselIntervalRef.current)
+            }
+            if (carouselAnimationTimeoutRef.current) {
+                clearTimeout(carouselAnimationTimeoutRef.current)
             }
         }
     }, [])
@@ -68,12 +75,37 @@ export default function HomePage() {
 
     const initializeContent = async () => {
         setIsLoading(true)
+        setLoadingStatus("Initializing...")
+
+        // Add a timeout to prevent infinite loading
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Content loading timeout')), 30000) // 30 second timeout
+        })
+
         try {
-            await Promise.all([fetchCarouselContent(), fetchTop10Content(), fetchGenres(), generateCategorySections()])
+            // Use Promise.allSettled instead of Promise.all to handle individual failures gracefully
+            const results = await Promise.race([
+                Promise.allSettled([
+                    fetchCarouselContent(),
+                    fetchTop10Content(),
+                    fetchGenres(),
+                    generateCategorySections()
+                ]),
+                timeoutPromise
+            ]) as PromiseSettledResult<any>[]
+
+            // Log any failures for debugging
+            results.forEach((result, index) => {
+                if (result.status === 'rejected') {
+                    console.error(`API call ${index} failed:`, result.reason)
+                }
+            })
         } catch (error) {
             console.error("Error initializing content:", error)
         } finally {
+            // Always set loading to false, even if some API calls fail
             setIsLoading(false)
+            setLoadingStatus("Initialization completed")
         }
     }
 
@@ -88,11 +120,23 @@ export default function HomePage() {
     }
 
     const fetchCarouselContent = async () => {
+        setLoadingStatus("Fetching carousel content...")
         try {
             const [movieResponse, tvResponse] = await Promise.all([
                 fetch('/api/tmdb/movies/popular?page=1'),
                 fetch('/api/tmdb/tv/popular?page=1')
             ])
+
+            // Check if responses are ok before processing
+            if (!movieResponse.ok || !tvResponse.ok) {
+                console.error('API responses not ok:', {
+                    movies: movieResponse.status,
+                    tv: tvResponse.status
+                })
+                // Set fallback data instead of throwing
+                setCarouselItems([])
+                return
+            }
 
             const [movieData, tvData] = await Promise.all([
                 movieResponse.json(),
@@ -100,11 +144,11 @@ export default function HomePage() {
             ])
 
             const combinedResults = [
-                ...movieData.results.slice(0, 5).map((item) => ({ ...item, type: "movie" })),
-                ...tvData.results.slice(0, 5).map((item) => ({ ...item, type: "tv" })),
+                ...movieData.results.slice(0, 10).map((item: any) => ({ ...item, type: "movie" })),
+                ...tvData.results.slice(0, 10).map((item: any) => ({ ...item, type: "tv" })),
             ]
 
-            // Deterministic shuffle based on content IDs to ensure consistent results
+            // Fallback: Deterministic shuffle based on content IDs to ensure consistent results
             const shuffled = combinedResults
                 .sort((a, b) => {
                     const hashA = (a.id * 17 + 13) % 1000
@@ -116,26 +160,70 @@ export default function HomePage() {
 
             // Start carousel auto-rotation after setting items
             startCarouselAutoRotation()
+
+            // Try AI-enhanced selection in background, don't block page load
+            setTimeout(async () => {
+                try {
+                    const aiResponse = await fetch('/api/ai/carousel-picks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            items: combinedResults,
+                            contentType: currentTab === "movies" ? "movie" : "tv"
+                        })
+                    })
+
+                    if (aiResponse.ok) {
+                        const { items: aiItems } = await aiResponse.json()
+                        if (aiItems && aiItems.length > 0) {
+                            setCarouselItems(aiItems)
+                        }
+                    }
+                } catch (aiError) {
+                    // AI enhancement failed, using fallback
+                }
+            }, 2000)
         } catch (error) {
             console.error("Error fetching carousel content:", error)
+            // Set empty array as fallback instead of throwing
+            setCarouselItems([])
         }
     }
 
     const fetchTop10Content = async () => {
+        setLoadingStatus("Fetching top 10 content...")
         try {
             const endpoint = currentTab === "movies" ? '/api/tmdb/movies/popular?page=1' : '/api/tmdb/tv/popular?page=1'
             const response = await fetch(endpoint)
+
+            if (!response.ok) {
+                console.error('Top 10 API response not ok:', response.status)
+                setTop10Items([])
+                return
+            }
+
             const data = await response.json()
             setTop10Items(data.results.slice(0, 10))
         } catch (error) {
             console.error("Error fetching top 10 content:", error)
+            setTop10Items([])
         }
     }
 
     const fetchGenres = async () => {
+        setLoadingStatus("Fetching genres...")
         try {
             const type = currentTab === "movies" ? "movie" : "tv"
             const response = await fetch(`/api/tmdb/genres?type=${type}`)
+
+            if (!response.ok) {
+                console.error('Genres API response not ok:', response.status)
+                setGenres([])
+                return
+            }
+
             const data = await response.json()
 
             // Expanded genre list with more variety
@@ -161,15 +249,17 @@ export default function HomePage() {
             ]
 
             // Filter to only include genres that exist in the API response
-            const availableGenres = allGenres.filter((genre) => data.genres.some((apiGenre) => apiGenre.id === genre.id))
+            const availableGenres = allGenres.filter((genre) => data.genres.some((apiGenre: any) => apiGenre.id === genre.id))
 
             setGenres(availableGenres.slice(0, 12)) // Show up to 12 genres
         } catch (error) {
             console.error("Error fetching genres:", error)
+            setGenres([])
         }
     }
 
     const generateCategorySections = async () => {
+        setLoadingStatus("Generating AI-enhanced category sections...")
         const categoryGenres = [
             { id: 28, name: "Action" },
             { id: 35, name: "Comedy" },
@@ -197,13 +287,46 @@ export default function HomePage() {
             try {
                 const type = currentTab === "movies" ? "movie" : "tv"
                 const response = await fetch(`/api/tmdb/discover?type=${type}&with_genres=${genre.id}`)
+
+                if (!response.ok) {
+                    console.error(`Category API response not ok for ${genre.name}:`, response.status)
+                    continue // Skip this genre instead of failing completely
+                }
+
                 const data = await response.json()
 
-                if (data.results.length > 0) {
-                    newCategories[genre.name] = data.results.slice(0, 20)
+                if (data.results && data.results.length > 0) {
+                    // Use AI enhancement for better content curation
+                    try {
+                        const aiResponse = await fetch('/api/ai/genre-categories', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                genre: genre.name,
+                                items: data.results,
+                                contentType: type
+                            })
+                        })
+
+                        if (aiResponse.ok) {
+                            const { items: aiItems } = await aiResponse.json()
+                            if (aiItems && aiItems.length > 0) {
+                                newCategories[genre.name] = aiItems
+                            } else {
+                                newCategories[genre.name] = data.results.slice(0, 20)
+                            }
+                        } else {
+                            newCategories[genre.name] = data.results.slice(0, 20)
+                        }
+                    } catch (aiError) {
+                        newCategories[genre.name] = data.results.slice(0, 20)
+                    }
                 }
             } catch (error) {
                 console.error(`Error fetching ${genre.name} content:`, error)
+                // Continue with other genres instead of failing completely
             }
         }
 
@@ -234,25 +357,28 @@ export default function HomePage() {
 
     // Enhanced carousel navigation with animations matching the HTML reference
     const goToCarouselSlide = (index: number) => {
-        if (isCarouselAnimating || index === currentCarouselIndex) return
+        if (index === currentCarouselIndex) return
+
+        // Clear any existing animation timeout to prevent conflicts
+        if (carouselAnimationTimeoutRef.current) {
+            clearTimeout(carouselAnimationTimeoutRef.current)
+        }
 
         setIsCarouselAnimating(true)
         setCurrentCarouselIndex(index)
 
         // Reset animation state after animation completes
-        setTimeout(() => {
+        carouselAnimationTimeoutRef.current = setTimeout(() => {
             setIsCarouselAnimating(false)
         }, 800)
     }
 
     const nextCarouselSlide = () => {
-        if (isCarouselAnimating) return
         const nextIndex = (currentCarouselIndex + 1) % carouselItems.length
         goToCarouselSlide(nextIndex)
     }
 
     const prevCarouselSlide = () => {
-        if (isCarouselAnimating) return
         const prevIndex = (currentCarouselIndex - 1 + carouselItems.length) % carouselItems.length
         goToCarouselSlide(prevIndex)
     }
@@ -264,12 +390,24 @@ export default function HomePage() {
             clearInterval(carouselIntervalRef.current)
         }
 
-        // Set new interval for auto-rotation
+        // Set new interval for auto-rotation with longer delay to reduce conflicts
         carouselIntervalRef.current = setInterval(() => {
             if (!isCarouselAnimating && carouselItems.length > 0) {
                 nextCarouselSlide()
             }
-        }, 8000)
+        }, 10000) // Increased from 8000 to 10000 for less aggressive auto-rotation
+    }
+
+    const resetAIService = async () => {
+        try {
+            // Reset AI service
+            await fetch('/api/ai/reset', { method: 'POST' });
+
+            // Refresh content with AI enhancement
+            await refreshContent();
+        } catch (error) {
+            console.error('Failed to reset AI service:', error);
+        }
     }
 
     const currentCarouselItem = carouselItems[currentCarouselIndex]
@@ -477,11 +615,24 @@ export default function HomePage() {
                                                                         <span>{item.vote_average.toFixed(1)}</span>
                                                                     </div>
                                                                 </div>
+
+                                                                {/* AI Pick Reason */}
+                                                                {(item as any).aiReason && (
+                                                                    <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-lg p-3 max-w-md">
+                                                                        <div className="flex items-center space-x-2 mb-1">
+                                                                            <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                                                                                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                                                            </svg>
+                                                                            <span className="text-purple-300 text-sm font-medium">AI Pick</span>
+                                                                        </div>
+                                                                        <p className="text-gray-300 text-sm">{(item as any).aiReason}</p>
+                                                                    </div>
+                                                                )}
                                                             </div>
 
                                                             {/* carousel buttons section */}
                                                             <div
-                                                                className="flex flex-col sm:flex-row gap-4 carousel-buttons carousel-animate-fade"
+                                                                className="flex flex-col sm:flex-row gap-4 carousel-buttons carousel-animate-fade relative z-30"
                                                                 style={{ animationDelay: "0.4s" }}
                                                                 onClick={(e) => e.stopPropagation()} // Prevent triggering parent click
                                                             >
@@ -553,27 +704,26 @@ export default function HomePage() {
                                             ))}
                                         </div>
 
-                                        {/* Click zones for navigation */}
+                                        {/* Click zones for navigation - positioned to avoid button area */}
                                         <div
-                                            className="absolute left-0 top-0 w-1/4 h-full z-10 cursor-pointer"
+                                            className="absolute left-0 top-0 w-16 h-full z-10 cursor-pointer md:w-20"
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                if (!isCarouselAnimating) prevCarouselSlide()
+                                                prevCarouselSlide()
                                             }}
                                         />
                                         <div
-                                            className="absolute right-0 top-0 w-1/4 h-full z-10 cursor-pointer"
+                                            className="absolute right-0 top-0 w-16 h-full z-10 cursor-pointer md:w-20"
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                if (!isCarouselAnimating) nextCarouselSlide()
+                                                nextCarouselSlide()
                                             }}
                                         />
 
                                         {/* Navigation Arrows */}
                                         <button
                                             onClick={prevCarouselSlide}
-                                            disabled={isCarouselAnimating}
-                                            className="carousel-nav-button absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-3 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] active:scale-95"
+                                            className={`carousel-nav-button absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-3 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hover:scale-110 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] active:scale-95 ${isCarouselAnimating ? 'opacity-50' : ''}`}
                                             aria-label="Previous slide"
                                         >
                                             <svg
@@ -588,8 +738,7 @@ export default function HomePage() {
                                         </button>
                                         <button
                                             onClick={nextCarouselSlide}
-                                            disabled={isCarouselAnimating}
-                                            className="carousel-nav-button absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-3 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] active:scale-95"
+                                            className={`carousel-nav-button absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-3 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hover:scale-110 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] active:scale-95 ${isCarouselAnimating ? 'opacity-50' : ''}`}
                                             aria-label="Next slide"
                                         >
                                             <svg
@@ -609,11 +758,10 @@ export default function HomePage() {
                                                 <button
                                                     key={index}
                                                     onClick={() => goToCarouselSlide(index)}
-                                                    disabled={isCarouselAnimating}
-                                                    className={`carousel-dot h-2 rounded-full transition-all duration-300 disabled:cursor-not-allowed hover:scale-110 ${index === currentCarouselIndex
+                                                    className={`carousel-dot h-2 rounded-full transition-all duration-300 hover:scale-110 ${index === currentCarouselIndex
                                                         ? "bg-purple-500 w-8 hover:bg-purple-400"
                                                         : "bg-gray-500 hover:bg-gray-400 w-2 hover:w-4"
-                                                        }`}
+                                                        } ${isCarouselAnimating ? 'opacity-50' : ''}`}
                                                     aria-label={`Go to slide ${index + 1}`}
                                                     aria-current={index === currentCarouselIndex ? "true" : "false"}
                                                 />
@@ -625,29 +773,17 @@ export default function HomePage() {
                         </div>
                     </div>
 
-                    {/* Genre Selection - Larger Size with Scroll Animation */}
+                    {/* AI-Enhanced Genre Selection */}
                     <div className="py-8 px-4 animate-fade-in-up" ref={(el) => observeSection(el, "genres")}>
                         <div className="container mx-auto">
-                            <div className="relative">
-                                <div className="flex items-center">
-                                    <div className="flex-1 overflow-hidden">
-                                        <div className="flex space-x-3 overflow-x-auto scrollbar-hide scroll-smooth">
-                                            {genres.map((genre, index) => (
-                                                <button
-                                                    key={genre.id}
-                                                    onClick={() => selectGenre(genre)}
-                                                    className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 border whitespace-nowrap genre-pill ${selectedGenre === genre.id
-                                                        ? "brand-gradient text-white border-purple-500"
-                                                        : "bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700 hover:text-white"
-                                                        } ${visibleSections.has("genres") ? "animate-fade-in-up" : "opacity-0"}`}
-                                                    style={{ animationDelay: `${index * 0.1}s` }}
-                                                >
-                                                    {genre.name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className={`transition-all duration-500 ${visibleSections.has("genres") ? "animate-fade-in-up" : "opacity-0"}`}>
+                                <SmartGenreTags
+                                    genres={genres}
+                                    contentType={currentTab === "movies" ? "movie" : "tv"}
+                                    selectedGenre={selectedGenre}
+                                    onGenreSelect={selectGenre}
+                                    className="justify-center"
+                                />
                             </div>
                         </div>
                     </div>
@@ -791,6 +927,14 @@ export default function HomePage() {
                             >
                                 <div className="flex items-center justify-between mb-4 px-4 sm:px-6">
                                     <h2 className="text-xl font-bold brand-text">{categoryName}</h2>
+                                    <div className="flex items-center space-x-2">
+                                        <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                            <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                            </svg>
+                                            AI Curated
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="relative overflow-hidden">
                                     <div
@@ -805,7 +949,12 @@ export default function HomePage() {
                                                     }`}
                                                 style={{ animationDelay: `${index * 0.05}s` }}
                                             >
-                                                <ContentCard item={item} type={currentTab === "movies" ? "movie" : "tv"} />
+                                                <ContentCard
+                                                    item={item}
+                                                    type={currentTab === "movies" ? "movie" : "tv"}
+                                                    aiReason={(item as any).aiReason}
+                                                    showAIBadge={!!(item as any).aiReason}
+                                                />
                                             </div>
                                         ))}
                                     </div>
@@ -951,21 +1100,8 @@ export default function HomePage() {
                         </div>
                     </footer>
 
-                    {/* Scroll to top button */}
-                    <button
-                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                        className="fixed bottom-8 right-8 brand-gradient text-white rounded-full p-4 shadow-lg cursor-pointer transition-all duration-300 hover:scale-110 z-50 floating-button"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                        </svg>
-                    </button>
+                    {/* Jarvis AI Button */}
+                    <JarvisButton />
                 </>
             )}
         </div>

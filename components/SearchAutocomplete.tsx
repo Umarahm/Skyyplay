@@ -177,7 +177,7 @@ function SearchAutocomplete({
     const historySuggestions = getSearchSuggestions(query, 3)
 
     return (
-        <div ref={containerRef} className={`relative w-full ${className}`}>
+        <div ref={containerRef} className="relative w-full">
             {/* Search Input */}
             <div className="relative">
                 <input

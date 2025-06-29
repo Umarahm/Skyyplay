@@ -67,17 +67,6 @@ function ErrorFallback({ error }: ErrorFallbackProps) {
                     </p>
                 </div>
 
-                {process.env.NODE_ENV === 'development' && error && (
-                    <details className="mb-6 text-left">
-                        <summary className="cursor-pointer text-purple-400 hover:text-purple-300 mb-2">
-                            Error Details (Development Only)
-                        </summary>
-                        <pre className="bg-gray-900 p-4 rounded text-sm text-red-400 overflow-auto">
-                            {error.toString()}
-                        </pre>
-                    </details>
-                )}
-
                 <div className="space-y-3">
                     <button
                         onClick={() => window.location.reload()}

@@ -6,9 +6,11 @@ import type { Movie, TVShow } from "@/lib/tmdb"
 interface ContentCardProps {
   item: Movie | TVShow
   type: "movie" | "tv"
+  aiReason?: string
+  showAIBadge?: boolean
 }
 
-export function ContentCard({ item, type }: ContentCardProps) {
+export function ContentCard({ item, type, aiReason, showAIBadge = false }: ContentCardProps) {
   const title = "title" in item ? item.title : item.name
   const year = new Date("release_date" in item ? item.release_date : item.first_air_date || "").getFullYear()
 
@@ -37,7 +39,21 @@ export function ContentCard({ item, type }: ContentCardProps) {
               ⭐ {item.vote_average ? item.vote_average.toFixed(1) : "N/A"}/10
             </p>
             {year && <p className="text-xs text-gray-400">{year}</p>}
+            {aiReason && (
+              <div className="mt-2 p-2 bg-purple-500/20 rounded border border-purple-500/30">
+                <p className="text-xs text-purple-200 font-medium">AI Pick:</p>
+                <p className="text-xs text-purple-100 mt-1">{aiReason}</p>
+              </div>
+            )}
           </div>
+          {showAIBadge && (
+            <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+              <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+              </svg>
+              AI
+            </div>
+          )}
         </div>
       </a>
     </div>

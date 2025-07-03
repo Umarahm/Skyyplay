@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import type { StreamingSource } from "@/lib/sources"
 import { Navbar } from "@/components/Navbar"
 import { availableSources } from "@/lib/sources"
 
@@ -11,6 +12,7 @@ export default function SettingsPage() {
   const [showParticles, setShowParticles] = useState(true)
   const [showUpdateNotice, setShowUpdateNotice] = useState(true)
   const [selectedLanguage, setSelectedLanguage] = useState("en")
+  const [selectedSource, setSelectedSource] = useState("rive")
 
   useEffect(() => {
     // Initialize settings from localStorage
@@ -22,10 +24,13 @@ export default function SettingsPage() {
     setShowUpdateNotice(updateNotice === null ? true : updateNotice !== "false")
     setSelectedLanguage(language || "en")
 
-    // Initialize default source if not set
+    // Ensure default source is set to rivestream
     if (!localStorage.getItem("defaultSource")) {
-      localStorage.setItem("defaultSource", "embedsu")
+      localStorage.setItem("defaultSource", "rive")
     }
+
+    // Sync selected source from storage
+    setSelectedSource(localStorage.getItem("defaultSource") || "rive")
 
     // Hide loading after a short delay
     setTimeout(() => {
@@ -123,7 +128,16 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {availableSources.map((source, index) => (
-                  <SourceOption key={source.id} source={source} index={index} />
+                  <SourceOption
+                    key={source.id}
+                    source={source}
+                    index={index}
+                    selectedSource={selectedSource}
+                    onSelect={(id: string) => {
+                      setSelectedSource(id)
+                      localStorage.setItem("defaultSource", id)
+                    }}
+                  />
                 ))}
               </div>
             </div>
@@ -198,6 +212,7 @@ export default function SettingsPage() {
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         className="fixed bottom-8 right-8 bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-full p-4 shadow-lg cursor-pointer transition-all duration-300 hover:scale-110 z-50 floating-button"
+        aria-label="Scroll to top"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -213,23 +228,18 @@ export default function SettingsPage() {
   )
 }
 
-function SourceOption({ source, index }: { source: any; index: number }) {
-  const [selectedSource, setSelectedSource] = useState("")
+interface SourceOptionProps {
+  source: StreamingSource
+  index: number
+  selectedSource: string
+  onSelect: (id: string) => void
+}
 
-  useEffect(() => {
-    setSelectedSource(localStorage.getItem("defaultSource") || "multiembed")
-  }, [])
-
-  const setSource = (sourceId: string) => {
-    setSelectedSource(sourceId)
-    localStorage.setItem("defaultSource", sourceId)
-  }
-
+const SourceOption: React.FC<SourceOptionProps> = ({ source, index, selectedSource, onSelect }) => {
   return (
     <div
-      onClick={() => setSource(source.id)}
-      className={`source-option rounded-lg p-4 cursor-pointer stagger-animation ${selectedSource === source.id ? "selected" : ""
-        }`}
+      onClick={() => onSelect(source.id)}
+      className={`source-option rounded-lg p-4 cursor-pointer stagger-animation ${selectedSource === source.id ? "selected" : ""}`}
       style={{ "--stagger": index } as React.CSSProperties}
     >
       <div className="flex items-center justify-between">
@@ -238,8 +248,7 @@ function SourceOption({ source, index }: { source: any; index: number }) {
           <div className="text-sm text-gray-400">{source.isFrench ? "French Content" : "English Content"}</div>
         </div>
         <div
-          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedSource === source.id ? "border-purple-500 bg-purple-500" : "border-gray-600"
-            }`}
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedSource === source.id ? "border-purple-500 bg-purple-500" : "border-gray-600"}`}
         >
           {selectedSource === source.id && <div className="w-3 h-3 rounded-full bg-white"></div>}
         </div>

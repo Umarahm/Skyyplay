@@ -43,7 +43,7 @@ export default function WatchPage() {
       setIsShow(type === "tv")
 
       // Set default source from localStorage
-      const defaultSource = localStorage.getItem("defaultSource") || "pstream"
+      const defaultSource = localStorage.getItem("defaultSource") || "rive"
       setSelectedSource(defaultSource)
 
       fetchContent(Number.parseInt(id), type as "movie" | "tv")
@@ -225,6 +225,42 @@ export default function WatchPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
               {/* Left Column - Video Player & Episodes */}
               <div className="lg:col-span-2 space-y-6">
+                {/* We Recommend Section */}
+                <div className="content-section rounded-lg p-4 md:p-6 space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 md:h-6 md:w-6 text-purple-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.518 4.674a1 1 0 00.95.69h4.908c.97 0 1.371 1.24.588 1.81l-3.974 2.884a1 1 0 00-.364 1.118l1.518 4.674c.3.921-.754 1.688-1.54 1.118l-3.974-2.884a1 1 0 00-1.176 0l-3.974 2.884c-.784.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.59 10.101c-.783-.57-.38-1.81.588-1.81h4.909a1 1 0 00.95-.69l1.518-4.674z"
+                      />
+                    </svg>
+                    <h3 className="text-lg md:text-xl font-semibold">We Recommend</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {['vidsrccc', 'spenflix', 'rive'].map((id) => {
+                      const source = availableSources.find((s) => s.id === id)
+                      if (!source) return null
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => setSelectedSource(id)}
+                          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-300 text-sm md:text-base ${selectedSource === id ? 'btn-primary' : 'btn-secondary'}`}
+                        >
+                          {source.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
                 {/* Video Player Skeleton */}
                 <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-700/20">
                   <div className="relative pt-[56.25%]">
@@ -458,6 +494,42 @@ export default function WatchPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             {/* Left Column - Video Player */}
             <div className="lg:col-span-2 space-y-6">
+              {/* We Recommend Section */}
+              <div className="content-section rounded-lg p-4 md:p-6 space-y-4">
+                <div className="flex items-center space-x-3">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 md:h-6 md:w-6 text-purple-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.518 4.674a1 1 0 00.95.69h4.908c.97 0 1.371 1.24.588 1.81l-3.974 2.884a1 1 0 00-.364 1.118l1.518 4.674c.3.921-.754 1.688-1.54 1.118l-3.974-2.884a1 1 0 00-1.176 0l-3.974 2.884c-.784.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.59 10.101c-.783-.57-.38-1.81.588-1.81h4.909a1 1 0 00.95-.69l1.518-4.674z"
+                    />
+                  </svg>
+                  <h3 className="text-lg md:text-xl font-semibold">We Recommend</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {['vidsrccc', 'spenflix', 'rive'].map((id) => {
+                    const source = availableSources.find((s) => s.id === id)
+                    if (!source) return null
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setSelectedSource(id)}
+                        className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-300 text-sm md:text-base ${selectedSource === id ? 'btn-primary' : 'btn-secondary'}`}
+                      >
+                        {source.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
               {/* Video Player with Purple Backdrop */}
               <div className="video-container rounded-lg overflow-hidden relative">
                 {/* Purple backdrop */}
@@ -544,6 +616,7 @@ export default function WatchPage() {
                     <button
                       onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
                       className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                      aria-label={viewMode === "grid" ? "Switch to list view" : "Switch to grid view"}
                     >
                       {viewMode === "grid" ? (
                         <svg
@@ -896,6 +969,7 @@ export default function WatchPage() {
                       onClick={() => castPage > 0 && setCastPage(castPage - 1)}
                       className={`absolute left-0 top-1/2 -translate-y-1/2 bg-gray-900 p-2 rounded-full hover:bg-gray-700 transition-all duration-300 z-20 ${castPage === 0 ? "opacity-50 cursor-not-allowed" : "opacity-100"
                         }`}
+                      aria-label="Previous cast page"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -934,6 +1008,7 @@ export default function WatchPage() {
                       onClick={() => castPage < maxCastPage && setCastPage(castPage + 1)}
                       className={`absolute right-0 top-1/2 -translate-y-1/2 bg-gray-900 p-2 rounded-full hover:bg-gray-700 transition-all duration-300 z-20 ${castPage >= maxCastPage ? "opacity-50 cursor-not-allowed" : "opacity-100"
                         }`}
+                      aria-label="Next cast page"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

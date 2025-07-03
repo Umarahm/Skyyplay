@@ -27,6 +27,29 @@ export const availableSources: StreamingSource[] = [
       tv: "https://multiembed.mov/?video_id={id}&tmdb=1&s={season}&e={episode}",
     },
   },
+
+
+  {
+    id: 'rive',
+    name: 'RiveStream',
+    isFrench: false,
+    urls: {
+      movie: 'https://rivestream.org/embed?type=movie&id={id}',
+      tv: 'https://rivestream.org/embed?type=tv&id={id}&season={season}&episode={episode}'
+    },
+  },
+
+  {
+    id: 'spenflix',
+    name: 'Spenflix',
+    isFrench: false,
+    urls: {
+      movie: 'https://spencerdevs.xyz/movie/{id}',
+      tv: 'https://spencerdevs.xyz/tv/{id}/{season}/{episode}'
+    },
+  },
+
+
   {
     id: "frembed",
     name: "Frembed",

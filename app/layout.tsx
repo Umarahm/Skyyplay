@@ -3,6 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import type React from "react"
 import type { Metadata } from "next"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -41,35 +42,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/x-icon" href="/placeholder-logo.png" />
+        <link rel="icon" type="image/avif" href="/logo.avif" />
+        {/* Preconnect to TMDB image CDN to improve LCP */}
+        <link rel="preconnect" href="https://image.tmdb.org" crossOrigin="" />
         <meta name="theme-color" content="#A855F7" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="SkyyPlay" />
-        <link rel="apple-touch-icon" href="/placeholder-logo.png" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      // ServiceWorker registration successful
-                    })
-                    .catch(function(err) {
-                      // ServiceWorker registration failed
-                    });
-                });
-              }
-            `,
-          }}
-        />
+        <link rel="apple-touch-icon" href="/logo.avif" />
       </head>
       <body className="bg-black text-white min-h-screen">
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
+        <ServiceWorkerRegistrar />
         <Analytics />
         <SpeedInsights />
       </body>

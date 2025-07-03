@@ -5,8 +5,62 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
 import { SmartGenreTags } from "@/components/SmartGenreTags"
-import { JarvisButton } from "@/components/JarvisButton"
+// import { JarvisButton } from "@/components/JarvisButton"
 import { type Movie, type TVShow, type Genre } from "@/lib/tmdb"
+
+// Lazy load poster images in the carousel only when at least 50% of the element is visible
+function LazyPoster({
+    src,
+    alt,
+    className,
+    imgClassName,
+}: {
+    src: string
+    alt: string
+    className?: string
+    imgClassName?: string
+}) {
+    const ref = useRef<HTMLDivElement>(null)
+    const [visible, setVisible] = useState(false)
+
+    useEffect(() => {
+        if (!ref.current || typeof IntersectionObserver === "undefined") return
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                        setVisible(true)
+                        observer.disconnect()
+                    }
+                })
+            },
+            { threshold: 0.5 },
+        )
+
+        observer.observe(ref.current)
+
+        return () => observer.disconnect()
+    }, [])
+
+    return (
+        <div ref={ref} className={className}>
+            {visible ? (
+                <img
+                    src={src}
+                    alt={alt}
+                    className={imgClassName ?? "w-full h-full object-cover"}
+                    loading="eager"
+                    onError={(e) => {
+                        ; (e.target as HTMLImageElement).src = "/logo.avif"
+                    }}
+                />
+            ) : (
+                <div className="w-full h-full bg-gray-800 animate-pulse" />
+            )}
+        </div>
+    )
+}
 
 export default function HomePage() {
     const [currentTab, setCurrentTab] = useState<"movies" | "shows">("shows")
@@ -121,6 +175,29 @@ export default function HomePage() {
 
     const fetchCarouselContent = async () => {
         setLoadingStatus("Fetching carousel content...")
+
+        const CACHE_KEY = "aiCarouselCache"
+        const twelveHours = 12 * 60 * 60 * 1000
+
+        // If we have a cached AI carousel within 12 hours, use it immediately
+        if (typeof window !== 'undefined') {
+            try {
+                const cachedRaw = localStorage.getItem(CACHE_KEY)
+                if (cachedRaw) {
+                    const cached = JSON.parse(cachedRaw)
+                    if (cached?.timestamp && Array.isArray(cached.items) && Date.now() - cached.timestamp < twelveHours) {
+                        console.log('💾 Using cached AI carousel items')
+                        setCarouselItems(cached.items)
+                        // Start auto-rotation and skip remote fetch
+                        startCarouselAutoRotation()
+                        return
+                    }
+                }
+            } catch (err) {
+                console.warn('Failed to parse AI carousel cache:', err)
+            }
+        }
+
         try {
             const [movieResponse, tvResponse] = await Promise.all([
                 fetch('/api/tmdb/movies/popular?page=1'),
@@ -161,50 +238,69 @@ export default function HomePage() {
             // Start carousel auto-rotation after setting items
             startCarouselAutoRotation()
 
-            // Try AI-enhanced selection in background, don't block page load
-            setTimeout(async () => {
-                try {
-                    console.log('🎯 Starting AI Carousel Enhancement (Optimized - 2 AI + 2 Regular)...', {
-                        itemCount: combinedResults.length,
-                        contentType: currentTab === "movies" ? "movie" : "tv",
-                        timestamp: new Date().toISOString()
-                    })
+            // Try AI-enhanced selection in background, but only once every 12 hours
+            const LAST_AI_KEY = "lastAICarouselTime"
+            const twelveHours = 12 * 60 * 60 * 1000
+            const lastRun = typeof window !== 'undefined' ? Number(localStorage.getItem(LAST_AI_KEY)) : 0
 
-                    const aiResponse = await fetch('/api/ai/carousel-picks', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            items: combinedResults,
-                            contentType: currentTab === "movies" ? "movie" : "tv"
-                        })
-                    })
+            if (!lastRun || Date.now() - lastRun > twelveHours) {
+                setTimeout(async () => {
+                    try {
+                        const itemsForAI = shuffled // limit to 8 items
 
-                    console.log('📡 AI Response Status:', aiResponse.status, aiResponse.statusText)
-
-                    if (aiResponse.ok) {
-                        const responseData = await aiResponse.json()
-                        console.log('✨ AI Enhancement Result (Optimized):', {
-                            ...responseData,
-                            aiPicksCount: responseData.items?.filter((item: any) => item.isAIPick)?.length || 0,
-                            regularPicksCount: responseData.items?.filter((item: any) => !item.isAIPick)?.length || 0
+                        console.log('🎯 Starting AI Carousel Enhancement (Optimized - 2 AI + 2 Regular)...', {
+                            itemCount: itemsForAI.length,
+                            contentType: currentTab === "movies" ? "movie" : "tv",
+                            timestamp: new Date().toISOString()
                         })
 
-                        if (responseData.items && responseData.items.length > 0) {
-                            console.log('🔄 Updating carousel with optimized AI-enhanced items')
-                            setCarouselItems(responseData.items)
+                        const aiResponse = await fetch('/api/ai/carousel-picks', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                items: itemsForAI,
+                                contentType: currentTab === "movies" ? "movie" : "tv"
+                            })
+                        })
+
+                        console.log('📡 AI Response Status:', aiResponse.status, aiResponse.statusText)
+
+                        if (aiResponse.ok) {
+                            const responseData = await aiResponse.json()
+                            console.log('✨ AI Enhancement Result (Optimized):', {
+                                ...responseData,
+                                aiPicksCount: responseData.items?.filter((item: any) => item.isAIPick)?.length || 0,
+                                regularPicksCount: responseData.items?.filter((item: any) => !item.isAIPick)?.length || 0
+                            })
+
+                            if (responseData.items && responseData.items.length > 0) {
+                                console.log('🔄 Updating carousel with optimized AI-enhanced items')
+                                setCarouselItems(responseData.items)
+
+                                // Cache the AI items with timestamp
+                                if (typeof window !== 'undefined') {
+                                    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), items: responseData.items }))
+                                }
+                            } else {
+                                console.warn('⚠️ No AI items received, keeping fallback')
+                            }
                         } else {
-                            console.warn('⚠️ No AI items received, keeping fallback')
+                            console.error('❌ AI Response not OK:', await aiResponse.text())
                         }
-                    } else {
-                        console.error('❌ AI Response not OK:', await aiResponse.text())
+
+                        // Update last run timestamp
+                        if (typeof window !== 'undefined') {
+                            localStorage.setItem(LAST_AI_KEY, Date.now().toString())
+                        }
+                    } catch (aiError) {
+                        console.error('❌ AI carousel enhancement failed:', aiError)
                     }
-                } catch (aiError) {
-                    console.error('❌ AI carousel enhancement failed:', aiError)
-                    // Continue with fallback items
-                }
-            }, 2000)
+                }, 2000)
+            } else {
+                console.log('⏱️ Skipping AI Carousel call – last run within 12 hours')
+            }
         } catch (error) {
             console.error("Error fetching carousel content:", error)
             // Set empty array as fallback instead of throwing
@@ -399,8 +495,6 @@ export default function HomePage() {
             }
         }, 10000) // Increased from 8000 to 10000 for less aggressive auto-rotation
     }
-
-
 
     const currentCarouselItem = carouselItems[currentCarouselIndex]
 
@@ -791,15 +885,12 @@ export default function HomePage() {
                                                             className={`hidden md:flex items-center justify-center lg:justify-end px-6 lg:px-12 ${index === currentCarouselIndex ? "animate-slide-in-right" : ""
                                                                 }`}
                                                         >
-                                                            <div className="relative group">
-                                                                <div className="w-64 md:w-80 lg:w-96 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 group-hover:scale-105">
-                                                                    <img
-                                                                        src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-                                                                        alt="Featured Content"
-                                                                        className="w-full h-full object-cover carousel-animate-in"
-                                                                    />
-                                                                </div>
-                                                            </div>
+                                                            <LazyPoster
+                                                                src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/logo.avif"}
+                                                                alt="Featured Content"
+                                                                className="w-64 md:w-80 lg:w-96 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                                                                imgClassName="w-full h-full object-cover carousel-animate-in"
+                                                            />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1232,8 +1323,8 @@ export default function HomePage() {
                         </div>
                     </motion.footer>
 
-                    {/* Jarvis AI Button */}
-                    <JarvisButton />
+                    {/* Jarvis AI Button (temporarily disabled) */}
+                    {/* <JarvisButton /> */}
                 </>
             )}
         </div>

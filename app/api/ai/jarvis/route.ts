@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+// @ts-ignore – library types will be available once 'openai' package is installed
+import OpenAI from 'openai'
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || '')
+// We will create the OpenAI client inside the handler after verifying the API key is present.
 
 const SYSTEM_PROMPT = `You are Jarvis, an AI movie companion that helps users discover movies and TV shows based on their mood, preferences, and interests. You have access to a vast database of movies and TV shows through TMDB.
 
@@ -39,9 +40,9 @@ const FALLBACK_RESPONSES = [
 
 export async function POST(request: NextRequest) {
     try {
-        // Check if API key is available
-        if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-            console.error('Jarvis AI: No API key found')
+        // Check if OpenAI API key is available
+        if (!process.env.OPENAI_API_KEY) {
+            console.error('Jarvis AI: No OPENAI_API_KEY found')
             const fallbackResponse = FALLBACK_RESPONSES[Math.floor(Math.random() * FALLBACK_RESPONSES.length)]
             return NextResponse.json({ response: fallbackResponse })
         }
@@ -52,51 +53,48 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 })
         }
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+        // Initialize OpenAI client lazily here (to avoid issues during build if key absent)
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-        // Build conversation context
-        const conversation = [
-            { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
-            { role: 'model', parts: [{ text: "Hello! I'm Jarvis, your AI movie companion. I'm ready to help you discover amazing movies and TV shows based on your mood, preferences, and interests. What would you like to watch today?" }] }
+        // Build conversation context for OpenAI
+        const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'assistant', content: "Hello! I'm Jarvis, your AI movie companion. I'm ready to help you discover amazing movies and TV shows based on your mood, preferences, and interests. What would you like to watch today?" },
         ]
 
-        // Add conversation history (limit to last 10 messages to avoid token limits)
+        // Append conversation history (limit last 10 to manage tokens)
         if (conversationHistory && conversationHistory.length > 0) {
             const recentHistory = conversationHistory.slice(-10)
             recentHistory.forEach((msg: any) => {
-                conversation.push({
-                    role: msg.role,
-                    parts: [{ text: msg.content }]
-                })
+                messages.push({ role: msg.role, content: msg.content })
             })
         }
 
-        // Add current message
-        conversation.push({
-            role: 'user',
-            parts: [{ text: message }]
+        // Add current user message
+        messages.push({ role: 'user', content: message })
+
+        const completion = await openai.chat.completions.create({
+            model: process.env.OPENAI_CHAT_MODEL || 'gpt-3.5-turbo',
+            messages,
+            temperature: 0.7,
+            max_tokens: 500,
         })
 
-        const result = await model.generateContent({
-            contents: conversation,
-            generationConfig: {
-                temperature: 0.7,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 500,
-            },
-        })
-
-        const response = await result.response
-        const text = response.text()
+        const text = completion.choices[0]?.message?.content?.trim() || ''
 
         return NextResponse.json({ response: text })
 
     } catch (error: any) {
         console.error('Jarvis AI error:', error)
 
-        // Check for specific rate limit errors
-        if (error.message?.includes('429') || error.message?.includes('quota') || error.message?.includes('rate limit')) {
+        // Check for specific rate limit errors (OpenAI 429 quota)
+        if (
+            error?.status === 429 ||
+            error?.statusCode === 429 ||
+            error.message?.includes('429') ||
+            error.message?.toLowerCase?.().includes('rate limit') ||
+            error.message?.toLowerCase?.().includes('quota')
+        ) {
             const fallbackResponse = FALLBACK_RESPONSES[Math.floor(Math.random() * FALLBACK_RESPONSES.length)]
             return NextResponse.json({ response: fallbackResponse })
         }

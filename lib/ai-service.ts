@@ -158,7 +158,126 @@ Format as JSON:
     }
 
     /**
-     * Generate AI-enhanced carousel picks
+     * Generate AI-enhanced carousel picks (optimized for 2 AI picks + 6 regular)
+     */
+    static async generateOptimizedCarouselPicks(items: (Movie | TVShow)[], contentType: 'movie' | 'tv'): Promise<Array<Movie | TVShow & { aiReason?: string; isAIPick?: boolean }>> {
+        try {
+            // Check if AI is enabled
+            if (!aiEnabled) {
+                return items.slice(0, 8).map((item: Movie | TVShow) => ({ ...item, isAIPick: false }));
+            }
+
+            // Check cache
+            const now = Date.now();
+            const cacheKey = `optimized_${contentType}_${items.length}`;
+            if (aiCache.carouselPicks.length > 0 && (now - aiCache.lastUpdated) < CACHE_DURATION) {
+                return aiCache.carouselPicks;
+            }
+
+            // Check rate limiting
+            if (!checkRateLimit()) {
+                return items.slice(0, 8).map((item: Movie | TVShow) => ({ ...item, isAIPick: false }));
+            }
+
+            const model = getGenAI().getGenerativeModel({ model: 'gemini-1.5-pro' });
+
+            // Get current time context
+            const currentHour = new Date().getHours();
+            const currentMonth = new Date().getMonth();
+            const timeContext = this.getTimeContext(currentHour, currentMonth);
+
+            const itemsInfo = items.slice(0, 20).map(item => ({
+                id: item.id,
+                title: 'title' in item ? item.title : item.name,
+                overview: item.overview,
+                rating: item.vote_average,
+                genres: item.genre_ids
+            }));
+
+            const prompt = `You are a smart content curator for a streaming platform. Select the 2 BEST ${contentType}s from this list for featured carousel spots.
+
+Context: ${timeContext}
+
+Available content:
+${JSON.stringify(itemsInfo, null, 2)}
+
+Consider:
+- Time of day/season appropriateness
+- Rating and popularity above 7.0
+- Compelling stories for featured placement
+- Audience engagement potential
+- Current trending content
+
+Select exactly 2 items and provide a brief reason (8-12 words) why each was chosen.
+
+Format as JSON:
+{
+  "selections": [
+    {
+      "id": 123,
+      "reason": "Perfect thriller for evening viewing with stellar ratings"
+    }
+  ]
+}`;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+
+            // Parse JSON response
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const aiResponse = JSON.parse(jsonMatch[0]);
+
+                // Map AI selections back to original items
+                const aiSelectedItems = aiResponse.selections
+                    .map((selection: any) => {
+                        const originalItem = items.find((item: Movie | TVShow) => item.id === selection.id);
+                        if (originalItem) {
+                            return {
+                                ...originalItem,
+                                aiReason: selection.reason,
+                                isAIPick: true
+                            };
+                        }
+                        return null;
+                    })
+                    .filter(Boolean)
+                    .slice(0, 2);
+
+                // Get remaining items (excluding AI selected ones)
+                const aiSelectedIds = aiSelectedItems.map((item: any) => item.id);
+                const remainingItems = items
+                    .filter((item: Movie | TVShow) => !aiSelectedIds.includes(item.id))
+                    .sort((a: Movie | TVShow, b: Movie | TVShow) => {
+                        const hashA = (a.id * 17 + 13) % 1000;
+                        const hashB = (b.id * 17 + 13) % 1000;
+                        return hashA - hashB;
+                    })
+                    .slice(0, 6)
+                    .map((item: Movie | TVShow) => ({ ...item, isAIPick: false }));
+
+                // Combine AI picks and regular items
+                const finalItems = [...aiSelectedItems, ...remainingItems];
+
+                // Cache results
+                aiCache.carouselPicks = finalItems;
+                aiCache.lastUpdated = now;
+
+                return finalItems;
+            }
+
+            throw new Error('Failed to parse AI response');
+        } catch (error) {
+            console.error('Error generating optimized carousel picks:', error);
+            handleRateLimitError(error);
+            // Fallback to original logic
+            return items.slice(0, 8).map((item: Movie | TVShow) => ({ ...item, isAIPick: false }));
+        }
+    }
+
+    /**
+     * Generate AI-enhanced carousel picks (original function - kept for compatibility)
      */
     static async generateCarouselPicks(items: (Movie | TVShow)[], contentType: 'movie' | 'tv'): Promise<Array<Movie | TVShow & { aiReason?: string }>> {
         try {

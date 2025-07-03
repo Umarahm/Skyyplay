@@ -164,6 +164,12 @@ export default function HomePage() {
             // Try AI-enhanced selection in background, don't block page load
             setTimeout(async () => {
                 try {
+                    console.log('🎯 Starting AI Carousel Enhancement (Optimized - 2 AI + 2 Regular)...', {
+                        itemCount: combinedResults.length,
+                        contentType: currentTab === "movies" ? "movie" : "tv",
+                        timestamp: new Date().toISOString()
+                    })
+
                     const aiResponse = await fetch('/api/ai/carousel-picks', {
                         method: 'POST',
                         headers: {
@@ -175,14 +181,28 @@ export default function HomePage() {
                         })
                     })
 
+                    console.log('📡 AI Response Status:', aiResponse.status, aiResponse.statusText)
+
                     if (aiResponse.ok) {
-                        const { items: aiItems } = await aiResponse.json()
-                        if (aiItems && aiItems.length > 0) {
-                            setCarouselItems(aiItems)
+                        const responseData = await aiResponse.json()
+                        console.log('✨ AI Enhancement Result (Optimized):', {
+                            ...responseData,
+                            aiPicksCount: responseData.items?.filter((item: any) => item.isAIPick)?.length || 0,
+                            regularPicksCount: responseData.items?.filter((item: any) => !item.isAIPick)?.length || 0
+                        })
+
+                        if (responseData.items && responseData.items.length > 0) {
+                            console.log('🔄 Updating carousel with optimized AI-enhanced items')
+                            setCarouselItems(responseData.items)
+                        } else {
+                            console.warn('⚠️ No AI items received, keeping fallback')
                         }
+                    } else {
+                        console.error('❌ AI Response not OK:', await aiResponse.text())
                     }
                 } catch (aiError) {
-                    // AI enhancement failed, using fallback
+                    console.error('❌ AI carousel enhancement failed:', aiError)
+                    // Continue with fallback items
                 }
             }, 2000)
         } catch (error) {
@@ -259,31 +279,38 @@ export default function HomePage() {
     }
 
     const generateCategorySections = async () => {
-        setLoadingStatus("Generating AI-enhanced category sections...")
-        const categoryGenres = [
+        setLoadingStatus("Loading category sections...")
+        // Always include Romance and Drama, then fill the rest deterministically up to a max of 6 total
+        const baseGenres = [
+            { id: 10749, name: "Romance" },
+            { id: 18, name: "Drama" },
+        ]
+
+        const otherGenres = [
             { id: 28, name: "Action" },
             { id: 35, name: "Comedy" },
             { id: 27, name: "Horror" },
-            { id: 18, name: "Drama" },
             { id: 12, name: "Adventure" },
             { id: 14, name: "Fantasy" },
             { id: 878, name: "Science Fiction" },
             { id: 9648, name: "Mystery" },
-            { id: 10749, name: "Romance" },
             { id: 53, name: "Thriller" },
         ]
 
-        // Deterministic shuffle based on genre IDs to ensure consistent results
-        const shuffled = [...categoryGenres]
+        // Deterministic shuffle for the remaining genres to keep UI consistency
+        const shuffledOthers = [...otherGenres]
             .sort((a, b) => {
                 const hashA = (a.id * 23 + 7) % 1000
                 const hashB = (b.id * 23 + 7) % 1000
                 return hashA - hashB
             })
-            .slice(0, 6)
+            .slice(0, 4) // Pick 4 more to make total of 6
+
+        const categoryGenres = [...baseGenres, ...shuffledOthers]
+
         const newCategories: { [key: string]: (Movie | TVShow)[] } = {}
 
-        for (const genre of shuffled) {
+        for (const genre of categoryGenres) {
             try {
                 const type = currentTab === "movies" ? "movie" : "tv"
                 const response = await fetch(`/api/tmdb/discover?type=${type}&with_genres=${genre.id}`)
@@ -296,33 +323,8 @@ export default function HomePage() {
                 const data = await response.json()
 
                 if (data.results && data.results.length > 0) {
-                    // Use AI enhancement for better content curation
-                    try {
-                        const aiResponse = await fetch('/api/ai/genre-categories', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                genre: genre.name,
-                                items: data.results,
-                                contentType: type
-                            })
-                        })
-
-                        if (aiResponse.ok) {
-                            const { items: aiItems } = await aiResponse.json()
-                            if (aiItems && aiItems.length > 0) {
-                                newCategories[genre.name] = aiItems
-                            } else {
-                                newCategories[genre.name] = data.results.slice(0, 20)
-                            }
-                        } else {
-                            newCategories[genre.name] = data.results.slice(0, 20)
-                        }
-                    } catch (aiError) {
-                        newCategories[genre.name] = data.results.slice(0, 20)
-                    }
+                    // Use first 20 results directly from TMDB
+                    newCategories[genre.name] = data.results.slice(0, 20)
                 }
             } catch (error) {
                 console.error(`Error fetching ${genre.name} content:`, error)
@@ -398,17 +400,7 @@ export default function HomePage() {
         }, 10000) // Increased from 8000 to 10000 for less aggressive auto-rotation
     }
 
-    const resetAIService = async () => {
-        try {
-            // Reset AI service
-            await fetch('/api/ai/reset', { method: 'POST' });
 
-            // Refresh content with AI enhancement
-            await refreshContent();
-        } catch (error) {
-            console.error('Failed to reset AI service:', error);
-        }
-    }
 
     const currentCarouselItem = carouselItems[currentCarouselIndex]
 
@@ -665,6 +657,30 @@ export default function HomePage() {
                                             ))}
                                         </div>
 
+                                        {/* AI Pick Badge - Dynamic per slide */}
+                                        <div className="absolute top-4 left-4 z-20">
+                                            <div className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center space-x-2 ${(currentCarouselItem as any)?.isAIPick
+                                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
+                                                : 'bg-gray-800/90 text-gray-300 border border-gray-600'
+                                                }`}>
+                                                {(currentCarouselItem as any)?.isAIPick ? (
+                                                    <>
+                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                                        </svg>
+                                                        <span>AI Pick</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                                        </svg>
+                                                        <span>Skyyplay Recommends</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
                                         {/* Content Container */}
                                         <div className="relative z-10 h-full">
                                             {carouselItems.map((item, index) => (
@@ -713,18 +729,7 @@ export default function HomePage() {
                                                                     </div>
                                                                 </div>
 
-                                                                {/* AI Pick Reason */}
-                                                                {(item as any).aiReason && (
-                                                                    <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-lg p-3 max-w-md">
-                                                                        <div className="flex items-center space-x-2 mb-1">
-                                                                            <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                                                                                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                                                            </svg>
-                                                                            <span className="text-purple-300 text-sm font-medium">AI Pick</span>
-                                                                        </div>
-                                                                        <p className="text-gray-300 text-sm">{(item as any).aiReason}</p>
-                                                                    </div>
-                                                                )}
+
                                                             </div>
 
                                                             {/* carousel buttons section */}
@@ -1051,14 +1056,7 @@ export default function HomePage() {
                             >
                                 <div className="flex items-center justify-between mb-4 px-4 sm:px-6">
                                     <h2 className="text-xl font-bold brand-text">{categoryName}</h2>
-                                    <div className="flex items-center space-x-2">
-                                        <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                                            <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                            </svg>
-                                            AI Curated
-                                        </div>
-                                    </div>
+
                                 </div>
                                 <div className="relative overflow-hidden">
                                     <motion.div
@@ -1078,8 +1076,6 @@ export default function HomePage() {
                                                 <ContentCard
                                                     item={item}
                                                     type={currentTab === "movies" ? "movie" : "tv"}
-                                                    aiReason={(item as any).aiReason}
-                                                    showAIBadge={!!(item as any).aiReason}
                                                 />
                                             </motion.div>
                                         ))}

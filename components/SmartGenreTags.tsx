@@ -71,21 +71,7 @@ export function SmartGenreTags({
         }
     }
 
-    const aiBadgeVariants = {
-        hidden: {
-            opacity: 0,
-            x: 20
-        },
-        visible: {
-            opacity: 1,
-            x: 0,
-            transition: {
-                duration: 0.5,
-                ease: "easeOut" as const,
-                delay: 0.5
-            }
-        }
-    }
+
 
     const scrollContainer = (direction: 'left' | 'right') => {
         const container = document.querySelector('.genre-tags-container') as HTMLElement
@@ -95,60 +81,18 @@ export function SmartGenreTags({
         }
     }
 
+    // Without GenAI, we simply display the passed genres as-is, without mood tags.
     useEffect(() => {
         if (genres.length === 0) return
 
-        // Start with basic genres immediately
-        setGenresWithMood(genres.map(genre => ({
-            ...genre,
-            moodTag: '',
-            isLoading: true
-        })))
-
-        const fetchMoodTags = async () => {
-            try {
-                const response = await fetch('/api/ai/genre-tags', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        genres,
-                        contentType
-                    })
-                })
-
-                if (response.ok) {
-                    const { moodTags } = await response.json()
-
-                    setGenresWithMood(genres.map(genre => ({
-                        ...genre,
-                        moodTag: moodTags[genre.name] || '',
-                        isLoading: false
-                    })))
-                } else {
-                    // Fallback: just show genre names without mood tags
-                    setGenresWithMood(genres.map(genre => ({
-                        ...genre,
-                        moodTag: '',
-                        isLoading: false
-                    })))
-                }
-            } catch (error) {
-                console.error('Error fetching mood tags:', error)
-                // Fallback: just show genre names without mood tags
-                setGenresWithMood(genres.map(genre => ({
-                    ...genre,
-                    moodTag: '',
-                    isLoading: false
-                })))
-            }
-        }
-
-        // Delay API call to prevent blocking page load
-        const timer = setTimeout(fetchMoodTags, 1000)
-        return () => clearTimeout(timer)
-    }, [genres, contentType])
+        setGenresWithMood(
+            genres.map((genre) => ({
+                ...genre,
+                moodTag: '',
+                isLoading: false,
+            }))
+        )
+    }, [genres])
 
     return (
         <div className={`relative ${className}`}>
@@ -259,18 +203,7 @@ export function SmartGenreTags({
                     ))}
                 </AnimatePresence>
 
-                {/* AI Badge */}
-                <motion.div
-                    className="flex items-center px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 flex-shrink-0"
-                    variants={aiBadgeVariants}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    <svg className="w-3 h-3 mr-1 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-xs text-purple-300 font-medium">AI Enhanced</span>
-                </motion.div>
+
             </motion.div>
         </div>
     )

@@ -406,62 +406,54 @@ export default function LiveSportsPage() {
       return "/placeholder.svg?height=40&width=40"
     }
 
+    // Return local image based on sport/category
+    const getSportImagePath = () => {
+      if (!match?.category) return null
+      const category = match.category.toLowerCase()
+
+      // Map of keywords to local image paths (spaces encoded for URLs)
+      // NOTE: Put more specific keys before generic ones to avoid partial-match issues
+      const map: Record<string, string> = {
+        "american football": "/images/american%20football.png",
+        "american-football": "/images/american%20football.png",
+        football: "/images/football.png",
+        soccer: "/images/football.png",
+        basketball: "/images/basketball.png",
+        cricket: "/images/cricket.png",
+        tennis: "/images/tennis.png",
+        hockey: "/images/hockey.png",
+        motorsports: "/images/motorsports.png",
+        motor: "/images/motorsports.png",
+        fighting: "/images/Fight.png",
+        fight: "/images/Fight.png",
+        baseball: "/images/baseball.png",
+        other: "/images/others.png"
+      }
+
+      // Find matching key inside the category string
+      for (const key of Object.keys(map)) {
+        if (category.includes(key)) return map[key]
+      }
+
+      return "/images/others.png" // default fallback
+    }
+
     return (
       <div className="match-card match-card-animated rounded-lg overflow-hidden group hover:scale-105 transition-transform duration-300">
-        {/* Enhanced Thumbnail with streamed.su API */}
-        <div className="relative h-32 bg-gray-800 overflow-hidden">
-          {getImageUrl() ? (
-            <div className="relative w-full h-full">
-              <Image
-                src={getImageUrl()!}
-                alt={match.title}
-                fill
-                className="object-cover group-hover:scale-110 transition-transform duration-300"
-                onError={handleImageError}
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+pED3H8C/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA="
-              />
-              {/* Gradient overlay for better text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            </div>
-          ) : match.teams ? (
-            <div className="flex items-center justify-center h-full space-x-4 p-4 bg-gradient-to-br from-gray-700 to-gray-800">
-              <div className="flex flex-col items-center">
-                <div className="relative w-10 h-10 mb-1">
-                  <Image
-                    src={getBadgeUrl('home')}
-                    alt={match.teams.home?.name || "Home Team"}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 object-contain"
-                    onError={() => handleBadgeError('home')}
-                  />
-                </div>
-                <span className="text-xs text-center truncate w-16 text-gray-200">{match.teams.home?.name}</span>
-              </div>
-              <span className="text-sm text-gray-400 font-bold">VS</span>
-              <div className="flex flex-col items-center">
-                <div className="relative w-10 h-10 mb-1">
-                  <Image
-                    src={getBadgeUrl('away')}
-                    alt={match.teams.away?.name || "Away Team"}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 object-contain"
-                    onError={() => handleBadgeError('away')}
-                  />
-                </div>
-                <span className="text-xs text-center truncate w-16 text-gray-200">{match.teams.away?.name}</span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full bg-gradient-to-br from-purple-600 to-blue-600">
-              <div className="text-center">
-                <span className="text-white font-bold text-2xl">{match.category.charAt(0).toUpperCase()}</span>
-                <div className="text-xs text-white/80 mt-1">{match.category}</div>
-              </div>
-            </div>
-          )}
+        {/* Enhanced Thumbnail with local base image and streamed.su API top overlay */}
+        <div className="relative aspect-[16/9] bg-gray-800 overflow-hidden">
+          <Image
+            src={getSportImagePath() || '/images/others.png'}
+            alt={match.category}
+            fill
+            quality={100}
+            priority
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 640px) 48vw,  /* 2-col mobile */
+                   (max-width: 1024px) 24vw, /* 4-col tablet */
+                   16vw"                    /* 6-col desktop */
+            onError={handleImageError}
+          />
 
           {/* Enhanced Live indicator overlay */}
           <div className="absolute top-2 right-2">
@@ -714,7 +706,7 @@ export default function LiveSportsPage() {
                   <h2 className="text-2xl md:text-3xl font-bold flex items-center space-x-3">
                     {category.type === 'live' && <span className="w-3 h-3 bg-red-500 rounded-full live-indicator"></span>}
                     {category.type === 'popular' && <Star className="h-6 w-6 text-yellow-500" />}
-                    {category.type === 'sport' && <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">{category.title.charAt(0)}</span>}
+                    {/* Removed sport initial badge */}
                     <span className="logo-text">{category.title}</span>
                   </h2>
                   <div className="text-sm text-gray-400 flex items-center space-x-1">

@@ -43,8 +43,11 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" type="image/avif" href="/logo.avif" />
+        {/* Preload critical logo for faster LCP fallback */}
+        <link rel="preload" href="/logo.avif" as="image" type="image/avif" />
         {/* Preconnect to TMDB image CDN to improve LCP */}
         <link rel="preconnect" href="https://image.tmdb.org" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://image.tmdb.org" />
         <meta name="theme-color" content="#A855F7" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

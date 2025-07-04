@@ -778,7 +778,7 @@ export default function LiveSportsPage() {
       <AnimatePresence mode="wait">
         {showModal && (
           <motion.div
-            className="fixed inset-0 z-50 overflow-hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-1 sm:p-2 md:p-4"
+            className="fixed inset-0 z-50 overflow-hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-1 sm:p-2 md:p-4 mobile-modal-backdrop"
             onClick={closeModal}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -786,7 +786,7 @@ export default function LiveSportsPage() {
             transition={{ duration: 0.3 }}
           >
             <motion.div
-              className="bg-gray-900/95 backdrop-blur-xl rounded-lg sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-7xl shadow-2xl border border-gray-700/50 overflow-hidden flex flex-col"
+              className="bg-gray-900/95 backdrop-blur-xl rounded-lg sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-7xl shadow-2xl border border-gray-700/50 overflow-hidden flex flex-col mobile-modal-container"
               onClick={(e) => e.stopPropagation()}
               variants={modalVariants}
               initial="hidden"
@@ -849,7 +849,7 @@ export default function LiveSportsPage() {
                         elem.requestFullscreen();
                       }
                     }}
-                    className="p-1.5 sm:p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-gray-300 hover:text-white hidden sm:block"
+                    className="p-1.5 sm:p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-gray-300 hover:text-white hidden sm:block flex items-center justify-center"
                     title="Fullscreen"
                   >
                     <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -860,7 +860,7 @@ export default function LiveSportsPage() {
                   {/* Close Button - Mobile Optimized */}
                   <button
                     onClick={closeModal}
-                    className="p-1.5 sm:p-2 rounded-lg bg-red-600 hover:bg-red-500 transition-colors text-white touch-manipulation"
+                    className="p-1.5 sm:p-2 rounded-lg bg-red-600 hover:bg-red-500 transition-colors text-white touch-manipulation flex items-center justify-center"
                     title="Close"
                   >
                     <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -879,26 +879,28 @@ export default function LiveSportsPage() {
                       {/* Stream Container - Mobile Optimized */}
                       <div className="flex-1 min-h-0 overflow-hidden relative">
                         <div
-                          className="relative bg-black rounded-lg sm:rounded-xl overflow-hidden shadow-2xl border border-gray-600 stream-container-glow w-full h-full performance-optimized"
+                          className="relative bg-black rounded-lg sm:rounded-xl overflow-hidden shadow-2xl border border-gray-600 stream-container-glow w-full h-full performance-optimized mobile-iframe-container"
                           id="streamContainer"
                         >
-                          <iframe
-                            src={selectedStream.embedUrl}
-                            className="absolute inset-0 w-full h-full rounded-lg sm:rounded-xl touch-manipulation"
-                            frameBorder="0"
-                            allowFullScreen
-                            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                            loading="lazy"
-                            title={`Live stream: ${selectedMatch?.title || 'Sports'}`}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              minHeight: '200px',
-                              maxHeight: '100vh',
-                              WebkitOverflowScrolling: 'touch',
-                              touchAction: 'manipulation'
-                            }}
-                          />
+                          {/* Responsive iframe wrapper */}
+                          <div className="relative w-full h-full min-h-[250px] sm:min-h-[300px] md:min-h-[400px] lg:min-h-[500px]">
+                            <iframe
+                              key={selectedStream?.id}
+                              src={selectedStream.embedUrl}
+                              className="absolute inset-0 w-full h-full rounded-lg sm:rounded-xl touch-manipulation mobile-iframe"
+                              frameBorder="0"
+                              allowFullScreen
+                              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                              loading="lazy"
+                              title={`Live stream: ${selectedMatch?.title || 'Sports'}`}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                border: 'none',
+                                backgroundColor: '#000'
+                              }}
+                            />
+                          </div>
 
                           {/* Enhanced Loading Overlay - Mobile Optimized */}
                           <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center iframe-loading backdrop-blur-sm">
@@ -980,6 +982,28 @@ export default function LiveSportsPage() {
                       <span className="bg-purple-600 text-white px-1.5 sm:px-2 py-1 rounded-full text-xs font-medium">
                         {availableStreams.length} available
                       </span>
+                    </div>
+
+                    {/* Mobile Source Selector */}
+                    <div className="sm:hidden mb-3">
+                      <label htmlFor="mobileSourceSelect" className="sr-only">Select Source</label>
+                      <select
+                        id="mobileSourceSelect"
+                        value={selectedStream?.id || ""}
+                        onChange={(e) => {
+                          const newStream = availableStreams.find((s) => s.id === e.target.value)
+                          if (newStream) {
+                            selectStream(newStream)
+                          }
+                        }}
+                        className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        {availableStreams.map((stream) => (
+                          <option key={stream.id} value={stream.id}>
+                            {stream.source} {stream.hd ? "(HD)" : ""}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     {availableStreams.length > 0 ? (

@@ -1421,10 +1421,48 @@ select:focus {
 
 /* Ensure carousel maintains proper height on all devices */
 .carousel-height {
-  height: 500px;
+  height: 400px;
+}
+
+@media (min-width: 640px) {
+  .carousel-height {
+    height: 450px;
+  }
 }
 
 @media (min-width: 768px) {
+  .carousel-height {
+    height: 500px;
+  }
+}
+
+/* iPad mini specific optimization */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .carousel-height {
+    height: 480px;
+  }
+
+  /* Ensure optimal spacing and layout for iPad mini */
+  .carousel-buttons {
+    gap: 0.75rem;
+  }
+
+  .carousel-buttons button {
+    font-size: 0.875rem;
+    padding: 0.625rem 1.5rem;
+  }
+
+  .carousel-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .carousel-meta span {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
   .carousel-height {
     height: 600px;
   }
@@ -2055,5 +2093,191 @@ select:focus {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     will-change: auto;
+  }
+
+  /* Enhanced mobile iframe containers */
+  .mobile-iframe-container {
+    /* Ensure proper containment */
+    contain: layout style paint;
+    isolation: isolate;
+
+    /* Optimize for touch */
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+
+    /* Prevent awkward scaling */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
+  .mobile-iframe {
+    /* Improve rendering performance */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+
+    /* Better touch handling */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+
+    /* Prevent content bleeding */
+    overflow: hidden;
+
+    /* Smooth transitions */
+    transition: opacity 0.3s ease;
+  }
+
+  .mobile-video-container {
+    /* Optimize container for video */
+    contain: strict;
+
+    /* Better memory usage */
+    will-change: auto;
+
+    /* Smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Landscape mobile optimizations */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .mobile-iframe-container {
+      /* Use more of the available height in landscape */
+      min-height: 60vh;
+    }
+
+    .mobile-video-container .relative.w-full.h-0 {
+      /* Adjust aspect ratio for landscape mobile */
+      padding-bottom: 45% !important;
+      min-height: 250px;
+    }
+  }
+
+  /* Very small screens (phones in portrait) */
+  @media (max-width: 480px) and (orientation: portrait) {
+    .mobile-iframe-container {
+      /* Ensure minimum usable size */
+      min-height: 280px;
+    }
+
+    .mobile-video-container .relative.w-full.h-0 {
+      /* Better aspect ratio for small screens */
+      min-height: 280px;
+    }
+  }
+
+  /* Tablet optimizations */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .mobile-iframe-container {
+      /* Better sizing for tablets */
+      min-height: 400px;
+    }
+
+    .mobile-video-container .relative.w-full.h-0 {
+      min-height: 350px;
+    }
+  }
+
+  /* Fix iframe loading states */
+  .mobile-iframe[src=""],
+  .mobile-iframe:not([src]) {
+    background: linear-gradient(45deg, #1f1f23, #2d2d35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-iframe[src=""]:before,
+  .mobile-iframe:not([src]):before {
+    content: "Loading...";
+    color: #9ca3af;
+    font-size: 14px;
+  }
+
+  /* Enhanced modal responsiveness */
+  .mobile-modal-backdrop {
+    /* Ensure proper stacking and touch handling */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+
+    /* Improve backdrop blur performance */
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    will-change: backdrop-filter;
+  }
+
+  .mobile-modal-container {
+    /* Better containment for modal content */
+    contain: layout style paint;
+
+    /* Smooth animations */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+
+    /* Optimize scrolling within modal */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Modal specific mobile optimizations */
+  @media (max-width: 768px) {
+    .mobile-modal-container {
+      /* Use full screen on mobile */
+      border-radius: 0 !important;
+      max-height: 100vh;
+      max-width: 100vw;
+    }
+
+    .mobile-modal-backdrop {
+      /* Reduce padding on mobile */
+      padding: 0 !important;
+      align-items: stretch;
+    }
+
+    /* Better stream sidebar on mobile */
+    .mobile-modal-container .lg\\:w-80 {
+      width: 100%;
+      max-height: 40vh;
+      border-left: none;
+      border-top: 1px solid rgba(75, 85, 99, 0.5);
+    }
+  }
+
+  /* Landscape mobile specific optimizations */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .mobile-modal-container {
+      /* Maximize space in landscape */
+      height: 100vh !important;
+    }
+
+    .mobile-modal-container .lg\\:w-80 {
+      /* Sidebar as overlay in landscape mobile */
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 280px;
+      z-index: 10;
+      background: rgba(31, 41, 55, 0.95);
+      backdrop-filter: blur(8px);
+      border-left: 1px solid rgba(75, 85, 99, 0.5);
+    }
+  }
+
+  /* Tablet specific optimizations */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .mobile-modal-container {
+      /* Better sizing for tablets */
+      max-width: 95vw;
+      max-height: 90vh;
+      border-radius: 1rem;
+    }
+
+    .mobile-modal-backdrop {
+      padding: 1rem;
+      align-items: center;
+    }
   }
 }

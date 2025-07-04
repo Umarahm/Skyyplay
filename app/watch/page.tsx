@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
+import Image from "next/image"
 import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
 import { TMDBApi, type Movie, type TVShow, type Season } from "@/lib/tmdb"
@@ -426,12 +427,23 @@ export default function WatchPage() {
       <div className="pt-16">
         {/* Backdrop */}
         <div className="relative h-[30vh] sm:h-[40vh] md:h-[60vh]">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: `url(https://image.tmdb.org/t/p/original${content.backdrop_path})`,
-            }}
-          />
+          <div className="absolute inset-0 overflow-hidden">
+            <Image
+              src={content.backdrop_path
+                ? `https://image.tmdb.org/t/p/w780${content.backdrop_path}`
+                : "/logo.avif"
+              }
+              alt={`${title} backdrop`}
+              fill
+              className="object-cover scale-105"
+              priority
+              quality={60}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+i"
+              loading="eager"
+            />
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 lg:p-12">
             {/* Title logo or text */}
@@ -531,20 +543,28 @@ export default function WatchPage() {
               </div>
 
               {/* Video Player with Purple Backdrop */}
-              <div className="video-container rounded-lg overflow-hidden relative">
+              <div className="video-container rounded-lg overflow-hidden relative mobile-video-container">
                 {/* Purple backdrop */}
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-purple-700/30 pointer-events-none z-0"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30 pointer-events-none z-0"></div>
 
-                <div className="relative pt-[56.25%] z-10">
-                  <iframe
-                    src={currentVideoUrl}
-                    className="absolute top-0 left-0 w-full h-full rounded-lg"
-                    frameBorder="0"
-                    scrolling="no"
-                    allowFullScreen
-                    referrerPolicy="no-referrer"
-                  />
+                {/* Responsive iframe container with mobile optimizations */}
+                <div className="relative w-full z-10">
+                  <div className="relative w-full h-0 pb-[56.25%] min-h-[250px] sm:min-h-[300px] md:min-h-0 md:pb-[56.25%]">
+                    <iframe
+                      src={currentVideoUrl}
+                      className="absolute top-0 left-0 w-full h-full rounded-lg touch-manipulation mobile-iframe"
+                      frameBorder="0"
+                      scrolling="no"
+                      allowFullScreen
+                      referrerPolicy="no-referrer"
+                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                      style={{
+                        border: 'none',
+                        backgroundColor: '#000'
+                      }}
+                    />
+                  </div>
                 </div>
                 <div className="p-3 md:p-4 relative z-10">
                   <div className="flex items-center justify-between text-xs md:text-sm text-gray-400">
@@ -1151,14 +1171,20 @@ export default function WatchPage() {
                     {content.videos?.results
                       ?.filter((video) => video.site === "YouTube" && video.type === "Trailer")
                       .map((video) => (
-                        <div key={video.key} className="relative pb-[56.25%] bg-gray-700 rounded-lg overflow-hidden">
-                          <iframe
-                            src={`https://www.youtube.com/embed/${video.key}`}
-                            className="absolute inset-0 w-full h-full"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
+                        <div key={video.key} className="relative bg-gray-700 rounded-lg overflow-hidden">
+                          <div className="relative w-full h-0 pb-[56.25%] min-h-[200px] sm:min-h-[250px] md:min-h-0 md:pb-[56.25%]">
+                            <iframe
+                              src={`https://www.youtube.com/embed/${video.key}`}
+                              className="absolute inset-0 w-full h-full touch-manipulation mobile-iframe"
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              style={{
+                                border: 'none',
+                                backgroundColor: '#000'
+                              }}
+                            />
+                          </div>
                         </div>
                       ))}
                   </div>

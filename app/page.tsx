@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
 import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
 import { SmartGenreTags } from "@/components/SmartGenreTags"
@@ -128,38 +129,34 @@ export default function HomePage() {
     }
 
     const initializeContent = async () => {
-        setIsLoading(true)
         setLoadingStatus("Initializing...")
 
-        // Add a timeout to prevent infinite loading
-        const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Content loading timeout')), 30000) // 30 second timeout
-        })
+        // Show content immediately, load data progressively
+        setIsLoading(false)
 
         try {
-            // Use Promise.allSettled instead of Promise.all to handle individual failures gracefully
-            const results = await Promise.race([
+            // Load critical carousel content first
+            fetchCarouselContent()
+
+            // Load other content in background without blocking render
+            setTimeout(() => {
                 Promise.allSettled([
-                    fetchCarouselContent(),
                     fetchTop10Content(),
                     fetchGenres(),
                     generateCategorySections()
-                ]),
-                timeoutPromise
-            ]) as PromiseSettledResult<any>[]
-
-            // Log any failures for debugging
-            results.forEach((result, index) => {
-                if (result.status === 'rejected') {
-                    console.error(`API call ${index} failed:`, result.reason)
-                }
-            })
+                ]).then((results) => {
+                    // Log any failures for debugging
+                    results.forEach((result, index) => {
+                        if (result.status === 'rejected') {
+                            console.error(`Background API call ${index} failed:`, result.reason)
+                        }
+                    })
+                    setLoadingStatus("All content loaded")
+                })
+            }, 100)
         } catch (error) {
             console.error("Error initializing content:", error)
-        } finally {
-            // Always set loading to false, even if some API calls fail
-            setIsLoading(false)
-            setLoadingStatus("Initialization completed")
+            setLoadingStatus("Initialization completed with errors")
         }
     }
 
@@ -200,8 +197,14 @@ export default function HomePage() {
 
         try {
             const [movieResponse, tvResponse] = await Promise.all([
-                fetch('/api/tmdb/movies/popular?page=1'),
-                fetch('/api/tmdb/tv/popular?page=1')
+                fetch('/api/tmdb/movies/popular?page=1', {
+                    cache: 'force-cache',
+                    headers: { 'Cache-Control': 'max-age=300' }
+                }),
+                fetch('/api/tmdb/tv/popular?page=1', {
+                    cache: 'force-cache',
+                    headers: { 'Cache-Control': 'max-age=300' }
+                })
             ])
 
             // Check if responses are ok before processing
@@ -236,7 +239,9 @@ export default function HomePage() {
             setCarouselItems(shuffled)
 
             // Start carousel auto-rotation after setting items
-            startCarouselAutoRotation()
+            if (shuffled.length > 0) {
+                startCarouselAutoRotation()
+            }
 
             // Try AI-enhanced selection in background, but only once every 12 hours
             const LAST_AI_KEY = "lastAICarouselTime"
@@ -472,11 +477,13 @@ export default function HomePage() {
     }
 
     const nextCarouselSlide = () => {
+        if (carouselItems.length === 0) return
         const nextIndex = (currentCarouselIndex + 1) % carouselItems.length
         goToCarouselSlide(nextIndex)
     }
 
     const prevCarouselSlide = () => {
+        if (carouselItems.length === 0) return
         const prevIndex = (currentCarouselIndex - 1 + carouselItems.length) % carouselItems.length
         goToCarouselSlide(prevIndex)
     }
@@ -496,7 +503,7 @@ export default function HomePage() {
         }, 10000) // Increased from 8000 to 10000 for less aggressive auto-rotation
     }
 
-    const currentCarouselItem = carouselItems[currentCarouselIndex]
+    const currentCarouselItem = carouselItems[currentCarouselIndex] || null
 
     // Framer Motion Animation Variants
     const containerVariants = {
@@ -730,7 +737,7 @@ export default function HomePage() {
                                 className="relative carousel-height rounded-2xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500/30 transition-all duration-300"
                                 ref={carouselRef}
                             >
-                                {carouselItems.length > 0 && (
+                                {carouselItems.length > 0 ? (
                                     <>
                                         {/* Background Image with Overlay */}
                                         <div className="absolute inset-0">
@@ -740,12 +747,25 @@ export default function HomePage() {
                                                     className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentCarouselIndex ? "opacity-100" : "opacity-0"
                                                         }`}
                                                 >
-                                                    <div
-                                                        className="absolute inset-0 bg-cover bg-center blur-sm md:blur-sm opacity-40 "
-                                                        style={{
-                                                            backgroundImage: `url(https://image.tmdb.org/t/p/original${item.backdrop_path || item.poster_path})`,
-                                                        }}
-                                                    />
+                                                    <div className="absolute inset-0 overflow-hidden">
+                                                        <Image
+                                                            src={item.backdrop_path
+                                                                ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
+                                                                : item.poster_path
+                                                                    ? `https://image.tmdb.org/t/p/w780${item.poster_path}`
+                                                                    : "/logo.avif"
+                                                            }
+                                                            alt={`${("title" in item ? item.title : item.name)} background`}
+                                                            fill
+                                                            className="object-cover blur-sm md:blur-sm opacity-40 scale-110"
+                                                            priority={index === 0}
+                                                            quality={60}
+                                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+                                                            placeholder="blur"
+                                                            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+i"
+                                                            loading={index === 0 ? "eager" : "lazy"}
+                                                        />
+                                                    </div>
                                                     <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20 md:to-black/40" />
                                                 </div>
                                             ))}
@@ -784,18 +804,18 @@ export default function HomePage() {
                                                         }`}
                                                 >
                                                     <div
-                                                        className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full h-full cursor-pointer"
+                                                        className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8 w-full h-full cursor-pointer"
                                                         onClick={() =>
                                                             (window.location.href = `/watch?id=${item.id}&type=${"title" in item ? "movie" : "tv"}`)
                                                         }
                                                     >
                                                         {/* Left Content */}
                                                         <div
-                                                            className={`flex flex-col justify-center px-6 lg:px-12 space-y-6 ${index === currentCarouselIndex ? "animate-slide-in-left" : ""
+                                                            className={`flex flex-col justify-center px-4 md:px-6 lg:px-12 space-y-4 md:space-y-6 ${index === currentCarouselIndex ? "animate-slide-in-left" : ""
                                                                 }`}
                                                         >
                                                             <div className="space-y-4">
-                                                                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight carousel-animate-slide">
+                                                                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight carousel-animate-slide">
                                                                     {"title" in item ? item.title : item.name}
                                                                 </h1>
                                                                 <div
@@ -828,12 +848,12 @@ export default function HomePage() {
 
                                                             {/* carousel buttons section */}
                                                             <div
-                                                                className="flex flex-col sm:flex-row gap-4 carousel-buttons carousel-animate-fade relative z-30"
+                                                                className="flex flex-col sm:flex-row gap-3 md:gap-4 carousel-buttons carousel-animate-fade relative z-30"
                                                                 style={{ animationDelay: "0.4s" }}
                                                                 onClick={(e) => e.stopPropagation()} // Prevent triggering parent click
                                                             >
                                                                 <button
-                                                                    className="brand-gradient text-white px-8 py-3 rounded-full flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(168,85,247,0.6)] active:scale-95 font-medium btn-animated"
+                                                                    className="brand-gradient text-white px-6 md:px-8 py-2.5 md:py-3 rounded-full flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(168,85,247,0.6)] active:scale-95 font-medium btn-animated text-sm md:text-base"
                                                                     onClick={(e) => {
                                                                         e.stopPropagation()
                                                                         window.location.href = `/watch?id=${item.id}&type=${"title" in item ? "movie" : "tv"}`
@@ -854,7 +874,7 @@ export default function HomePage() {
                                                                     <span>Watch Now</span>
                                                                 </button>
                                                                 <button
-                                                                    className="bg-gray-800/80 text-white px-8 py-3 rounded-full flex items-center justify-center space-x-2 transition-all duration-300 hover:bg-gray-700 hover:scale-110 hover:shadow-[0_0_20px_rgba(75,85,99,0.6)] active:scale-95 font-medium border border-gray-600 btn-animated"
+                                                                    className="bg-gray-800/80 text-white px-6 md:px-8 py-2.5 md:py-3 rounded-full flex items-center justify-center space-x-2 transition-all duration-300 hover:bg-gray-700 hover:scale-110 hover:shadow-[0_0_20px_rgba(75,85,99,0.6)] active:scale-95 font-medium border border-gray-600 btn-animated text-sm md:text-base"
                                                                     onClick={(e) => {
                                                                         e.stopPropagation()
                                                                         // Show more info modal or navigate to details page
@@ -882,13 +902,13 @@ export default function HomePage() {
 
                                                         {/* Right Poster */}
                                                         <div
-                                                            className={`hidden md:flex items-center justify-center lg:justify-end px-6 lg:px-12 ${index === currentCarouselIndex ? "animate-slide-in-right" : ""
+                                                            className={`hidden md:flex items-center justify-center lg:justify-end px-2 md:px-4 lg:px-12 ${index === currentCarouselIndex ? "animate-slide-in-right" : ""
                                                                 }`}
                                                         >
                                                             <LazyPoster
                                                                 src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/logo.avif"}
                                                                 alt="Featured Content"
-                                                                className="w-64 md:w-80 lg:w-96 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                                                                className="w-48 md:w-56 lg:w-72 xl:w-96 aspect-[2/3] rounded-xl md:rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 group-hover:scale-105"
                                                                 imgClassName="w-full h-full object-cover carousel-animate-in"
                                                             />
                                                         </div>
@@ -961,6 +981,20 @@ export default function HomePage() {
                                             ))}
                                         </div>
                                     </>
+                                ) : (
+                                    // Show minimal placeholder while carousel loads
+                                    <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20" />
+                                        <div className="relative z-10 h-full flex items-center justify-center">
+                                            <div className="text-center">
+                                                <div className="w-16 h-16 mx-auto mb-4 animate-spin">
+                                                    <img src="/logo.avif" alt="Loading" className="w-full h-full object-contain" />
+                                                </div>
+                                                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white">SkyyPlay</h1>
+                                                <p className="text-gray-300 mt-2">Loading amazing content...</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>

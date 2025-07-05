@@ -26,13 +26,13 @@
 - **Security Headers** - Comprehensive security headers and CSP
 - **Service Worker** - Offline support and background caching
 
-### 📱 PWA Features
+### PWA Features
 - **Installable** - Add to home screen on any device
 - **Offline Support** - Browse cached content without internet
 - **App Shortcuts** - Quick access to Search and Live Sports
 - **Native Feel** - Standalone display mode with proper theming
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **Next.js 15.2.4** - React framework with SSR and app router
@@ -54,11 +54,12 @@
 - **Vercel Analytics** - Performance and usage analytics
 - **Vercel Speed Insights** - Core Web Vitals monitoring
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Node.js 18+ and npm/yarn/pnpm
 - TMDB API key (free at [themoviedb.org](https://www.themoviedb.org/))
+- GEMINI API KEY FOR AI BASED FEATURES
 
 ### Installation
 
@@ -86,6 +87,7 @@
    ```env
    TMDB_API_KEY=your_tmdb_api_key_here
    NEXT_PUBLIC_TMDB_BASE_URL=https://api.themoviedb.org/3
+   GOOGLE_GENERATIVE_AI_API_KEY= YOUR_API_KEY
    ```
 
 4. **Start the development server**
@@ -100,17 +102,7 @@
 5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## 📱 PWA Installation
 
-### Desktop (Chrome/Edge)
-1. Visit the site in Chrome or Edge
-2. Click the install button in the address bar
-3. Follow the installation prompts
-
-### Mobile (iOS/Android)
-1. Open the site in Safari (iOS) or Chrome (Android)
-2. Tap the share button
-3. Select "Add to Home Screen"
 
 ## 🏗️ Project Structure
 
@@ -146,6 +138,7 @@ skyyplay/
 # TMDB API Configuration (Server-side only for security)
 TMDB_API_KEY=your_api_key
 NEXT_PUBLIC_TMDB_BASE_URL=https://api.themoviedb.org/3
+GOOGLE_GENERATIVE_AI_API_KEY = YOUR_API_KEY
 ```
 
 ### PWA Configuration
@@ -171,10 +164,6 @@ The app uses CSS custom properties for theming. Main colors:
 
 ## 📈 Performance
 
-### Core Web Vitals
-- **LCP**: < 2.5s (optimized images and caching)
-- **FID**: < 100ms (minimal JavaScript)
-- **CLS**: < 0.1 (stable layouts)
 
 ### Optimization Features
 - Image optimization with WebP/AVIF
@@ -185,8 +174,8 @@ The app uses CSS custom properties for theming. Main colors:
 
 ## 🤝 Contributing
 
-WE CURRENTLY ARENT ACCEPTING ANY CONTIBUTIONS
-ITS ON OUR AGENDA
+- WE CURRENTLY ARENT ACCEPTING ANY CONTIBUTIONS
+- BUT THE BEST PART IS ITS ON OUR AGENDA FOR THE FUTURE
 
 ### Development Guidelines
 - Use TypeScript for type safety
@@ -195,22 +184,17 @@ ITS ON OUR AGENDA
 - Test on different devices and browsers
 - Update documentation for new features
 
-## 📝 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - [The Movie Database (TMDB)](https://www.themoviedb.org/) for the comprehensive movie and TV data
 - [Vercel](https://vercel.com/) for hosting and analytics
 - [Radix UI](https://www.radix-ui.com/) for accessible components
 - [Tailwind CSS](https://tailwindcss.com/) for styling utilities
 
-## 📧 Contact
-
-**Umar Ahmed** - [GitHub](https://github.com/your-username)
-
-Project Link: [https://github.com/your-username/skyyplay](https://github.com/your-username/skyyplay)
 
 ---
 

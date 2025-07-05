@@ -592,7 +592,6 @@ html {
 /* Category item styling with subtle animations */
 .category-item {
   flex: 0 0 auto;
-  width: 180px;
   transition: transform 0.3s ease;
 }
 
@@ -1464,7 +1463,7 @@ select:focus {
 
 @media (min-width: 1024px) {
   .carousel-height {
-    height: 600px;
+    height: 500px;
   }
 }
 
@@ -2280,4 +2279,11 @@ select:focus {
       align-items: center;
     }
   }
+}
+
+/* Override default mobile touch target size for carousel pagination pills */
+.carousel-pagination-btn {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
 }

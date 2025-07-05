@@ -6,8 +6,23 @@ import Image from "next/image"
 import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
 import { SmartGenreTags } from "@/components/SmartGenreTags"
+import { ContinueWatching } from "@/components/ContinueWatching"
+import { WatchlistButton } from "@/components/WatchlistButton"
 // import { JarvisButton } from "@/components/JarvisButton"
-import { type Movie, type TVShow, type Genre } from "@/lib/tmdb"
+import { type Movie, type TVShow, type Genre, type Images } from "@/lib/tmdb"
+import { useIsMobile } from "@/hooks/use-mobile"
+
+interface MovieWithLogo extends Movie {
+    images?: Images & {
+        logos: { file_path: string; iso_639_1: string }[]
+    }
+}
+
+interface TVShowWithLogo extends TVShow {
+    images?: Images & {
+        logos: { file_path: string; iso_639_1: string }[]
+    }
+}
 
 // Lazy load poster images in the carousel only when at least 50% of the element is visible
 function LazyPoster({
@@ -66,7 +81,7 @@ function LazyPoster({
 export default function HomePage() {
     const [currentTab, setCurrentTab] = useState<"movies" | "shows">("shows")
     const [isLoading, setIsLoading] = useState(true)
-    const [carouselItems, setCarouselItems] = useState<(Movie | TVShow)[]>([])
+    const [carouselItems, setCarouselItems] = useState<(MovieWithLogo | TVShowWithLogo)[]>([])
     const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0)
     const [top10Items, setTop10Items] = useState<(Movie | TVShow)[]>([])
     const [genres, setGenres] = useState<Genre[]>([])
@@ -76,6 +91,8 @@ export default function HomePage() {
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
     const [isCarouselAnimating, setIsCarouselAnimating] = useState(false)
     const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...")
+    const [isAIFetching, setIsAIFetching] = useState(false)
+    const isMobile = useIsMobile()
 
     const observerRef = useRef<IntersectionObserver | null>(null)
     const carouselRef = useRef<HTMLDivElement | null>(null)
@@ -90,14 +107,22 @@ export default function HomePage() {
             if (observerRef.current) {
                 observerRef.current.disconnect()
             }
-            if (carouselIntervalRef.current) {
-                clearInterval(carouselIntervalRef.current)
-            }
             if (carouselAnimationTimeoutRef.current) {
                 clearTimeout(carouselAnimationTimeoutRef.current)
             }
         }
     }, [])
+
+
+
+    useEffect(() => {
+        if (carouselItems.length > 0 && !isCarouselAnimating) {
+            const timer = setTimeout(() => {
+                nextCarouselSlide()
+            }, 10000)
+            return () => clearTimeout(timer)
+        }
+    }, [currentCarouselIndex, isCarouselAnimating, carouselItems])
 
     useEffect(() => {
         if (currentTab) {
@@ -130,13 +155,14 @@ export default function HomePage() {
 
     const initializeContent = async () => {
         setLoadingStatus("Initializing...")
-
-        // Show content immediately, load data progressively
-        setIsLoading(false)
+        setIsLoading(true)
 
         try {
             // Load critical carousel content first
-            fetchCarouselContent()
+            await fetchCarouselContent()
+
+            // Once carousel is ready, turn off the main loader
+            setIsLoading(false)
 
             // Load other content in background without blocking render
             setTimeout(() => {
@@ -228,8 +254,18 @@ export default function HomePage() {
                 ...tvData.results.slice(0, 10).map((item: any) => ({ ...item, type: "tv" })),
             ]
 
+            // Fetch details with logos for each item
+            const detailedItems = await Promise.all(
+                combinedResults.map(async (item) => {
+                    const type = "title" in item ? "movie" : "tv"
+                    const response = await fetch(`/api/tmdb/${type === 'movie' ? 'movies' : 'tv'}/${item.id}?append_to_response=images`)
+                    const details = await response.json()
+                    return { ...item, ...details }
+                })
+            )
+
             // Fallback: Deterministic shuffle based on content IDs to ensure consistent results
-            const shuffled = combinedResults
+            const shuffled = detailedItems
                 .sort((a, b) => {
                     const hashA = (a.id * 17 + 13) % 1000
                     const hashB = (b.id * 17 + 13) % 1000
@@ -248,7 +284,8 @@ export default function HomePage() {
             const twelveHours = 12 * 60 * 60 * 1000
             const lastRun = typeof window !== 'undefined' ? Number(localStorage.getItem(LAST_AI_KEY)) : 0
 
-            if (!lastRun || Date.now() - lastRun > twelveHours) {
+            if (!isAIFetching && (!lastRun || Date.now() - lastRun > twelveHours)) {
+                setIsAIFetching(true)
                 setTimeout(async () => {
                     try {
                         const itemsForAI = shuffled // limit to 8 items
@@ -301,10 +338,12 @@ export default function HomePage() {
                         }
                     } catch (aiError) {
                         console.error('❌ AI carousel enhancement failed:', aiError)
+                    } finally {
+                        setIsAIFetching(false)
                     }
                 }, 2000)
             } else {
-                console.log('⏱️ Skipping AI Carousel call – last run within 12 hours')
+                console.log('⏱️ Skipping AI Carousel call – last run within 12 hours or already fetching')
             }
         } catch (error) {
             console.error("Error fetching carousel content:", error)
@@ -488,19 +527,13 @@ export default function HomePage() {
         goToCarouselSlide(prevIndex)
     }
 
-    // Start auto-rotation for carousel
+    // Start auto-rotation for carousel - This will be handled by useEffect now
     const startCarouselAutoRotation = () => {
-        // Clear any existing interval
+        // This function can be removed or left empty as useEffect handles the logic now.
+        // For safety, we can clear any lingering timers if it's called from old code paths.
         if (carouselIntervalRef.current) {
             clearInterval(carouselIntervalRef.current)
         }
-
-        // Set new interval for auto-rotation with longer delay to reduce conflicts
-        carouselIntervalRef.current = setInterval(() => {
-            if (!isCarouselAnimating && carouselItems.length > 0) {
-                nextCarouselSlide()
-            }
-        }, 10000) // Increased from 8000 to 10000 for less aggressive auto-rotation
     }
 
     const currentCarouselItem = carouselItems[currentCarouselIndex] || null
@@ -606,7 +639,7 @@ export default function HomePage() {
                 <>
                     <div className="pt-24 pb-8 animate-fade-in-up">
                         <div className="container mx-auto px-4">
-                            <div className="relative h-[500px] md:h-[600px] rounded-2xl overflow-hidden bg-gradient-to-r from-gray-800 to-gray-700">
+                            <div className="relative carousel-height rounded-2xl overflow-hidden bg-gradient-to-r from-gray-800 to-gray-700">
                                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20" />
                                 <div className="relative z-10 h-full flex items-center">
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
@@ -625,7 +658,7 @@ export default function HomePage() {
                                             </div>
                                         </div>
                                         <div className="hidden md:flex items-center justify-center lg:justify-end px-6 lg:px-12">
-                                            <div className="w-64 md:w-80 lg:w-96 aspect-[2/3] bg-gray-600 rounded-2xl animate-pulse skeleton-shimmer" />
+                                            <div className="w-48 md:w-56 lg:w-64 xl:w-80 aspect-[2/3] bg-gray-600 rounded-2xl animate-pulse skeleton-shimmer" />
                                         </div>
                                     </div>
                                 </div>
@@ -757,7 +790,7 @@ export default function HomePage() {
                                                             }
                                                             alt={`${("title" in item ? item.title : item.name)} background`}
                                                             fill
-                                                            className="object-cover blur-sm md:blur-sm opacity-40 scale-110"
+                                                            className="object-cover md:blur-sm opacity-40 scale-110"
                                                             priority={index === 0}
                                                             quality={60}
                                                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
@@ -767,6 +800,9 @@ export default function HomePage() {
                                                         />
                                                     </div>
                                                     <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20 md:to-black/40" />
+                                                    {/* Mobile-specific overlays to match the reference image */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent md:hidden" />
+                                                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent md:hidden" />
                                                 </div>
                                             ))}
                                         </div>
@@ -811,13 +847,48 @@ export default function HomePage() {
                                                     >
                                                         {/* Left Content */}
                                                         <div
-                                                            className={`flex flex-col justify-center px-4 md:px-6 lg:px-12 space-y-4 md:space-y-6 ${index === currentCarouselIndex ? "animate-slide-in-left" : ""
+                                                            className={`flex flex-col justify-end pb-16 md:justify-center md:pb-0 px-4 md:px-6 lg:px-12 space-y-4 md:space-y-6 ${index === currentCarouselIndex ? "animate-slide-in-left" : ""
                                                                 }`}
                                                         >
                                                             <div className="space-y-4">
-                                                                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight carousel-animate-slide">
-                                                                    {"title" in item ? item.title : item.name}
-                                                                </h1>
+                                                                <AnimatePresence mode="wait">
+                                                                    {(() => {
+                                                                        const logo = item.images?.logos?.find(l => l.iso_639_1 === 'en' && l.file_path.endsWith('.svg')) || item.images?.logos?.find(l => l.iso_639_1 === 'en');
+                                                                        if (logo) {
+                                                                            return (
+                                                                                <motion.div
+                                                                                    key={`${item.id}-logo-wrapper`}
+                                                                                    className="h-16 md:h-20 lg:h-24"
+                                                                                    initial={{ opacity: 0, y: 20 }}
+                                                                                    animate={{ opacity: 1, y: 0 }}
+                                                                                    exit={{ opacity: 0, y: -20 }}
+                                                                                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                                                                                >
+                                                                                    <img
+                                                                                        src={`https://image.tmdb.org/t/p/w500${logo.file_path}`}
+                                                                                        alt={`${"title" in item ? item.title : item.name} logo`}
+                                                                                        className="h-full object-contain object-left hidden md:block"
+                                                                                    />
+                                                                                    <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight carousel-animate-slide md:hidden flex items-center justify-center h-full text-center">
+                                                                                        {"title" in item ? item.title : item.name}
+                                                                                    </h1>
+                                                                                </motion.div>
+                                                                            );
+                                                                        }
+                                                                        return (
+                                                                            <motion.h1
+                                                                                key={`${item.id}-title`}
+                                                                                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight carousel-animate-slide h-16 md:h-20 lg:h-24 flex items-center"
+                                                                                initial={{ opacity: 0, y: 20 }}
+                                                                                animate={{ opacity: 1, y: 0 }}
+                                                                                exit={{ opacity: 0, y: -20 }}
+                                                                                transition={{ duration: 0.5, ease: 'easeOut' }}
+                                                                            >
+                                                                                {"title" in item ? item.title : item.name}
+                                                                            </motion.h1>
+                                                                        );
+                                                                    })()}
+                                                                </AnimatePresence>
                                                                 <div
                                                                     className="flex items-center space-x-4 text-gray-300 carousel-animate-fade carousel-meta"
                                                                     style={{ animationDelay: "0.2s" }}
@@ -871,32 +942,21 @@ export default function HomePage() {
                                                                             clipRule="evenodd"
                                                                         />
                                                                     </svg>
-                                                                    <span>Watch Now</span>
+                                                                    <span>Watch</span>
                                                                 </button>
-                                                                <button
-                                                                    className="bg-gray-800/80 text-white px-6 md:px-8 py-2.5 md:py-3 rounded-full flex items-center justify-center space-x-2 transition-all duration-300 hover:bg-gray-700 hover:scale-110 hover:shadow-[0_0_20px_rgba(75,85,99,0.6)] active:scale-95 font-medium border border-gray-600 btn-animated text-sm md:text-base"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation()
-                                                                        // Show more info modal or navigate to details page
-                                                                        window.location.href = `/watch?id=${item.id}&type=${"title" in item ? "movie" : "tv"}&info=true`
-                                                                    }}
+                                                                <div
+                                                                    className="flex items-center justify-center"
+                                                                    onClick={(e) => e.stopPropagation()}
                                                                 >
-                                                                    <svg
-                                                                        xmlns="http://www.w3.org/2000/svg"
-                                                                        className="h-5 w-5"
-                                                                        fill="none"
-                                                                        viewBox="0 0 24 24"
-                                                                        stroke="currentColor"
-                                                                    >
-                                                                        <path
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                            strokeWidth={2}
-                                                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                                        />
-                                                                    </svg>
-                                                                    <span>More Info</span>
-                                                                </button>
+                                                                    <WatchlistButton
+                                                                        item={item}
+                                                                        type={"title" in item ? "movie" : "tv"}
+                                                                        size={isMobile ? "sm" : "md"}
+                                                                        variant="carousel-square"
+                                                                        showText={false}
+                                                                        className="hover:shadow-[0_0_15px_rgba(147,51,234,0.4)]"
+                                                                    />
+                                                                </div>
                                                             </div>
                                                         </div>
 
@@ -908,7 +968,7 @@ export default function HomePage() {
                                                             <LazyPoster
                                                                 src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/logo.avif"}
                                                                 alt="Featured Content"
-                                                                className="w-48 md:w-56 lg:w-72 xl:w-96 aspect-[2/3] rounded-xl md:rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                                                                className="w-48 md:w-56 lg:w-64 xl:w-80 aspect-[2/3] rounded-xl md:rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 group-hover:scale-105"
                                                                 imgClassName="w-full h-full object-cover carousel-animate-in"
                                                             />
                                                         </div>
@@ -917,68 +977,54 @@ export default function HomePage() {
                                             ))}
                                         </div>
 
-                                        {/* Click zones for navigation - positioned to avoid button area */}
-                                        <div
-                                            className="absolute left-0 top-0 w-16 h-full z-10 cursor-pointer md:w-20"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                prevCarouselSlide()
-                                            }}
-                                        />
-                                        <div
-                                            className="absolute right-0 top-0 w-16 h-full z-10 cursor-pointer md:w-20"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                nextCarouselSlide()
-                                            }}
-                                        />
+                                        {/* Carousel Controls Container */}
+                                        <div className="absolute bottom-4 md:bottom-6 left-4 right-4 z-20 flex items-center justify-between">
+                                            {/* Pagination "Pills" */}
+                                            <div className="flex items-center space-x-2">
+                                                {carouselItems.map((_, index) => (
+                                                    <button
+                                                        key={index}
+                                                        onClick={() => goToCarouselSlide(index)}
+                                                        className={`carousel-pagination-btn h-1 rounded-sm transition-all duration-300 ${index === currentCarouselIndex ? 'bg-white w-4 sm:w-5 md:w-6' : 'bg-white/40 w-2 sm:w-3 md:w-4 hover:bg-white/70'} ${isCarouselAnimating ? 'opacity-50' : ''}`}
+                                                        aria-label={`Go to slide ${index + 1}`}
+                                                        aria-current={index === currentCarouselIndex ? 'true' : 'false'}
+                                                    />
+                                                ))}
+                                            </div>
 
-                                        {/* Navigation Arrows */}
-                                        <button
-                                            onClick={prevCarouselSlide}
-                                            className={`carousel-nav-button absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-3 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hover:scale-110 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] active:scale-95 ${isCarouselAnimating ? 'opacity-50' : ''}`}
-                                            aria-label="Previous slide"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-6 w-6"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={nextCarouselSlide}
-                                            className={`carousel-nav-button absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-3 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hover:scale-110 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] active:scale-95 ${isCarouselAnimating ? 'opacity-50' : ''}`}
-                                            aria-label="Next slide"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-6 w-6"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </button>
-
-                                        {/* Pagination Dots */}
-                                        <div className="carousel-dot-container absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-0.5 md:space-x-2 z-20">
-                                            {carouselItems.map((_, index) => (
+                                            {/* Navigation Arrows */}
+                                            <div className="flex items-center space-x-2">
                                                 <button
-                                                    key={index}
-                                                    onClick={() => goToCarouselSlide(index)}
-                                                    className={`carousel-dot h-1 md:h-2 rounded-full transition-all duration-300 hover:scale-110 ${index === currentCarouselIndex
-                                                        ? "bg-purple-500 w-2 md:w-6 lg:w-8 hover:bg-purple-400"
-                                                        : "bg-gray-500 hover:bg-gray-400 w-1 md:w-2 hover:w-1.5 md:hover:w-3 lg:hover:w-4"
-                                                        } ${isCarouselAnimating ? 'opacity-50' : ''}`}
-                                                    aria-label={`Go to slide ${index + 1}`}
-                                                    aria-current={index === currentCarouselIndex ? "true" : "false"}
-                                                />
-                                            ))}
+                                                    onClick={prevCarouselSlide}
+                                                    className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${isCarouselAnimating ? 'opacity-50' : ''}`}
+                                                    aria-label="Previous slide"
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-5 w-5 md:h-6 md:w-6"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    onClick={nextCarouselSlide}
+                                                    className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${isCarouselAnimating ? 'opacity-50' : ''}`}
+                                                    aria-label="Next slide"
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-5 w-5 md:h-6 md:w-6"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </div>
                                     </>
                                 ) : (
@@ -1020,6 +1066,14 @@ export default function HomePage() {
                         </div>
                     </motion.div>
 
+                    {/* Continue Watching Section */}
+                    <div ref={(el) => observeSection(el, "continue-watching")}>
+                        <ContinueWatching
+                            isVisible={visibleSections.has("continue-watching")}
+                            onScrollSection={scrollSection}
+                        />
+                    </div>
+
                     {/* Genre Results - Same size as Top 10 with Scroll Animation */}
                     {selectedGenre && genreResults.length > 0 && (
                         <motion.div
@@ -1031,9 +1085,31 @@ export default function HomePage() {
                             transition={{ duration: 0.6, ease: "easeOut" as const }}
                         >
                             <div className="container mx-auto">
-                                <h2 className="text-2xl font-bold brand-text mb-6">
-                                    {genres.find((g) => g.id === selectedGenre)?.name} {currentTab === "movies" ? "Movies" : "TV Shows"}
-                                </h2>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-2xl font-bold brand-text">
+                                        {genres.find((g) => g.id === selectedGenre)?.name} {currentTab === "movies" ? "Movies" : "TV Shows"}
+                                    </h2>
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => scrollSection("genreResultsContainer", "left")}
+                                            className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
+                                            aria-label="Scroll left"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => scrollSection("genreResultsContainer", "right")}
+                                            className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
+                                            aria-label="Scroll right"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
                                 <div className="relative overflow-hidden">
                                     <motion.div
                                         id="genreResultsContainer"
@@ -1053,36 +1129,6 @@ export default function HomePage() {
                                             </motion.div>
                                         ))}
                                     </motion.div>
-
-                                    {/* Navigation buttons for genre results */}
-                                    <button
-                                        onClick={() => scrollSection("genreResultsContainer", "left")}
-                                        className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-2 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hidden lg:flex"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-5 w-5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        onClick={() => scrollSection("genreResultsContainer", "right")}
-                                        className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-2 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hidden lg:flex"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-5 w-5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </button>
                                 </div>
                             </div>
                         </motion.div>
@@ -1102,6 +1148,26 @@ export default function HomePage() {
                                 <h2 className="text-2xl font-bold brand-text">
                                     Top 10 {currentTab === "movies" ? "Movies" : "TV Shows"} Today
                                 </h2>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={() => scrollSection("top10Container", "left")}
+                                        className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
+                                        aria-label="Scroll left"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onClick={() => scrollSection("top10Container", "right")}
+                                        className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
+                                        aria-label="Scroll right"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                             <div className="relative overflow-hidden">
                                 <motion.div
@@ -1128,36 +1194,6 @@ export default function HomePage() {
                                         </motion.div>
                                     ))}
                                 </motion.div>
-
-                                {/* Navigation buttons for top 10 */}
-                                <button
-                                    onClick={() => scrollSection("top10Container", "left")}
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-2 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hidden lg:flex section-nav-button"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-5 w-5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                                <button
-                                    onClick={() => scrollSection("top10Container", "right")}
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-2 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hidden lg:flex section-nav-button"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-5 w-5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
                             </div>
                         </div>
                     </motion.div>
@@ -1176,7 +1212,26 @@ export default function HomePage() {
                             >
                                 <div className="flex items-center justify-between mb-4 px-4 sm:px-6">
                                     <h2 className="text-xl font-bold brand-text">{categoryName}</h2>
-
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "left")}
+                                            className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
+                                            aria-label="Scroll left"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "right")}
+                                            className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
+                                            aria-label="Scroll right"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="relative overflow-hidden">
                                     <motion.div
@@ -1190,7 +1245,7 @@ export default function HomePage() {
                                         {items.map((item, index) => (
                                             <motion.div
                                                 key={item.id}
-                                                className="flex-shrink-0 w-36 category-item"
+                                                className="flex-shrink-0 w-36 md:w-44 category-item"
                                                 variants={cardVariants}
                                             >
                                                 <ContentCard
@@ -1200,36 +1255,6 @@ export default function HomePage() {
                                             </motion.div>
                                         ))}
                                     </motion.div>
-
-                                    {/* Navigation buttons for categories */}
-                                    <button
-                                        onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "left")}
-                                        className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-2 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hidden lg:flex section-nav-button"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-5 w-5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "right")}
-                                        className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-2 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hidden lg:flex section-nav-button"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-5 w-5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </button>
                                 </div>
                             </motion.div>
                         ))}

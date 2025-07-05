@@ -7,6 +7,7 @@ import { Navbar } from "@/components/Navbar"
 import { ContentCard } from "@/components/ContentCard"
 import { TMDBApi, type Movie, type TVShow, type Season } from "@/lib/tmdb"
 import { availableSources } from "@/lib/sources"
+import { useContinueWatching } from "@/hooks/useContinueWatching"
 // import { AdblockerModal } from "@/components/AdblockerModal"
 
 export default function WatchPage() {
@@ -33,6 +34,11 @@ export default function WatchPage() {
     trailers: true,
   })
   const [castPage, setCastPage] = useState(0)
+  const [isWatching, setIsWatching] = useState(false)
+  const [watchStartTime, setWatchStartTime] = useState<number | null>(null)
+  const [totalWatchTime, setTotalWatchTime] = useState(0)
+
+  const { addToContinueWatching } = useContinueWatching()
 
   useEffect(() => {
     const id = searchParams.get("id")
@@ -166,6 +172,102 @@ export default function WatchPage() {
 
   const displayedCast = content?.credits?.cast?.slice(castPage * 6, (castPage + 1) * 6) || []
   const maxCastPage = Math.max(0, Math.ceil((content?.credits?.cast?.length || 0) / 6) - 1)
+
+  // Continue watching functions
+  const startWatching = () => {
+    if (!isWatching && content) {
+      setIsWatching(true)
+      setWatchStartTime(Date.now())
+    }
+  }
+
+  const calculateProgress = () => {
+    if (!content || !watchStartTime) return 0
+
+    const currentTime = Date.now()
+    const sessionWatchTime = Math.floor((currentTime - watchStartTime) / 1000 / 60) // minutes
+    const totalSessionTime = totalWatchTime + sessionWatchTime
+
+    // Get runtime for progress calculation
+    const runtime = contentType === 'movie' && 'runtime' in content && content.runtime ?
+      content.runtime :
+      (contentType === 'tv' && 'episode_run_time' in content && Array.isArray(content.episode_run_time) && content.episode_run_time.length > 0 ?
+        content.episode_run_time[0] :
+        45) // default episode runtime
+
+    return Math.min(Math.round((totalSessionTime / runtime) * 100), 99) // Cap at 99% to avoid marking as complete
+  }
+
+  const saveWatchProgress = () => {
+    if (!content || !contentId || !contentType || !isWatching) return
+
+    const progress = calculateProgress()
+    if (progress >= 5) { // Only save if watched at least 5%
+      const runtime = contentType === 'movie' && 'runtime' in content && content.runtime ?
+        content.runtime :
+        (contentType === 'tv' && 'episode_run_time' in content && Array.isArray(content.episode_run_time) && content.episode_run_time.length > 0 ?
+          content.episode_run_time[0] :
+          45)
+
+      addToContinueWatching(
+        content,
+        contentType,
+        progress,
+        runtime,
+        isShow ? selectedSeason : undefined,
+        isShow ? selectedEpisode : undefined
+      )
+    }
+  }
+
+  // Track watch time periodically
+  useEffect(() => {
+    if (!isWatching) return
+
+    const interval = setInterval(() => {
+      if (watchStartTime) {
+        const currentTime = Date.now()
+        const sessionTime = Math.floor((currentTime - watchStartTime) / 1000 / 60)
+        // Save progress every 2 minutes of watching
+        if (sessionTime > 0 && sessionTime % 2 === 0) {
+          saveWatchProgress()
+        }
+      }
+    }, 60000) // Check every minute
+
+    return () => clearInterval(interval)
+  }, [isWatching, watchStartTime, content, contentId, contentType, selectedSeason, selectedEpisode])
+
+  // Save progress when leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveWatchProgress()
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        saveWatchProgress()
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isWatching, content, contentId, contentType, selectedSeason, selectedEpisode])
+
+  // Save progress when content changes (switching episodes/seasons)
+  useEffect(() => {
+    if (isWatching) {
+      saveWatchProgress()
+      // Reset watch time for new content
+      setWatchStartTime(Date.now())
+      setTotalWatchTime(0)
+    }
+  }, [selectedSeason, selectedEpisode])
 
   if (isLoading) {
     return (
@@ -543,17 +645,17 @@ export default function WatchPage() {
               </div>
 
               {/* Video Player with Purple Backdrop */}
-              <div className="video-container rounded-lg overflow-hidden relative mobile-video-container">
+              <div className="rounded-lg overflow-hidden relative">
                 {/* Purple backdrop */}
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-purple-700/30 pointer-events-none z-0"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30 pointer-events-none z-0"></div>
 
                 {/* Responsive iframe container with mobile optimizations */}
                 <div className="relative w-full z-10">
-                  <div className="relative w-full h-0 pb-[56.25%] min-h-[250px] sm:min-h-[300px] md:min-h-0 md:pb-[56.25%]">
+                  <div className="relative w-full aspect-video min-h-[250px] sm:min-h-[300px]">
                     <iframe
                       src={currentVideoUrl}
-                      className="absolute top-0 left-0 w-full h-full rounded-lg touch-manipulation mobile-iframe"
+                      className="absolute top-0 left-0 w-full h-full rounded-lg touch-manipulation"
                       frameBorder="0"
                       scrolling="no"
                       allowFullScreen
@@ -563,7 +665,23 @@ export default function WatchPage() {
                         border: 'none',
                         backgroundColor: '#000'
                       }}
+                      onClick={startWatching}
+                      onLoad={startWatching}
                     />
+                    {/* Overlay to ensure click detection on initial load */}
+                    {!isWatching && (
+                      <div
+                        className="absolute inset-0 z-10 cursor-pointer bg-transparent"
+                        onClick={startWatching}
+                        title="Click to start watching"
+                      />
+                    )}
+                    {/* Watch indicator */}
+                    {isWatching && (
+                      <div className="absolute top-2 right-2 z-20 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium opacity-75">
+                        ●  Recording Progress
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="p-3 md:p-4 relative z-10">

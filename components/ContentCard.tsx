@@ -3,6 +3,7 @@
 import Image from "next/image"
 import type { Movie, TVShow } from "@/lib/tmdb"
 import { useEffect, useRef, useState } from "react"
+import { WatchlistButton } from "./WatchlistButton"
 
 interface ContentCardProps {
   item: Movie | TVShow
@@ -40,7 +41,7 @@ export function ContentCard({ item, type }: ContentCardProps) {
   }, [])
 
   return (
-    <div className="card-hover rounded-lg overflow-hidden bg-gray-800 border border-purple-500/10 relative">
+    <div className="card-hover rounded-lg overflow-hidden bg-gray-800 border border-purple-500/10 relative group">
       <a href={`/watch?id=${item.id}&type=${type}`} className="block">
         <div ref={containerRef} className="relative aspect-[2/3]">
           {shouldLoad ? (
@@ -62,6 +63,17 @@ export function ContentCard({ item, type }: ContentCardProps) {
           ) : (
             <div className="w-full h-full bg-gray-800 animate-pulse" />
           )}
+
+          {/* Watchlist Button */}
+          <div className="absolute top-2 right-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+            <WatchlistButton
+              item={item}
+              type={type}
+              size="sm"
+              variant="overlay"
+            />
+          </div>
+
           <div className="card-overlay pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
             <h3 className="text-sm font-semibold text-white">{title}</h3>
             <p className="text-xs text-gray-300 mt-1">

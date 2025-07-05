@@ -108,6 +108,7 @@ export interface ImageFile {
   file_path: string
   width: number
   height: number
+  iso_639_1?: string
 }
 
 export interface Season {

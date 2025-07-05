@@ -95,11 +95,11 @@ export function SmartGenreTags({
     }, [genres])
 
     return (
-        <div className={`relative ${className}`}>
+        <div className={`flex items-center gap-2 ${className}`}>
             {/* Desktop Navigation Buttons - Hidden on Mobile */}
             <motion.button
                 onClick={() => scrollContainer('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-2 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hidden lg:flex"
+                className="bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20 z-20 hidden lg:flex"
                 aria-label="Scroll genres left"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
@@ -112,24 +112,9 @@ export function SmartGenreTags({
                 </svg>
             </motion.button>
 
-            <motion.button
-                onClick={() => scrollContainer('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-purple-600/80 text-white p-2 rounded-full z-20 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hidden lg:flex"
-                aria-label="Scroll genres right"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.8 }}
-            >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-            </motion.button>
-
             {/* Genre Tags Container */}
             <motion.div
-                className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth pb-2 genre-tags-container"
+                className="flex-1 flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth pb-2 genre-tags-container"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -202,9 +187,22 @@ export function SmartGenreTags({
                         </motion.button>
                     ))}
                 </AnimatePresence>
-
-
             </motion.div>
+
+            <motion.button
+                onClick={() => scrollContainer('right')}
+                className="bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20 z-20 hidden lg:flex"
+                aria-label="Scroll genres right"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.8 }}
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+            </motion.button>
         </div>
     )
 } 

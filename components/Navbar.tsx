@@ -7,6 +7,9 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 
+import { useWatchlist } from "@/hooks/useWatchlist"
+import { WatchlistModal } from "./WatchlistModal"
+
 const SearchAutocomplete = dynamic(() => import("./SearchAutocomplete"), {
   ssr: false,
   loading: () => (
@@ -40,6 +43,8 @@ interface NavbarProps {
 
 export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab = "shows", onTabChange }: NavbarProps) {
   const [mobileMenu, setMobileMenu] = useState(false)
+  const [watchlistOpen, setWatchlistOpen] = useState(false)
+  const { watchlistCount } = useWatchlist()
 
   return (
     <>
@@ -77,6 +82,23 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
                 <Link href="/search" className="nav-link">
                   Search
                 </Link>
+                <div className="relative">
+                  <button
+                    onClick={() => setWatchlistOpen(!watchlistOpen)}
+                    className="nav-link relative"
+                  >
+                    Watchlist
+                    {watchlistCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                        {watchlistCount > 9 ? '9+' : watchlistCount}
+                      </span>
+                    )}
+                  </button>
+                  <WatchlistModal
+                    isOpen={watchlistOpen}
+                    onClose={() => setWatchlistOpen(false)}
+                  />
+                </div>
               </div>
             </div>
 
@@ -90,6 +112,8 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
                   />
                 </div>
               )}
+
+
 
               {/* Settings icon - hidden on mobile */}
               <Link href="/settings" className="hidden md:block text-gray-400 hover:text-purple-400 transition-colors duration-300">
@@ -150,6 +174,20 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
               <Link href="/search" className="block px-4 py-3 hover:bg-gray-800 rounded-lg transition-colors duration-200">
                 Search
               </Link>
+              <button
+                onClick={() => {
+                  setWatchlistOpen(!watchlistOpen)
+                  setMobileMenu(false)
+                }}
+                className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-lg transition-colors duration-200 flex items-center justify-between"
+              >
+                <span>Watchlist</span>
+                {watchlistCount > 0 && (
+                  <span className="bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {watchlistCount > 9 ? '9+' : watchlistCount}
+                  </span>
+                )}
+              </button>
               <Link
                 href="/settings"
                 className="block px-4 py-3 hover:bg-gray-800 rounded-lg transition-colors duration-200 flex items-center space-x-2"
@@ -180,6 +218,18 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
           </div>
         </div>
       </nav>
+
+      {/* Mobile Watchlist Modal */}
+      {watchlistOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <WatchlistModal
+              isOpen={watchlistOpen}
+              onClose={() => setWatchlistOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </>
   )
 }

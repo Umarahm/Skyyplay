@@ -11,6 +11,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Poppins", "sans-serif"],
+        orbitron: ["Orbitron", "monospace"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -44,10 +48,6 @@ module.exports = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
-        },
-        fontFamily: {
-          sans: ["Poppins", "sans-serif"],
-          orbitron: ["Orbitron", "monospace"],
         },
         dark: {
           50: "#f8fafc",

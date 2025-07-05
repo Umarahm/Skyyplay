@@ -660,14 +660,14 @@ export default function HomePage() {
                             <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
                                 <div className="h-8 w-48 bg-gray-600 rounded animate-pulse skeleton-shimmer" />
                             </div>
-                            <div className="flex space-x-4 overflow-x-auto scrollbar-hide">
+                            <div className="flex space-x-6 overflow-x-auto scrollbar-hide">
                                 {[...Array(10)].map((_, i) => (
                                     <div key={i} className="flex-shrink-0 relative">
                                         <div
                                             className="w-36 md:w-44 aspect-[2/3] bg-gray-700 rounded-xl animate-pulse skeleton-shimmer"
                                             style={{ animationDelay: `${i * 0.1}s` }}
                                         />
-                                        <div className="absolute left-[-8px] bottom-0 text-6xl md:text-7xl text-gray-500 font-black opacity-50">
+                                        <div className="absolute left-[-20px] bottom-[-6px] text-white font-black font-orbitron text-7xl md:text-8xl z-20 pointer-events-none select-none" style={{ textShadow: "3px 3px 12px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.9)", WebkitTextStroke: "2px rgba(0,0,0,0.5)" }}>
                                             {i + 1}
                                         </div>
                                     </div>
@@ -683,7 +683,7 @@ export default function HomePage() {
                                 <div className="flex items-center justify-between mb-4 px-4 sm:px-6">
                                     <div className="h-6 w-32 bg-gray-600 rounded animate-pulse skeleton-shimmer" />
                                 </div>
-                                <div className="flex space-x-4 overflow-x-auto scrollbar-hide">
+                                <div className="flex space-x-6 overflow-x-auto scrollbar-hide">
                                     {[...Array(8)].map((_, i) => (
                                         <div key={i} className="flex-shrink-0 w-36">
                                             <div
@@ -1037,7 +1037,7 @@ export default function HomePage() {
                                 <div className="relative overflow-hidden">
                                     <motion.div
                                         id="genreResultsContainer"
-                                        className="flex space-x-4 overflow-x-auto scrollbar-hide scroll-smooth"
+                                        className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth"
                                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                                         variants={staggerContainerVariants}
                                         initial="hidden"
@@ -1106,7 +1106,7 @@ export default function HomePage() {
                             <div className="relative overflow-hidden">
                                 <motion.div
                                     id="top10Container"
-                                    className="flex space-x-4 overflow-x-auto scrollbar-hide scroll-smooth"
+                                    className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth"
                                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                                     variants={staggerContainerVariants}
                                     initial="hidden"
@@ -1121,12 +1121,7 @@ export default function HomePage() {
                                             <div className="relative w-36 md:w-44">
                                                 <ContentCard item={item} type={currentTab === "movies" ? "movie" : "tv"} />
                                                 <div
-                                                    className="absolute left-[-12px] bottom-[-4px] text-white font-black text-6xl md:text-7xl opacity-90 z-20 pointer-events-none select-none"
-                                                    style={{
-                                                        textShadow: "3px 3px 12px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.9)",
-                                                        WebkitTextStroke: "2px rgba(0,0,0,0.5)"
-                                                    }}
-                                                >
+                                                    className="absolute left-[-20px] bottom-[-6px] text-white font-black font-orbitron text-7xl md:text-8xl z-20 pointer-events-none select-none" style={{ textShadow: "3px 3px 12px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.9)", WebkitTextStroke: "2px rgba(0,0,0,0.5)" }}>
                                                     {index + 1}
                                                 </div>
                                             </div>
@@ -1186,7 +1181,7 @@ export default function HomePage() {
                                 <div className="relative overflow-hidden">
                                     <motion.div
                                         id={`category-${categoryName.replace(/\s+/g, "")}`}
-                                        className="flex space-x-4 overflow-x-auto scrollbar-hide scroll-smooth category-container"
+                                        className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth category-container"
                                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                                         variants={staggerContainerVariants}
                                         initial="hidden"

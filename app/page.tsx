@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { Navbar } from "@/components/Navbar"
@@ -8,7 +8,9 @@ import { ContentCard } from "@/components/ContentCard"
 import { SmartGenreTags } from "@/components/SmartGenreTags"
 import { ContinueWatching } from "@/components/ContinueWatching"
 import { WatchlistButton } from "@/components/WatchlistButton"
-// import { JarvisButton } from "@/components/JarvisButton"
+import { StreamingServiceHub } from "@/components/StreamingServiceHub"
+import { RefreshCw, Info } from "lucide-react"
+
 import { type Movie, type TVShow, type Genre, type Images } from "@/lib/tmdb"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -91,7 +93,6 @@ export default function HomePage() {
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
     const [isCarouselAnimating, setIsCarouselAnimating] = useState(false)
     const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...")
-    const [isAIFetching, setIsAIFetching] = useState(false)
     const isMobile = useIsMobile()
 
     const observerRef = useRef<IntersectionObserver | null>(null)
@@ -196,20 +197,40 @@ export default function HomePage() {
         }
     }
 
+    const forceRefreshCarousel = async () => {
+        // Clear all carousel-related cache and refresh
+        setIsCarouselAnimating(true)
+        try {
+            await fetchCarouselContent()
+            setCurrentCarouselIndex(0) // Reset to first slide
+        } catch (error) {
+            console.error("Error refreshing carousel:", error)
+        } finally {
+            setIsCarouselAnimating(false)
+        }
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('newCarouselMix_v2')
+            localStorage.removeItem('randomCarouselCache')
+            localStorage.removeItem('aiCarouselCache')
+        }
+        // Immediately fetch new content
+        fetchCarouselContent()
+    }
+
     const fetchCarouselContent = async () => {
         setLoadingStatus("Fetching carousel content...")
 
-        const CACHE_KEY = "aiCarouselCache"
-        const twelveHours = 12 * 60 * 60 * 1000
+        const CACHE_KEY = "newCarouselMix_v2" // Changed cache key to force refresh
+        const oneHour = 1 * 60 * 60 * 1000 // Reduced to 1 hour for testing
 
-        // If we have a cached AI carousel within 12 hours, use it immediately
+        // If we have a cached carousel within 1 hour, use it immediately
         if (typeof window !== 'undefined') {
             try {
                 const cachedRaw = localStorage.getItem(CACHE_KEY)
                 if (cachedRaw) {
                     const cached = JSON.parse(cachedRaw)
-                    if (cached?.timestamp && Array.isArray(cached.items) && Date.now() - cached.timestamp < twelveHours) {
-                        console.log('💾 Using cached AI carousel items')
+                    if (cached?.timestamp && Array.isArray(cached.items) && Date.now() - cached.timestamp < oneHour) {
+                        console.log('💾 Using cached new carousel mix')
                         setCarouselItems(cached.items)
                         // Start auto-rotation and skip remote fetch
                         startCarouselAutoRotation()
@@ -217,42 +238,102 @@ export default function HomePage() {
                     }
                 }
             } catch (err) {
-                console.warn('Failed to parse AI carousel cache:', err)
+                console.warn('Failed to parse carousel cache:', err)
             }
         }
 
         try {
-            const [movieResponse, tvResponse] = await Promise.all([
-                fetch('/api/tmdb/movies/popular?page=1', {
-                    cache: 'force-cache',
-                    headers: { 'Cache-Control': 'max-age=300' }
+            console.log('🎲 Fetching new carousel composition: 3 movies + 3 TV shows + 1 talk show + 1 anime')
+
+            // Generate random pages for different content types
+            const randomMoviePage = Math.floor(Math.random() * 100) + 1 // Movies: pages 1-100
+            const randomTVPage = Math.floor(Math.random() * 100) + 1 // TV shows: pages 1-100
+            const randomTalkShowPage = Math.floor(Math.random() * 20) + 1 // Talk shows: pages 1-20
+            const randomAnimePage = Math.floor(Math.random() * 50) + 1 // Anime: pages 1-50
+
+            // Different sort orders for variety
+            const sortOptions = ['popularity.desc', 'vote_average.desc', 'release_date.desc']
+            const movieSort = sortOptions[Math.floor(Math.random() * sortOptions.length)]
+            const tvSort = sortOptions[Math.floor(Math.random() * sortOptions.length)]
+            const talkShowSort = sortOptions[Math.floor(Math.random() * sortOptions.length)]
+            const animeSort = sortOptions[Math.floor(Math.random() * sortOptions.length)]
+
+            // Fetch different content types in parallel
+            const [movieResponse, tvResponse, talkShowResponse, animeResponse] = await Promise.all([
+                // 3 Movies - recent/popular with good ratings
+                fetch(`/api/tmdb/discover?type=movie&page=${randomMoviePage}&sort_by=${movieSort}&vote_count.gte=200&vote_average.gte=6.0&primary_release_date.gte=2020-01-01`, {
+                    cache: 'no-store'
                 }),
-                fetch('/api/tmdb/tv/popular?page=1', {
-                    cache: 'force-cache',
-                    headers: { 'Cache-Control': 'max-age=300' }
+                // 3 TV Shows - excluding talk shows (genre 10767)
+                fetch(`/api/tmdb/discover?type=tv&page=${randomTVPage}&sort_by=${tvSort}&vote_count.gte=100&vote_average.gte=6.5&without_genres=10767&first_air_date.gte=2020-01-01`, {
+                    cache: 'no-store'
+                }),
+                // 1 Talk Show - specifically genre 10767
+                fetch(`/api/tmdb/discover?type=tv&page=${randomTalkShowPage}&sort_by=${talkShowSort}&with_genres=10767&vote_count.gte=50`, {
+                    cache: 'no-store'
+                }),
+                // 1 Anime - animation genre with Japanese origin
+                fetch(`/api/tmdb/discover?type=tv&page=${randomAnimePage}&sort_by=${animeSort}&with_genres=16&with_origin_country=JP&vote_count.gte=100&vote_average.gte=7.0`, {
+                    cache: 'no-store'
                 })
             ])
 
             // Check if responses are ok before processing
-            if (!movieResponse.ok || !tvResponse.ok) {
+            if (!movieResponse.ok || !tvResponse.ok || !talkShowResponse.ok || !animeResponse.ok) {
                 console.error('API responses not ok:', {
                     movies: movieResponse.status,
-                    tv: tvResponse.status
+                    tv: tvResponse.status,
+                    talkShows: talkShowResponse.status,
+                    anime: animeResponse.status
                 })
                 // Set fallback data instead of throwing
                 setCarouselItems([])
                 return
             }
 
-            const [movieData, tvData] = await Promise.all([
+            const [movieData, tvData, talkShowData, animeData] = await Promise.all([
                 movieResponse.json(),
-                tvResponse.json()
+                tvResponse.json(),
+                talkShowResponse.json(),
+                animeResponse.json()
             ])
 
-            const combinedResults = [
-                ...movieData.results.slice(0, 10).map((item: any) => ({ ...item, type: "movie" })),
-                ...tvData.results.slice(0, 10).map((item: any) => ({ ...item, type: "tv" })),
-            ]
+            // Select items randomly from each category
+            const movieItems = movieData.results
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3)
+                .map((item: any) => ({ ...item, type: "movie", category: "movie" }))
+
+            const tvItems = tvData.results
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3)
+                .map((item: any) => ({ ...item, type: "tv", category: "tv" }))
+
+            const talkShowItems = talkShowData.results
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 1)
+                .map((item: any) => ({ ...item, type: "tv", category: "talk-show" }))
+
+            const animeItems = animeData.results
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 1)
+                .map((item: any) => ({ ...item, type: "tv", category: "anime" }))
+
+            // Combine all items and shuffle them randomly for final carousel order
+            const combinedResults = [...movieItems, ...tvItems, ...talkShowItems, ...animeItems]
+                .sort(() => Math.random() - 0.5) // Final random shuffle
+
+            console.log('🎲 New Carousel composition fetched:', {
+                movies: movieItems.length,
+                tvShows: tvItems.length,
+                talkShows: talkShowItems.length,
+                anime: animeItems.length,
+                total: combinedResults.length,
+                movieTitles: movieItems.map((m: any) => m.title),
+                tvTitles: tvItems.map((t: any) => t.name),
+                talkShowTitles: talkShowItems.map((t: any) => t.name),
+                animeTitles: animeItems.map((a: any) => a.name)
+            })
 
             // Fetch details with logos for each item
             const detailedItems = await Promise.all(
@@ -264,86 +345,19 @@ export default function HomePage() {
                 })
             )
 
-            // Fallback: Deterministic shuffle based on content IDs to ensure consistent results
-            const shuffled = detailedItems
-                .sort((a, b) => {
-                    const hashA = (a.id * 17 + 13) % 1000
-                    const hashB = (b.id * 17 + 13) % 1000
-                    return hashA - hashB
-                })
-                .slice(0, 8)
-            setCarouselItems(shuffled)
+            setCarouselItems(detailedItems)
 
-            // Start carousel auto-rotation after setting items
-            if (shuffled.length > 0) {
-                startCarouselAutoRotation()
+            // Cache the random results
+            if (typeof window !== 'undefined') {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    timestamp: Date.now(),
+                    items: detailedItems
+                }))
             }
 
-            // Try AI-enhanced selection in background, but only once every 12 hours
-            const LAST_AI_KEY = "lastAICarouselTime"
-            const twelveHours = 12 * 60 * 60 * 1000
-            const lastRun = typeof window !== 'undefined' ? Number(localStorage.getItem(LAST_AI_KEY)) : 0
-
-            if (!isAIFetching && (!lastRun || Date.now() - lastRun > twelveHours)) {
-                setIsAIFetching(true)
-                setTimeout(async () => {
-                    try {
-                        const itemsForAI = shuffled // limit to 8 items
-
-                        console.log('🎯 Starting AI Carousel Enhancement (Optimized - 2 AI + 2 Regular)...', {
-                            itemCount: itemsForAI.length,
-                            contentType: currentTab === "movies" ? "movie" : "tv",
-                            timestamp: new Date().toISOString()
-                        })
-
-                        const aiResponse = await fetch('/api/ai/carousel-picks', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                items: itemsForAI,
-                                contentType: currentTab === "movies" ? "movie" : "tv"
-                            })
-                        })
-
-                        console.log('📡 AI Response Status:', aiResponse.status, aiResponse.statusText)
-
-                        if (aiResponse.ok) {
-                            const responseData = await aiResponse.json()
-                            console.log('✨ AI Enhancement Result (Optimized):', {
-                                ...responseData,
-                                aiPicksCount: responseData.items?.filter((item: any) => item.isAIPick)?.length || 0,
-                                regularPicksCount: responseData.items?.filter((item: any) => !item.isAIPick)?.length || 0
-                            })
-
-                            if (responseData.items && responseData.items.length > 0) {
-                                console.log('🔄 Updating carousel with optimized AI-enhanced items')
-                                setCarouselItems(responseData.items)
-
-                                // Cache the AI items with timestamp
-                                if (typeof window !== 'undefined') {
-                                    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), items: responseData.items }))
-                                }
-                            } else {
-                                console.warn('⚠️ No AI items received, keeping fallback')
-                            }
-                        } else {
-                            console.error('❌ AI Response not OK:', await aiResponse.text())
-                        }
-
-                        // Update last run timestamp
-                        if (typeof window !== 'undefined') {
-                            localStorage.setItem(LAST_AI_KEY, Date.now().toString())
-                        }
-                    } catch (aiError) {
-                        console.error('❌ AI carousel enhancement failed:', aiError)
-                    } finally {
-                        setIsAIFetching(false)
-                    }
-                }, 2000)
-            } else {
-                console.log('⏱️ Skipping AI Carousel call – last run within 12 hours or already fetching')
+            // Start carousel auto-rotation after setting items
+            if (detailedItems.length > 0) {
+                startCarouselAutoRotation()
             }
         } catch (error) {
             console.error("Error fetching carousel content:", error)
@@ -391,6 +405,7 @@ export default function HomePage() {
                 { id: 28, name: "Action" },
                 { id: 12, name: "Adventure" },
                 { id: 16, name: "Animation" },
+                { id: 9999, name: "Anime" }, // Using custom ID for keyword search
                 { id: 35, name: "Comedy" },
                 { id: 80, name: "Crime" },
                 { id: 99, name: "Documentary" },
@@ -420,7 +435,39 @@ export default function HomePage() {
 
     const generateCategorySections = async () => {
         setLoadingStatus("Loading category sections...")
-        // Always include Romance and Drama, then fill the rest deterministically up to a max of 6 total
+
+        const newCategories: { [key: string]: (Movie | TVShow)[] } = {}
+
+        // Add special sections based on current tab
+        if (currentTab === "movies") {
+            // Add "Upcoming Movies" section for movies
+            try {
+                const upcomingResponse = await fetch('/api/tmdb/movies/upcoming?page=1')
+                if (upcomingResponse.ok) {
+                    const upcomingData = await upcomingResponse.json()
+                    if (upcomingData.results && upcomingData.results.length > 0) {
+                        newCategories["Upcoming Movies"] = upcomingData.results.slice(0, 20)
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching upcoming movies:', error)
+            }
+        } else {
+            // Add "Airing This Month" section for TV shows
+            try {
+                const airingResponse = await fetch('/api/tmdb/tv/airing-this-month?page=1')
+                if (airingResponse.ok) {
+                    const airingData = await airingResponse.json()
+                    if (airingData.results && airingData.results.length > 0) {
+                        newCategories["Airing This Month"] = airingData.results.slice(0, 20)
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching airing TV shows:', error)
+            }
+        }
+
+        // Always include Romance and Drama, then fill the rest deterministically up to a max of 5 more (total 6 sections)
         const baseGenres = [
             { id: 10749, name: "Romance" },
             { id: 18, name: "Drama" },
@@ -444,11 +491,9 @@ export default function HomePage() {
                 const hashB = (b.id * 23 + 7) % 1000
                 return hashA - hashB
             })
-            .slice(0, 4) // Pick 4 more to make total of 6
+            .slice(0, 3) // Pick 3 more to make total of 5 genre sections + 1 special section = 6 total
 
         const categoryGenres = [...baseGenres, ...shuffledOthers]
-
-        const newCategories: { [key: string]: (Movie | TVShow)[] } = {}
 
         for (const genre of categoryGenres) {
             try {
@@ -479,7 +524,14 @@ export default function HomePage() {
         setSelectedGenre(genre.id)
         try {
             const type = currentTab === "movies" ? "movie" : "tv"
-            const response = await fetch(`/api/tmdb/discover?type=${type}&with_genres=${genre.id}`)
+            const params = new URLSearchParams({ type })
+            if (genre.id === 9999) { // Special handling for Anime keyword
+                params.set('with_keywords', '210024')
+            } else {
+                params.set('with_genres', genre.id.toString())
+            }
+
+            const response = await fetch(`/api/tmdb/discover?${params.toString()}`)
             const data = await response.json()
 
             setGenreResults(data.results)
@@ -697,7 +749,7 @@ export default function HomePage() {
                                 {[...Array(10)].map((_, i) => (
                                     <div key={i} className="flex-shrink-0 relative">
                                         <div
-                                            className="w-36 md:w-44 aspect-[2/3] bg-gray-700 rounded-xl animate-pulse skeleton-shimmer"
+                                            className="w-[156px] h-[222px] md:w-[208px] md:h-[296px] bg-gray-700 rounded-xl animate-pulse skeleton-shimmer"
                                             style={{ animationDelay: `${i * 0.1}s` }}
                                         />
                                         <div className="absolute left-[-20px] bottom-[-6px] text-white font-black font-orbitron text-7xl md:text-8xl z-20 pointer-events-none select-none" style={{ textShadow: "3px 3px 12px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.9)", WebkitTextStroke: "2px rgba(0,0,0,0.5)" }}>
@@ -718,9 +770,9 @@ export default function HomePage() {
                                 </div>
                                 <div className="flex space-x-6 overflow-x-auto scrollbar-hide">
                                     {[...Array(8)].map((_, i) => (
-                                        <div key={i} className="flex-shrink-0 w-36">
+                                        <div key={i} className="flex-shrink-0">
                                             <div
-                                                className="aspect-[2/3] bg-gray-700 rounded-lg animate-pulse skeleton-shimmer"
+                                                className="w-[156px] h-[222px] md:w-[208px] md:h-[296px] bg-gray-700 rounded-lg animate-pulse skeleton-shimmer"
                                                 style={{ animationDelay: `${i * 0.05}s` }}
                                             />
                                         </div>
@@ -807,28 +859,29 @@ export default function HomePage() {
                                             ))}
                                         </div>
 
-                                        {/* AI Pick Badge - Dynamic per slide */}
+                                        {/* AI Pick Badge or Refresh Button */}
                                         <div className="absolute top-4 left-4 z-20">
-                                            <div className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center space-x-2 ${(currentCarouselItem as any)?.isAIPick
-                                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                                                : 'bg-gray-800/90 text-gray-300 border border-gray-600'
-                                                }`}>
-                                                {(currentCarouselItem as any)?.isAIPick ? (
-                                                    <>
-                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                                        </svg>
-                                                        <span>AI Pick</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                                                        </svg>
-                                                        <span>Skyyplay Recommends</span>
-                                                    </>
-                                                )}
-                                            </div>
+                                            {(currentCarouselItem as any)?.isAIPick ? (
+                                                <div className="px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg">
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <span>AI Pick</span>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        forceRefreshCarousel()
+                                                    }}
+                                                    disabled={isCarouselAnimating}
+                                                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center space-x-2 bg-gray-800/90 text-gray-300 border border-gray-600 hover:bg-gray-700/90 hover:text-white hover:border-gray-500 active:scale-95 ${isCarouselAnimating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                    title="Refresh carousel content"
+                                                >
+                                                    <RefreshCw className={`w-4 h-4 ${isCarouselAnimating ? 'animate-spin' : ''}`} />
+                                                    <span>Refresh</span>
+                                                </button>
+                                            )}
                                         </div>
 
                                         {/* Content Container */}
@@ -948,14 +1001,16 @@ export default function HomePage() {
                                                                     className="flex items-center justify-center"
                                                                     onClick={(e) => e.stopPropagation()}
                                                                 >
-                                                                    <WatchlistButton
-                                                                        item={item}
-                                                                        type={"title" in item ? "movie" : "tv"}
-                                                                        size={isMobile ? "sm" : "md"}
-                                                                        variant="carousel-square"
-                                                                        showText={false}
-                                                                        className="hover:shadow-[0_0_15px_rgba(147,51,234,0.4)]"
-                                                                    />
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            window.location.href = `/info?id=${item.id}&type=${"title" in item ? "movie" : "tv"}`
+                                                                        }}
+                                                                        className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10 text-base'} rounded-lg bg-gray-800/90 hover:bg-gray-700/90 border border-gray-600/50 backdrop-filter backdrop-blur-sm text-white transition-all duration-200 hover:scale-110 hover:shadow-[0_0_15px_rgba(147,51,234,0.4)] active:scale-95 flex items-center justify-center`}
+                                                                        title="View details"
+                                                                    >
+                                                                        <Info className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1122,7 +1177,7 @@ export default function HomePage() {
                                         {genreResults.slice(0, 18).map((item, index) => (
                                             <motion.div
                                                 key={item.id}
-                                                className="flex-shrink-0 w-36 md:w-44"
+                                                className="flex-shrink-0"
                                                 variants={cardVariants}
                                             >
                                                 <ContentCard item={item} type={currentTab === "movies" ? "movie" : "tv"} />
@@ -1172,7 +1227,7 @@ export default function HomePage() {
                             <div className="relative overflow-hidden">
                                 <motion.div
                                     id="top10Container"
-                                    className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth"
+                                    className="flex space-x-6 overflow-x-auto overflow-y-hidden scrollbar-hide scroll-smooth"
                                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                                     variants={staggerContainerVariants}
                                     initial="hidden"
@@ -1184,7 +1239,7 @@ export default function HomePage() {
                                             className="flex-shrink-0 relative top10-item"
                                             variants={cardVariants}
                                         >
-                                            <div className="relative w-36 md:w-44">
+                                            <div className="relative">
                                                 <ContentCard item={item} type={currentTab === "movies" ? "movie" : "tv"} />
                                                 <div
                                                     className="absolute left-[-20px] bottom-[-6px] text-white font-black font-orbitron text-7xl md:text-8xl z-20 pointer-events-none select-none" style={{ textShadow: "3px 3px 12px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.9)", WebkitTextStroke: "2px rgba(0,0,0,0.5)" }}>
@@ -1201,160 +1256,75 @@ export default function HomePage() {
                     {/* Category Sections with Scroll Animation */}
                     <div className="px-0 sm:px-6 py-4 overflow-hidden">
                         {Object.entries(categories).map(([categoryName, items], categoryIndex) => (
-                            <motion.div
-                                key={categoryName}
-                                className="category-section container mx-auto mb-8"
-                                ref={(el) => observeSection(el, `category-${categoryIndex}`)}
-                                variants={sectionVariants}
-                                initial="hidden"
-                                animate={visibleSections.has(`category-${categoryIndex}`) ? "visible" : "hidden"}
-                                transition={{ duration: 0.6, ease: "easeOut" as const }}
-                            >
-                                <div className="flex items-center justify-between mb-4 px-4 sm:px-6">
-                                    <h2 className="text-xl font-bold brand-text">{categoryName}</h2>
-                                    <div className="flex items-center space-x-2">
-                                        <button
-                                            onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "left")}
-                                            className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
-                                            aria-label="Scroll left"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "right")}
-                                            className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
-                                            aria-label="Scroll right"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="relative overflow-hidden">
-                                    <motion.div
-                                        id={`category-${categoryName.replace(/\s+/g, "")}`}
-                                        className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth category-container"
-                                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                        variants={staggerContainerVariants}
-                                        initial="hidden"
-                                        animate={visibleSections.has(`category-${categoryIndex}`) ? "visible" : "hidden"}
-                                    >
-                                        {items.map((item, index) => (
-                                            <motion.div
-                                                key={item.id}
-                                                className="flex-shrink-0 w-36 md:w-44 category-item"
-                                                variants={cardVariants}
+                            <React.Fragment key={categoryName}>
+                                <motion.div
+                                    className="category-section container mx-auto mb-8"
+                                    ref={(el) => observeSection(el, `category-${categoryIndex}`)}
+                                    variants={sectionVariants}
+                                    initial="hidden"
+                                    animate={visibleSections.has(`category-${categoryIndex}`) ? "visible" : "hidden"}
+                                    transition={{ duration: 0.6, ease: "easeOut" as const }}
+                                >
+                                    <div className="flex items-center justify-between mb-4 px-4 sm:px-6">
+                                        <h2 className="text-xl font-bold brand-text">{categoryName}</h2>
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "left")}
+                                                className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
+                                                aria-label="Scroll left"
                                             >
-                                                <ContentCard
-                                                    item={item}
-                                                    type={currentTab === "movies" ? "movie" : "tv"}
-                                                />
-                                            </motion.div>
-                                        ))}
-                                    </motion.div>
-                                </div>
-                            </motion.div>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "right")}
+                                                className={`bg-black/50 hover:bg-black/75 text-white p-2 md:p-2.5 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20`}
+                                                aria-label="Scroll right"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="relative overflow-hidden">
+                                        <motion.div
+                                            id={`category-${categoryName.replace(/\s+/g, "")}`}
+                                            className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth category-container"
+                                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                            variants={staggerContainerVariants}
+                                            initial="hidden"
+                                            animate={visibleSections.has(`category-${categoryIndex}`) ? "visible" : "hidden"}
+                                        >
+                                            {items.map((item, index) => (
+                                                <motion.div
+                                                    key={item.id}
+                                                    className="flex-shrink-0 category-item"
+                                                    variants={cardVariants}
+                                                >
+                                                    <ContentCard
+                                                        item={item}
+                                                        type={currentTab === "movies" ? "movie" : "tv"}
+                                                    />
+                                                </motion.div>
+                                            ))}
+                                        </motion.div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Insert Streaming Service Hubs after Romance category */}
+                                {categoryName === "Romance" && (
+                                    <StreamingServiceHub
+                                        currentTab={currentTab}
+                                        visibleSections={visibleSections}
+                                        observeSection={observeSection}
+                                        scrollSection={scrollSection}
+                                    />
+                                )}
+                            </React.Fragment>
                         ))}
                     </div>
-
-                    {/* Streaming Services */}
-                    <motion.div
-                        className="container mx-auto px-4 md:px-6 py-8 md:py-12"
-                        ref={(el) => observeSection(el, "streaming")}
-                        variants={sectionVariants}
-                        initial="hidden"
-                        animate={visibleSections.has("streaming") ? "visible" : "hidden"}
-                        transition={{ duration: 0.6, ease: "easeOut" as const }}
-                    >
-                        <div className="text-center mb-6 md:mb-8">
-                            <h2 className="text-xl md:text-2xl font-bold text-gray-300">Content Available From</h2>
-                            <p className="text-sm md:text-base text-gray-400 mt-2">
-                                SkyyPlay aggregates content from various premium streaming platforms
-                            </p>
-                        </div>
-                        <motion.div
-                            className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 items-center justify-items-center opacity-80"
-                            variants={staggerContainerVariants}
-                            initial="hidden"
-                            animate={visibleSections.has("streaming") ? "visible" : "hidden"}
-                        >
-                            <a
-                                href="https://netflix.com"
-                                target="_blank"
-                                className="transform transition-transform hover:scale-105"
-                                rel="noreferrer"
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg"
-                                    alt="Netflix"
-                                    className="h-6 md:h-8 w-auto grayscale hover:grayscale-0 hover:scale-110 hover:brightness-125 transition-all duration-300"
-                                />
-                            </a>
-                            <a
-                                href="https://www.primevideo.com"
-                                target="_blank"
-                                className="transform transition-transform hover:scale-105"
-                                rel="noreferrer"
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/1/11/Amazon_Prime_Video_logo.svg"
-                                    alt="Prime Video"
-                                    className="h-6 md:h-8 w-auto grayscale hover:grayscale-0 hover:scale-110 hover:brightness-125 transition-all duration-300"
-                                />
-                            </a>
-                            <a
-                                href="https://www.disneyplus.com"
-                                target="_blank"
-                                className="transform transition-transform hover:scale-105"
-                                rel="noreferrer"
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg"
-                                    alt="Disney+"
-                                    className="h-6 md:h-8 w-auto grayscale hover:grayscale-0 hover:scale-110 hover:brightness-125 transition-all duration-300"
-                                />
-                            </a>
-                            <a
-                                href="https://www.hulu.com"
-                                target="_blank"
-                                className="transform transition-transform hover:scale-105"
-                                rel="noreferrer"
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Hulu_logo_%282018%29.svg"
-                                    alt="Hulu"
-                                    className="h-6 md:h-8 w-auto grayscale hover:grayscale-0 hover:scale-110 hover:brightness-125 transition-all duration-300"
-                                />
-                            </a>
-                            <a
-                                href="https://www.max.com"
-                                target="_blank"
-                                className="transform transition-transform hover:scale-105"
-                                rel="noreferrer"
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/1/17/HBO_Max_Logo.svg"
-                                    alt="HBO Max"
-                                    className="h-6 md:h-8 w-auto grayscale hover:grayscale-0 hover:scale-110 hover:brightness-125 transition-all duration-300"
-                                />
-                            </a>
-                            <a
-                                href="https://tv.apple.com"
-                                target="_blank"
-                                className="transform transition-transform hover:scale-105"
-                                rel="noreferrer"
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg"
-                                    alt="Apple TV+"
-                                    className="h-6 md:h-8 w-auto grayscale hover:grayscale-0 hover:scale-110 hover:brightness-125 transition-all duration-300"
-                                />
-                            </a>
-                        </motion.div>
-                    </motion.div>
 
                     {/* Footer */}
                     <motion.footer
@@ -1377,8 +1347,7 @@ export default function HomePage() {
                         </div>
                     </motion.footer>
 
-                    {/* Jarvis AI Button (temporarily disabled) */}
-                    {/* <JarvisButton /> */}
+
                 </>
             )}
         </div>

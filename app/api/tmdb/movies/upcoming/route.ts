@@ -10,29 +10,26 @@ function getApiKey() {
     return apiKey
 }
 
-export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url)
         const language = searchParams.get('language') || 'en'
-        const { id } = await params
+        const page = searchParams.get('page') || '1'
 
         const response = await fetch(
-            `${BASE_URL}/tv/${id}?api_key=${getApiKey()}&language=${language}&append_to_response=credits,similar,videos,reviews,keywords,images`
+            `${BASE_URL}/movie/upcoming?api_key=${getApiKey()}&language=${language}&page=${page}&region=US`
         )
 
         if (!response.ok) {
-            throw new Error('Failed to fetch TV show details')
+            throw new Error('Failed to fetch upcoming movies')
         }
 
         const data = await response.json()
         return NextResponse.json(data)
     } catch (error) {
-        console.error('Error fetching TV show details:', error)
+        console.error('Error fetching upcoming movies:', error)
         return NextResponse.json(
-            { error: 'Failed to fetch TV show details' },
+            { error: 'Failed to fetch upcoming movies' },
             { status: 500 }
         )
     }

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Genre } from '@/lib/tmdb'
 
@@ -12,11 +12,6 @@ interface SmartGenreTagsProps {
     className?: string
 }
 
-interface GenreWithMood extends Genre {
-    moodTag?: string
-    isLoading?: boolean
-}
-
 export function SmartGenreTags({
     genres,
     contentType,
@@ -24,10 +19,6 @@ export function SmartGenreTags({
     onGenreSelect,
     className = ""
 }: SmartGenreTagsProps) {
-    const [genresWithMood, setGenresWithMood] = useState<GenreWithMood[]>(
-        genres.map(genre => ({ ...genre, isLoading: true }))
-    )
-
     // Animation variants
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -71,8 +62,6 @@ export function SmartGenreTags({
         }
     }
 
-
-
     const scrollContainer = (direction: 'left' | 'right') => {
         const container = document.querySelector('.genre-tags-container') as HTMLElement
         if (container) {
@@ -80,19 +69,6 @@ export function SmartGenreTags({
             container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
         }
     }
-
-    // Without GenAI, we simply display the passed genres as-is, without mood tags.
-    useEffect(() => {
-        if (genres.length === 0) return
-
-        setGenresWithMood(
-            genres.map((genre) => ({
-                ...genre,
-                moodTag: '',
-                isLoading: false,
-            }))
-        )
-    }, [genres])
 
     return (
         <div className={`flex items-center gap-2 ${className}`}>
@@ -120,7 +96,7 @@ export function SmartGenreTags({
                 animate="visible"
             >
                 <AnimatePresence>
-                    {genresWithMood.map((genre) => (
+                    {genres.map((genre) => (
                         <motion.button
                             key={genre.id}
                             onClick={() => onGenreSelect(genre)}
@@ -131,9 +107,7 @@ export function SmartGenreTags({
                                     ? 'bg-purple-500 border-purple-500 text-white'
                                     : 'bg-gray-800/50 border-purple-500/20 text-gray-300 hover:bg-purple-500/10 hover:border-purple-500/40 hover:text-white'
                                 }
-                                ${genre.isLoading ? 'animate-pulse' : ''}
                             `}
-                            disabled={genre.isLoading}
                             variants={genreTagVariants}
                             whileHover={selectedGenre !== genre.id ? "hover" : undefined}
                             animate={selectedGenre === genre.id ? "selected" : "visible"}
@@ -143,35 +117,6 @@ export function SmartGenreTags({
                                 <div className="font-medium text-sm">
                                     {genre.name}
                                 </div>
-                                <AnimatePresence mode="wait">
-                                    {genre.moodTag && !genre.isLoading && (
-                                        <motion.div
-                                            className={`
-                                                text-xs mt-0.5 transition-opacity duration-300
-                                                ${selectedGenre === genre.id
-                                                    ? 'text-purple-100'
-                                                    : 'text-purple-300 group-hover:text-purple-200'
-                                                }
-                                            `}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            transition={{ duration: 0.3 }}
-                                        >
-                                            {genre.moodTag}
-                                        </motion.div>
-                                    )}
-                                    {genre.isLoading && (
-                                        <motion.div
-                                            className="text-xs mt-0.5 text-gray-500"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                        >
-                                            <span className="animate-pulse">Loading...</span>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
                             </div>
 
                             {/* Subtle background animation on hover */}

@@ -3,7 +3,7 @@ import type { Movie, TVShow, Genre } from './tmdb';
 
 // Initialize Gemini AI lazily to avoid client-side issues
 let genAI: GoogleGenerativeAI | null = null;
-let aiEnabled = true; // Flag to disable AI if there are issues
+let aiEnabled = false; // Permanently disabled AI features
 let aiErrorCount = 0; // Track consecutive errors
 const MAX_AI_ERRORS = 3; // Allow up to 3 consecutive errors before disabling
 
@@ -554,7 +554,7 @@ Format as JSON:
      * Reset AI service (useful for testing or recovery)
      */
     static resetAI(): void {
-        aiEnabled = true;
+        aiEnabled = false;
         aiErrorCount = 0;
         genAI = null;
         lastApiCall = 0;

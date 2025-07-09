@@ -5,6 +5,11 @@ import type { Metadata } from "next"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar"
 import "./globals.css"
+import { Inter } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider"
+import ClickSpark from "@/components/ClickSpark"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "SkyyPlay - Free Movies & TV Shows",
@@ -40,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/avif" href="/logo.avif" />
         {/* Preload critical logo for faster LCP fallback */}
@@ -55,13 +60,28 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="SkyyPlay" />
         <link rel="apple-touch-icon" href="/logo.avif" />
       </head>
-      <body className="bg-black text-white min-h-screen">
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
-        <ServiceWorkerRegistrar />
-        <Analytics />
-        <SpeedInsights />
+      <body className={`${inter.className} bg-black text-white min-h-screen`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ClickSpark
+            sparkColor="#A855F7"
+            sparkSize={12}
+            sparkRadius={20}
+            sparkCount={6}
+            duration={600}
+          >
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+            <ServiceWorkerRegistrar />
+            <Analytics />
+            <SpeedInsights />
+          </ClickSpark>
+        </ThemeProvider>
       </body>
     </html>
   )

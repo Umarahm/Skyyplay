@@ -137,6 +137,157 @@ body {
   transition: all 0.4s ease;
 }
 
+/* Inspiration Design - Movie & TV Cards */
+.inspiration-card {
+  width: 208px;
+  height: 296px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0px 14px 42px -8px rgba(112, 144, 176, 0.2);
+  background: #374151;
+  /* gray-700 for loading state */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.inspiration-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0px 20px 50px -8px rgba(112, 144, 176, 0.3);
+}
+
+.inspiration-card-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border-radius: 12px;
+  object-fit: cover;
+  transition: all 0.4s ease;
+}
+
+.inspiration-card:hover .inspiration-card-image {
+  filter: brightness(0.8);
+}
+
+.inspiration-card-inner-shadow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  box-shadow: inset 5px -5px 15px rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.inspiration-card-noise {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  opacity: 0.15;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.inspiration-watchlist-button-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  z-index: 15;
+}
+
+.inspiration-watchlist-button-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2.5px);
+  -webkit-backdrop-filter: blur(2.5px);
+  border-radius: 0 0 12px 0;
+  transition: all 0.3s ease;
+}
+
+.inspiration-card:hover .inspiration-watchlist-button-bg {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Custom variant for the WatchlistButton */
+.watchlist-btn-inspiration {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background-color: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.watchlist-btn-inspiration:hover {
+  transform: scale(1.08) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.watchlist-btn-inspiration.is-added {
+  background-color: rgba(168, 85, 247, 0.5) !important;
+  /* purple-500 with opacity */
+  border-color: rgba(192, 132, 252, 0.5) !important;
+  /* purple-400 with opacity */
+}
+
+.inspiration-glass-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.4s ease;
+  z-index: 12;
+}
+
+.inspiration-card:hover .inspiration-glass-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .inspiration-card {
+    width: 156px;
+    height: 222px;
+  }
+
+  .inspiration-watchlist-button-container {
+    width: 48px;
+    height: 48px;
+  }
+
+  .watchlist-btn-inspiration {
+    top: 8px;
+    left: 8px;
+    width: 28px !important;
+    height: 28px !important;
+  }
+}
+
 /* Navigation styling */
 .nav-link {
   position: relative;
@@ -314,6 +465,21 @@ html {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 /* Smooth scroll behavior for all containers */
@@ -2286,4 +2452,479 @@ select:focus {
   min-width: 0 !important;
   min-height: 0 !important;
   padding: 0 !important;
+}
+
+/* Info Page Styles */
+.info-page-container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+}
+
+.info-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.info-backdrop-image {
+  object-fit: cover;
+  opacity: 0.4;
+}
+
+.info-backdrop-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  /* Even dark overlay */
+  z-index: 2;
+}
+
+.info-content-container {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  height: 100%;
+  width: 100%;
+  padding-top: 80px;
+  /* Adjust for navbar height */
+}
+
+.info-left-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2rem 3rem;
+  gap: 1.5rem;
+}
+
+.info-poster-card {
+  position: relative;
+  width: 200px;
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.info-poster-image {
+  object-fit: cover;
+}
+
+.info-rating-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #f59e0b;
+  /* yellow-500 */
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+.info-action-card {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.info-action-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.info-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.info-action-type {
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  transform: translateY(-50%) rotate(90deg);
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-size: 0.75rem;
+}
+
+/* Sidebar Styles */
+.info-sidebar-container {
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(15px);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  /* Width is now controlled by framer-motion */
+  height: 100%;
+  overflow-y: auto;
+  padding: 2rem;
+  flex-shrink: 0;
+  border-radius: 1.5rem 0 0 1.5rem;
+}
+
+.info-sidebar-container:hover {
+  /* Hover effect handled by framer-motion */
+}
+
+.info-sidebar-tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem;
+  transition: gap 0.3s ease-in-out;
+}
+
+.info-sidebar-tabs.hovered {
+  gap: 1.5rem;
+}
+
+.info-sidebar-tab {
+  padding: 0.5rem 0.25rem;
+  color: rgba(255, 255, 255, 0.6);
+  position: relative;
+  transition: color 0.2s;
+}
+
+.info-sidebar-tab:hover {
+  color: #fff;
+}
+
+.info-sidebar-tab.active {
+  color: #fff;
+  font-weight: bold;
+}
+
+.info-sidebar-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #a855f7;
+  /* purple-500 */
+}
+
+.info-season-selector {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.info-season-button {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s;
+}
+
+.info-season-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.info-season-button.active {
+  background-color: #a855f7;
+  color: #fff;
+  font-weight: bold;
+}
+
+.info-season-dropdown {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  color: white;
+  font-weight: 500;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23a855f7' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.info-season-dropdown:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(59, 130, 246, 0.3) 100%);
+  border-color: rgba(168, 85, 247, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+}
+
+.info-season-dropdown:focus {
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.7);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+}
+
+.info-season-dropdown option {
+  background-color: rgba(15, 23, 42, 0.95);
+  color: white;
+  padding: 0.5rem;
+}
+
+.episodes-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.episodes-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.episodes-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.episodes-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.6) 0%, rgba(59, 130, 246, 0.6) 100%);
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.episodes-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.8) 0%, rgba(59, 130, 246, 0.8) 100%);
+}
+
+.episode-card-info-page {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: background-color 0.2s;
+}
+
+.episode-card-info-page:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile optimizations for Info Page */
+@media (max-width: 768px) {
+  .info-page-container {
+    height: 100vh;
+    overflow-y: auto;
+    background-color: #000;
+    /* Add solid black background for mobile */
+  }
+
+  .info-content-container {
+    flex-direction: column;
+    padding-top: 60px;
+    /* Reduced navbar padding for mobile */
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .info-left-panel {
+    width: 100%;
+    padding: 1rem;
+    gap: 1rem;
+    justify-content: flex-start;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    /* Change to row layout for mobile */
+    align-items: flex-end;
+  }
+
+  .info-poster-card {
+    width: 120px;
+    height: 180px;
+    margin: 0;
+    /* Remove auto margin */
+    flex-shrink: 0;
+  }
+
+  .info-action-card {
+    padding: 0.75rem;
+    margin-top: 0;
+    /* Remove top margin */
+    margin-left: 1rem;
+    /* Add left margin for spacing from poster */
+    flex: 1;
+    /* Take remaining space */
+    max-width: calc(100% - 140px);
+    /* Ensure it doesn't overflow */
+  }
+
+  .info-action-title {
+    font-size: 1.25rem;
+    text-align: left;
+    /* Change from center to left */
+    margin-bottom: 0.5rem;
+  }
+
+  .info-action-buttons {
+    justify-content: flex-start;
+    /* Change from center to flex-start */
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    /* Reduce gap between buttons */
+  }
+
+  .info-action-type {
+    display: none;
+    /* Hide the rotated type indicator on mobile */
+  }
+
+  /* Remove backdrop styles since backdrop is hidden on mobile */
+  .info-backdrop {
+    display: none;
+  }
+
+  /* Mobile Sidebar - moved to bottom */
+  .info-sidebar-container {
+    width: 100% !important;
+    height: auto !important;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem 1.5rem 0 0;
+    padding: 1.5rem 1rem;
+    background-color: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow-y: visible;
+    margin-top: 1rem;
+    /* Reduce top margin */
+  }
+
+  .info-sidebar-tabs {
+    display: flex;
+    justify-content: space-around;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .info-sidebar-tab {
+    flex-shrink: 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    border-radius: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+  }
+
+  .info-sidebar-tab.active {
+    background-color: rgba(168, 85, 247, 0.8);
+    color: white;
+  }
+
+  .info-sidebar-tab.active::after {
+    display: none;
+    /* Remove the underline indicator on mobile */
+  }
+
+  /* Mobile optimizations for sidebar content */
+  .info-sidebar-container .grid.grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .episodes-container {
+    max-height: 300px;
+  }
+
+  .episode-card-info-page {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    margin-bottom: 0.5rem;
+  }
+
+  .episode-card-info-page .relative.w-32.h-20 {
+    width: 80px;
+    height: 45px;
+  }
+
+  /* Mobile cast cards */
+  .info-sidebar-container .space-y-4 .flex.items-center {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Mobile review cards */
+  .info-sidebar-container .bg-white\/5 {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 0.75rem;
+  }
+
+  /* Mobile related content grid */
+  .info-sidebar-container .grid.grid-cols-2.gap-4 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  .info-season-dropdown {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Hide framer-motion animations on mobile */
+  .info-left-panel,
+  .info-sidebar-container {
+    transform: none !important;
+    width: 100% !important;
+  }
+
+  /* Optimize image loading for mobile */
+  .info-poster-image,
+  .inspiration-card-image {
+    object-fit: cover;
+  }
+}
+
+/* Tablet specific adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .info-content-container {
+    padding-top: 70px;
+  }
+
+  .info-left-panel {
+    padding: 1.5rem 2rem;
+  }
+
+  .info-poster-card {
+    width: 160px;
+    height: 240px;
+  }
+
+  .info-sidebar-container {
+    padding: 1.5rem;
+  }
+
+  .info-sidebar-tabs {
+    gap: 0.75rem;
+  }
 }

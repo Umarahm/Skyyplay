@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import type { ContinueWatchingItem } from "@/hooks/useContinueWatching"
 import { WatchlistButton } from "./WatchlistButton"
+import { useWatchlist } from "@/hooks/useWatchlist"
 
 interface ContinueWatchingCardProps {
     item: ContinueWatchingItem
@@ -14,6 +15,7 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
     const containerRef = useRef<HTMLDivElement>(null)
     const [shouldLoad, setShouldLoad] = useState(false)
     const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+    const { isInWatchlist } = useWatchlist()
 
     useEffect(() => {
         if (!containerRef.current || typeof IntersectionObserver === "undefined") return
@@ -21,13 +23,13 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                    if (entry.isIntersecting) {
                         setShouldLoad(true)
                         observer.disconnect()
                     }
                 })
             },
-            { threshold: 0.5 }
+            { threshold: 0.01 }
         )
 
         observer.observe(containerRef.current)
@@ -69,86 +71,95 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
 
     const progressInfo = formatProgress(item.progress, item.duration)
     const episodeInfo = item.season && item.episode ? ` • S${item.season}E${item.episode}` : ''
+    const isAdded = isInWatchlist(item.id, item.type)
 
     return (
-        <div className="card-hover rounded-lg overflow-hidden bg-gray-800 border border-purple-500/10 relative group">
-            <a href={`/watch?id=${item.id}&type=${item.type}`} className="block">
-                <div ref={containerRef} className="relative aspect-[2/3]">
-                    {shouldLoad ? (
-                        <Image
-                            src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/logo.avif"}
-                            alt={item.title}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                            placeholder="blur"
-                            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-                            onError={(e) => {
-                                const target = e.target as HTMLImageElement
-                                target.src = "/logo.avif"
-                            }}
-                            priority={false}
-                            loading="eager"
+        <div className="inspiration-card group" ref={containerRef}>
+            <a href={`/watch?id=${item.id}&type=${item.type}`} className="block w-full h-full">
+                {/* Main Image */}
+                {shouldLoad ? (
+                    <Image
+                        src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/logo.avif"}
+                        alt={item.title}
+                        fill
+                        className="inspiration-card-image"
+                        sizes="(max-width: 768px) 156px, 208px"
+                        placeholder="blur"
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = "/logo.avif"
+                        }}
+                        priority={false}
+                        loading="lazy"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gray-800 animate-pulse rounded-[12px]" />
+                )}
+
+                {/* Noise Texture Overlay */}
+                <div className="inspiration-card-noise" />
+
+                {/* Inner Shadow Effect */}
+                <div className="inspiration-card-inner-shadow" />
+
+                {/* Watchlist Button Container */}
+                <div className="inspiration-watchlist-button-container">
+                    <div className="inspiration-watchlist-button-bg" />
+                    <WatchlistButton
+                        item={item}
+                        type={item.type}
+                        size="sm"
+                        className={`watchlist-btn-inspiration ${isAdded ? 'is-added' : ''}`}
+                    />
+                </div>
+
+                {/* Remove Button */}
+                <div className="absolute top-4 right-4 z-20">
+                    <button
+                        onClick={handleRemoveClick}
+                        className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center backdrop-blur-sm group-hover:opacity-100 md:opacity-0 ${showRemoveConfirm
+                            ? 'bg-red-500/80 hover:bg-red-600/80 text-white border border-red-400/50'
+                            : 'bg-black/50 hover:bg-black/70 text-gray-300 hover:text-white border border-white/20'
+                            }`}
+                        title={showRemoveConfirm ? "Click again to confirm removal" : "Remove from Continue Watching"}
+                    >
+                        {showRemoveConfirm ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        )}
+                    </button>
+                </div>
+
+
+                {/* Progress Bar - positioned above glass overlay */}
+                <div className="absolute bottom-16 left-4 right-4 z-15 pointer-events-none">
+                    <div className="w-full bg-black/40 rounded-full h-1 mb-1 backdrop-blur-sm">
+                        <div
+                            className="bg-gradient-to-r from-purple-500 to-blue-500 h-1 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.max(2, item.progress)}%` }}
                         />
-                    ) : (
-                        <div className="w-full h-full bg-gray-800 animate-pulse" />
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="absolute top-2 right-2 flex space-x-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-10">
-                        {/* Watchlist Button */}
-                        <WatchlistButton
-                            item={item}
-                            type={item.type}
-                            size="sm"
-                            variant="overlay"
-                        />
-
-                        {/* Remove Button */}
-                        <button
-                            onClick={handleRemoveClick}
-                            className={`w-8 h-8 rounded-full transition-all duration-200 flex items-center justify-center ${showRemoveConfirm
-                                ? 'bg-red-500 hover:bg-red-600 text-white'
-                                : 'bg-black/70 hover:bg-black/90 text-gray-300 hover:text-white'
-                                }`}
-                            title={showRemoveConfirm ? "Click again to confirm removal" : "Remove from Continue Watching"}
-                        >
-                            {showRemoveConfirm ? (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            )}
-                        </button>
                     </div>
-
-                    {/* Progress Bar */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-2">
-                        <div className="w-full bg-gray-600 rounded-full h-1 mb-1">
-                            <div
-                                className="bg-gradient-to-r from-purple-500 to-blue-500 h-1 rounded-full transition-all duration-300"
-                                style={{ width: `${Math.max(2, item.progress)}%` }}
-                            />
-                        </div>
-                        <div className="text-xs text-gray-300 flex justify-between items-center">
-                            <span>{Math.round(item.progress)}% watched</span>
-                            <span>{progressInfo.remaining} left</span>
-                        </div>
+                    <div className="text-xs text-white/90 flex justify-between items-center px-1">
+                        <span className="drop-shadow-md">{Math.round(item.progress)}% watched</span>
+                        <span className="drop-shadow-md">{progressInfo.remaining} left</span>
                     </div>
+                </div>
 
-                    {/* Overlay with Info */}
-                    <div className="card-overlay pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 pb-16">
-                        <h3 className="text-sm font-semibold text-white line-clamp-2">{item.title}</h3>
-                        <p className="text-xs text-gray-300 mt-1">
-                            ⭐ {item.vote_average ? item.vote_average.toFixed(1) : "N/A"}/10{episodeInfo}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                            {progressInfo.watched} watched • {formatDuration(item.duration)} total
-                        </p>
-                    </div>
+                {/* Glass Overlay with Content Info */}
+                <div className="inspiration-glass-overlay">
+                    <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2">{item.title}</h3>
+                    <p className="text-xs text-gray-300 mb-1">
+                        ⭐ {item.vote_average ? item.vote_average.toFixed(1) : "N/A"}/10{episodeInfo}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                        {progressInfo.watched} watched • {formatDuration(item.duration)} total
+                    </p>
                 </div>
             </a>
         </div>

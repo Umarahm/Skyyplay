@@ -5,6 +5,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Info, Settings, Menu, ChevronDown, Star, Play } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface Match {
   id: string
@@ -37,6 +45,19 @@ interface CategorySection {
   type: 'live' | 'popular' | 'sport'
   sportFilter?: string
 }
+
+const sportsCategories = [
+  { name: "Basketball", id: "basketball" },
+  { name: "Football", id: "football" },
+  { name: "American Football", id: "american-football" },
+  { name: "Hockey", id: "hockey" },
+  { name: "Baseball", id: "baseball" },
+  { name: "Motor Sports", id: "motorsports" },
+  { name: "Fight (UFC, Boxing)", id: "fighting" },
+  { name: "Tennis", id: "tennis" },
+  { name: "Cricket", id: "cricket" },
+  { name: "Others", id: "other" },
+];
 
 export default function LiveSportsPage() {
   const [sports, setSports] = useState<Sport[]>([])
@@ -443,15 +464,13 @@ export default function LiveSportsPage() {
         {/* Enhanced Thumbnail with local base image and streamed.su API top overlay */}
         <div className="relative aspect-[16/9] bg-gray-800 overflow-hidden">
           <Image
-            src={getSportImagePath() || '/images/others.png'}
+            src={match.poster && !imageError ? `/api/images/proxy/${match.poster}.webp` : (getSportImagePath() || '/images/others.png')}
             alt={match.category}
             fill
+            sizes="(max-width:640px) 48vw, (max-width:1024px) 24vw, 16vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
             quality={100}
             priority
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 48vw,  /* 2-col mobile */
-                   (max-width: 1024px) 24vw, /* 4-col tablet */
-                   16vw"                    /* 6-col desktop */
             onError={handleImageError}
           />
 
@@ -614,79 +633,42 @@ export default function LiveSportsPage() {
             </div>
           </motion.div>
 
-          {/* Filters */}
-          <motion.div
-            className="mb-8"
-            variants={sectionVariants}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold logo-text">Filters</h3>
-            </div>
-
-            <div className="filter-container rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Sports filter */}
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Sport</label>
-                  <select
-                    value={selectedSport}
-                    onChange={(e) => setSelectedSport(e.target.value)}
-                    className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 pr-8 appearance-none hover:bg-gray-700 transition-colors duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                  >
-                    <option value="">All Sports</option>
-                    {sports.map((sport) => (
-                      <option key={sport.id} value={sport.id}>
-                        {sport.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2 top-9 h-5 w-5 text-gray-400 pointer-events-none" />
-                </div>
-
-                {/* Match type filter */}
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
-                  <select
-                    value={matchType}
-                    onChange={(e) => setMatchType(e.target.value)}
-                    className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 pr-8 appearance-none hover:bg-gray-700 transition-colors duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                  >
-                    <option value="live">Live</option>
-                    <option value="popular">Popular</option>
-                    <option value="today">Today</option>
-                    <option value="all">All</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-9 h-5 w-5 text-gray-400 pointer-events-none" />
-                </div>
-
-                {/* Popular toggle */}
-                <div className="flex flex-col">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Popular</label>
-                  <button
-                    onClick={togglePopular}
-                    className={`px-4 py-2 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2 ${showPopular ? "btn-primary" : "btn-secondary"}`}
-                  >
-                    <Star className="h-4 w-4" />
-                    <span>{showPopular ? 'Popular Only' : 'Include All'}</span>
-                  </button>
-                </div>
-
-                {/* Clear filters */}
-                <div className="flex flex-col">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Reset</label>
-                  <button
-                    onClick={() => {
-                      setSelectedSport("")
-                      setMatchType("live")
-                      setShowPopular(false)
-                    }}
-                    className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors duration-300 text-white"
-                  >
-                    Clear All
-                  </button>
+          {/* Sports Carousel */}
+          <motion.div className="mb-12" variants={sectionVariants}>
+            <Carousel
+              opts={{
+                align: "start",
+                dragFree: true,
+                slidesToScroll: 3,
+              }}
+              className="w-full"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-bold logo-text">Sports</h3>
+                <div className="flex items-center space-x-2">
+                  <CarouselPrevious className="relative translate-y-0 left-0 right-0 top-0 w-8 h-8 rounded-md bg-neutral-900/80 border border-neutral-700 text-white hover:bg-neutral-800" />
+                  <CarouselNext className="relative translate-y-0 left-0 right-0 top-0 w-8 h-8 rounded-md bg-neutral-900/80 border border-neutral-700 text-white hover:bg-neutral-800" />
                 </div>
               </div>
-            </div>
+              <CarouselContent className="-ml-4">
+                {sportsCategories.map((sport, index) => (
+                  <CarouselItem key={index} className="basis-1/4 md:basis-1/6 lg:basis-1/8 pl-4">
+                    <Card
+                      onClick={() => setSelectedSport(sport.id === selectedSport ? "" : sport.id)}
+                      className={`cursor-pointer transition-all duration-300 rounded-lg group border-2 ${selectedSport === sport.id
+                        ? "border-purple-500"
+                        : "border-transparent"
+                        }`}
+                    >
+                      <CardContent className="relative aspect-[3/2] flex items-center justify-center p-2 bg-[#FDE7F3] rounded-lg">
+                        <p className="text-black font-bold text-center text-sm md:text-base whitespace-nowrap">{sport.name}</p>
+                      </CardContent>
+                    </Card>
+                    <p className="text-center mt-2 text-sm text-neutral-300">{sport.name}</p>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
           </motion.div>
 
           {/* Categorized Content - Streamed.su style */}

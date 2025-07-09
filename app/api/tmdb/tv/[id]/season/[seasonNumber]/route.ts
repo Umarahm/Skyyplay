@@ -12,12 +12,12 @@ function getApiKey() {
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string; seasonNumber: string } }
+    { params }: { params: Promise<{ id: string; seasonNumber: string }> }
 ) {
     try {
         const { searchParams } = new URL(request.url)
         const language = searchParams.get('language') || 'en'
-        const { id, seasonNumber } = params
+        const { id, seasonNumber } = await params
 
         const response = await fetch(
             `${BASE_URL}/tv/${id}/season/${seasonNumber}?api_key=${getApiKey()}&language=${language}`

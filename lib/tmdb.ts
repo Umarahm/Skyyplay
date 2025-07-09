@@ -14,6 +14,13 @@ export interface Movie {
   adult: boolean
   runtime?: number
   status?: string
+  tagline?: string
+  belongs_to_collection?: {
+    id: number
+    name: string
+    poster_path: string
+    backdrop_path: string
+  } | null
   production_companies?: ProductionCompany[]
   production_countries?: ProductionCountry[]
   spoken_languages?: SpokenLanguage[]
@@ -23,6 +30,7 @@ export interface Movie {
   similar?: { results: Movie[] }
   videos?: { results: Video[] }
   images?: Images
+  reviews?: { results: Review[] }
 }
 
 export interface TVShow {
@@ -39,6 +47,15 @@ export interface TVShow {
   number_of_seasons?: number
   number_of_episodes?: number
   episode_run_time?: number[]
+  seasons?: {
+    air_date: string
+    episode_count: number
+    id: number
+    name: string
+    overview: string
+    poster_path: string
+    season_number: number
+  }[]
   status?: string
   production_companies?: ProductionCompany[]
   production_countries?: ProductionCountry[]
@@ -47,6 +64,7 @@ export interface TVShow {
   similar?: { results: TVShow[] }
   videos?: { results: Video[] }
   images?: Images
+  reviews?: { results: Review[] }
 }
 
 export interface Genre {
@@ -130,6 +148,22 @@ export interface Episode {
   still_path?: string
   air_date: string
   vote_average: number
+}
+
+export interface Review {
+  id: string
+  author: string
+  content: string
+  author_details: {
+    name: string
+    username: string
+    avatar_path: string | null
+    rating: number | null
+  }
+}
+
+export function isMovie(content: Movie | TVShow): content is Movie {
+  return "title" in content;
 }
 
 export class TMDBApi {
@@ -221,6 +255,25 @@ export class TMDBApi {
 
   static async getTVGenres(language = "en"): Promise<{ genres: Genre[] }> {
     const response = await fetch(`${BASE_URL}/genre/tv/list?language=${language}`)
+    return response.json()
+  }
+
+  static async discoverStreamingContent(params: {
+    service: string
+    type: 'movie' | 'tv'
+    language?: string
+    page?: number
+    sort_by?: string
+  }): Promise<{ results: (Movie | TVShow)[]; total_pages: number }> {
+    const searchParams = new URLSearchParams({
+      service: params.service,
+      type: params.type,
+      language: params.language || 'en',
+      page: params.page?.toString() || '1',
+      sort_by: params.sort_by || 'popularity.desc'
+    })
+
+    const response = await fetch(`${BASE_URL}/discover/streaming?${searchParams}`)
     return response.json()
   }
 }

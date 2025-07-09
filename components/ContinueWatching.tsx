@@ -80,7 +80,7 @@ export function ContinueWatching({ isVisible, onScrollSection }: ContinueWatchin
                         {continueWatchingItems.map((item) => (
                             <motion.div
                                 key={`${item.id}-${item.type}`}
-                                className="flex-shrink-0 w-36 md:w-44"
+                                className="flex-shrink-0"
                                 variants={cardVariants}
                             >
                                 <ContinueWatchingCard

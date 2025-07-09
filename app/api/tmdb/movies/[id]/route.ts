@@ -12,12 +12,12 @@ function getApiKey() {
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { searchParams } = new URL(request.url)
         const language = searchParams.get('language') || 'en'
-        const id = params.id
+        const { id } = await params
 
         const response = await fetch(
             `${BASE_URL}/movie/${id}?api_key=${getApiKey()}&language=${language}&append_to_response=credits,similar,videos,reviews,release_dates,keywords,images`

@@ -174,8 +174,7 @@ The app uses CSS custom properties for theming. Main colors:
 
 ## 🤝 Contributing
 
-- WE CURRENTLY ARENT ACCEPTING ANY CONTIBUTIONS
-- BUT THE BEST PART IS ITS ON OUR AGENDA FOR THE FUTURE
+- JUST CLONE THE REPO AND SEND A PULL REQUEST ILL CHECK IT OUT :)
 
 ### Development Guidelines
 - Use TypeScript for type safety

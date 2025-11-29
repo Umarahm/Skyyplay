@@ -4,6 +4,8 @@ import type React from "react"
 import type { Metadata } from "next"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar"
+import { Toaster } from "@/components/ui/toaster"
+import { RedirectBlocker } from "@/components/RedirectBlocker"
 import "./globals.css"
 import { Inter, Orbitron } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -82,6 +84,8 @@ export default function RootLayout({
             <ServiceWorkerRegistrar />
             <Analytics />
             <SpeedInsights />
+            <RedirectBlocker />
+            <Toaster />
           </ClickSpark>
         </ThemeProvider>
       </body>

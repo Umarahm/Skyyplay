@@ -452,8 +452,8 @@ export default function HomePage() {
             {/* Loading skeleton or main content */}
             {isLoading ? (
                 <>
-                    <div className="pt-24 pb-8 animate-fade-in-up">
-                        <div className="container mx-auto px-4">
+                    <div className="pt-16 md:pt-24 pb-6 md:pb-8 animate-fade-in-up">
+                        <div className="container mx-auto px-4 md:px-6">
                             <div className="relative carousel-height rounded-2xl overflow-hidden bg-gradient-to-r from-gray-800 to-gray-700">
                                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/20" />
                                 <div className="relative z-10 h-full flex items-center">
@@ -486,7 +486,7 @@ export default function HomePage() {
                         </div>
                     </div>
 
-                    <div className="container mx-auto px-4 md:px-6 py-8 md:py-12 animate-fade-in-up">
+                    <div className="container mx-auto px-4 md:px-6 py-6 md:py-12 animate-fade-in-up">
                         <div className="text-center mb-6 md:mb-8">
                             <div className="h-8 w-64 bg-gray-600 rounded mx-auto mb-2 animate-pulse skeleton-shimmer" />
                             <div className="h-4 w-96 bg-gray-700 rounded mx-auto animate-pulse skeleton-shimmer" />
@@ -503,7 +503,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Skeleton Footer */}
-                    <footer className="text-gray-400 py-4 md:py-6 mt-8 md:mt-12">
+                    <footer className="text-gray-400 py-3 md:py-6 mt-6 md:mt-12">
                         <div className="container mx-auto px-4 md:px-6 text-center space-y-2">
                             <div className="h-4 w-96 bg-gray-700 rounded mx-auto animate-pulse skeleton-shimmer" />
                             <div className="h-4 w-64 bg-gray-700 rounded mx-auto animate-pulse skeleton-shimmer" />
@@ -514,8 +514,8 @@ export default function HomePage() {
             ) : (
                 <>
                     {/* Featured Carousel Section */}
-                    <div className="pt-24 pb-8 animate-fade-in-up">
-                        <div className="container mx-auto px-4">
+                    <div className="pt-16 md:pt-24 pb-6 md:pb-8 animate-fade-in-up">
+                        <div className="container mx-auto px-4 md:px-6">
                             <Carousel
                                 items={carouselItems}
                                 isLoading={carouselItems.length === 0}
@@ -526,7 +526,7 @@ export default function HomePage() {
                     </div>
 
                     {/* AI-Enhanced Genre Selection */}
-                    <div className="py-8 px-4 animate-fade-in-up">
+                    <div className="py-6 md:py-8 px-4 md:px-6 animate-fade-in-up">
                         <div className="container mx-auto">
                             <SmartGenreTags
                                 genres={genres}
@@ -548,7 +548,7 @@ export default function HomePage() {
 
                     {/* Genre Results - Same size as Top 10 with Static Animation */}
                     {selectedGenre && genreResults.length > 0 && (
-                        <div className="py-6 px-0 sm:px-6 animate-fade-in-up">
+                        <div className="py-4 md:py-6 px-0 sm:px-6 animate-fade-in-up">
                             <div className="container mx-auto">
                                 <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
                                     <h2 className="text-2xl font-bold brand-text">
@@ -585,7 +585,7 @@ export default function HomePage() {
                     )}
 
                     {/* Top 10 Section */}
-                    <div className="py-6 px-0 sm:px-6 animate-fade-in-up">
+                    <div className="py-4 md:py-6 px-0 sm:px-6 animate-fade-in-up">
                         <div className="container mx-auto">
                             <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
                                 <h2 className="text-2xl font-bold brand-text">
@@ -661,7 +661,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Category Sections with Static Animation */}
-                    <div className="px-0 sm:px-6 py-4 overflow-hidden">
+                    <div className="px-0 sm:px-6 py-3 md:py-4 overflow-hidden">
                         {isLoadingCategories ? (
                             // Show skeleton loading for categories
                             [...Array(5)].map((_, categoryIndex) => (
@@ -753,7 +753,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Footer */}
-                    <footer className="text-gray-400 py-4 md:py-6 mt-8 md:mt-12 animate-fade-in-up">
+                    <footer className="text-gray-400 py-3 md:py-6 mt-6 md:mt-12 animate-fade-in-up">
                         <div className="container mx-auto px-4 md:px-6 text-center">
                             <p className="text-xs md:text-sm">
                                 All rules and regulations of the respective streaming platforms apply. <br />

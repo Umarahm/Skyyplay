@@ -113,16 +113,22 @@ export async function GET(request: NextRequest) {
                 apiParams.append('page', page)
                 apiParams.append('sort_by', sortBy)
 
-                // Map service to provider ID (you may need to expand this mapping)
+                    // Map service to provider ID (you may need to expand this mapping)
                 const providerMap: { [key: string]: string } = {
                     'netflix': '8',
                     'disney': '337',
                     'hulu': '15',
                     'amazon': '9',
-                    'hbo': '384',
+                    'prime': '9', // Amazon Prime Video
+                    'hbo': '318', // Max (formerly HBO Max) - working provider ID
                     'apple': '350',
+                    'appletv': '350',
                     'paramount': '531',
-                    'peacock': '386'
+                    'peacock': '386',
+                    'showtime': '37',
+                    'fox': '2',
+                    'warner': '8', // Warner Bros shares Netflix ID
+                    'discovery': '24'
                 }
 
                 if (service && providerMap[service]) {

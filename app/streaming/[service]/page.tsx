@@ -88,8 +88,8 @@ const SERVICE_CONFIGS: Record<string, ServiceConfig> = {
     }
 }
 
-export default function StreamingServicePage({ params }: StreamingServicePageProps) {
-    const service = params.service
+export default async function StreamingServicePage({ params }: StreamingServicePageProps) {
+    const { service } = await params
     const serviceConfig = SERVICE_CONFIGS[service]
 
     if (!serviceConfig) {

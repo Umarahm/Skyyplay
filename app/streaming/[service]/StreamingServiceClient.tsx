@@ -38,10 +38,11 @@ export function StreamingServiceClient({ service, serviceConfig }: StreamingServ
 
     const scrollSection = useCallback((containerId: string, direction: "left" | "right") => {
         const container = document.getElementById(containerId)
-        if (container) {
-            const scrollAmount = direction === "left" ? -400 : 400
-            container.scrollBy({ left: scrollAmount, behavior: "smooth" })
-        }
+        if (!container) return
+
+        // Calculate scroll amount based on container width for smoother scrolling
+        const scrollAmount = direction === "left" ? -container.offsetWidth * 0.8 : container.offsetWidth * 0.8
+        container.scrollBy({ left: scrollAmount, behavior: "smooth" })
     }, [])
 
     const fetchServiceContent = useCallback(async () => {
@@ -68,6 +69,7 @@ export function StreamingServiceClient({ service, serviceConfig }: StreamingServ
                             })
                         ])
 
+
                         // Combine and shuffle movies and TV shows
                         const combined = [...(movieData.results || []), ...(tvData.results || [])]
                             .sort(() => Math.random() - 0.5)
@@ -82,6 +84,7 @@ export function StreamingServiceClient({ service, serviceConfig }: StreamingServ
                             sort_by: category.sort || 'popularity.desc',
                             page: 1
                         })
+
 
                         sections[category.id] = (data.results || []).slice(0, 20)
                     }
@@ -104,6 +107,7 @@ export function StreamingServiceClient({ service, serviceConfig }: StreamingServ
             fetchServiceContent()
         }
     }, [service, fetchServiceContent])
+
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -204,9 +208,8 @@ export function StreamingServiceClient({ service, serviceConfig }: StreamingServ
                                         {/* Content Cards */}
                                         <div
                                             id={`${category.id}-container`}
-                                            className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-4 px-4 sm:px-6"
+                                            className="flex space-x-3 md:space-x-6 overflow-x-auto scrollbar-hide scroll-smooth"
                                             style={{
-                                                scrollBehavior: 'smooth',
                                                 scrollbarWidth: 'none',
                                                 msOverflowStyle: 'none'
                                             }}
@@ -214,7 +217,7 @@ export function StreamingServiceClient({ service, serviceConfig }: StreamingServ
                                             {sectionContent.map((item, index) => (
                                                 <div
                                                     key={`${item.id}-${category.id}`}
-                                                    className={`flex-shrink-0 animate-fade-in-up stagger-animation`}
+                                                    className="flex-shrink-0 category-item animate-fade-in-up stagger-animation"
                                                     style={{ "--stagger": index } as React.CSSProperties}
                                                 >
                                                     <ContentCard

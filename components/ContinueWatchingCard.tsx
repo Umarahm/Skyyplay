@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import type { ContinueWatchingItem } from "@/hooks/useContinueWatching"
 import { WatchlistButton } from "./WatchlistButton"
 import { useWatchlist } from "@/hooks/useWatchlist"
+import Link from "next/link"
 
 interface ContinueWatchingCardProps {
     item: ContinueWatchingItem
@@ -64,7 +65,6 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
             onRemove(item.id, item.type)
         } else {
             setShowRemoveConfirm(true)
-            // Auto-hide confirmation after 3 seconds
             setTimeout(() => setShowRemoveConfirm(false), 3000)
         }
     }
@@ -72,10 +72,11 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
     const progressInfo = formatProgress(item.progress, item.duration)
     const episodeInfo = item.season && item.episode ? ` • S${item.season}E${item.episode}` : ''
     const isAdded = isInWatchlist(item.id, item.type)
+    const year = new Date(item.release_date || "").getFullYear()
 
     return (
-        <div className="inspiration-card group" ref={containerRef}>
-            <a href={`/watch?id=${item.id}&type=${item.type}`} className="block w-full h-full">
+        <div className="inspiration-card group relative" ref={containerRef}>
+            <Link href={`/watch?id=${item.id}&type=${item.type}`} className="block w-full h-full relative">
                 {/* Main Image */}
                 {shouldLoad ? (
                     <Image
@@ -97,32 +98,15 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
                     <div className="w-full h-full bg-gray-800 animate-pulse rounded-[12px]" />
                 )}
 
-                {/* Noise Texture Overlay */}
-                <div className="inspiration-card-noise" />
-
-                {/* Inner Shadow Effect */}
-                <div className="inspiration-card-inner-shadow" />
-
-                {/* Watchlist Button Container */}
-                <div className="inspiration-watchlist-button-container">
-                    <div className="inspiration-watchlist-button-bg" />
-                    <WatchlistButton
-                        item={item}
-                        type={item.type}
-                        size="sm"
-                        className={`watchlist-btn-inspiration ${isAdded ? 'is-added' : ''}`}
-                    />
-                </div>
-
-                {/* Remove Button */}
-                <div className="absolute top-4 right-4 z-20">
+                {/* Remove Button - Positioned absolute top-right */}
+                <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button
                         onClick={handleRemoveClick}
-                        className={`w-8 h-8 rounded-lg transition-all duration-200 flex items-center justify-center backdrop-blur-sm group-hover:opacity-100 md:opacity-0 ${showRemoveConfirm
-                            ? 'bg-red-500/80 hover:bg-red-600/80 text-white border border-red-400/50'
-                            : 'bg-black/50 hover:bg-black/70 text-gray-300 hover:text-white border border-white/20'
+                        className={`w-8 h-8 rounded-full transition-all duration-200 flex items-center justify-center shadow-lg ${showRemoveConfirm
+                            ? 'bg-red-600 text-white'
+                            : 'bg-black/60 hover:bg-red-600 text-white border border-white/10'
                             }`}
-                        title={showRemoveConfirm ? "Click again to confirm removal" : "Remove from Continue Watching"}
+                        title={showRemoveConfirm ? "Click again to confirm" : "Remove"}
                     >
                         {showRemoveConfirm ? (
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,32 +120,34 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
                     </button>
                 </div>
 
-
-                {/* Progress Bar - positioned above glass overlay */}
-                <div className="absolute bottom-16 left-4 right-4 z-15 pointer-events-none">
-                    <div className="w-full bg-black/40 rounded-full h-1 mb-1 backdrop-blur-sm">
-                        <div
-                            className="bg-gradient-to-r from-purple-500 to-blue-500 h-1 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.max(2, item.progress)}%` }}
-                        />
-                    </div>
-                    <div className="text-xs text-white/90 flex justify-between items-center px-1">
-                        <span className="drop-shadow-md">{Math.round(item.progress)}% watched</span>
-                        <span className="drop-shadow-md">{progressInfo.remaining} left</span>
+                {/* Glass Overlay with Content Info - Matches ContentCard style */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                    <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 mb-4">
+                        <h3 className="text-white font-bold text-base line-clamp-2 mb-1 drop-shadow-md leading-tight">{item.title}</h3>
+                        <div className="flex items-center justify-between text-xs text-gray-300 font-medium">
+                            <span className="flex items-center gap-1 text-yellow-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+                                    <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                                </svg>
+                                {item.vote_average ? item.vote_average.toFixed(1) : "N/A"}
+                            </span>
+                            <span>{year || 'N/A'}</span>
+                        </div>
+                        {/* Additional Info for Continue Watching */}
+                        <div className="text-xs text-gray-400 mt-1 truncate">
+                            {episodeInfo ? episodeInfo.replace(' • ', '') : formatDuration(item.duration)} left
+                        </div>
                     </div>
                 </div>
 
-                {/* Glass Overlay with Content Info */}
-                <div className="inspiration-glass-overlay">
-                    <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2">{item.title}</h3>
-                    <p className="text-xs text-gray-300 mb-1">
-                        ⭐ {item.vote_average ? item.vote_average.toFixed(1) : "N/A"}/10{episodeInfo}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                        {progressInfo.watched} watched • {formatDuration(item.duration)} total
-                    </p>
+                {/* Progress Bar - Always visible at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800 z-10">
+                    <div
+                        className="h-full bg-purple-600 shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                        style={{ width: `${Math.max(5, Math.min(100, item.progress))}%` }}
+                    />
                 </div>
-            </a>
+            </Link>
         </div>
     )
-} 
+}

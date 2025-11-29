@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -44,7 +44,13 @@ interface NavbarProps {
 export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab = "shows", onTabChange }: NavbarProps) {
   const [mobileMenu, setMobileMenu] = useState(false)
   const [watchlistOpen, setWatchlistOpen] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
   const { watchlistCount } = useWatchlist()
+
+  // Mark as hydrated after component mounts
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   return (
     <>
@@ -88,7 +94,7 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
                     className="nav-link relative"
                   >
                     Watchlist
-                    {watchlistCount > 0 && (
+                    {isHydrated && watchlistCount > 0 && (
                       <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
                         {watchlistCount > 9 ? '9+' : watchlistCount}
                       </span>

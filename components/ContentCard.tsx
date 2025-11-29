@@ -5,6 +5,7 @@ import type { Movie, TVShow } from "@/lib/tmdb"
 import { useEffect, useRef, useState } from "react"
 import { WatchlistButton } from "./WatchlistButton"
 import { useWatchlist } from "@/hooks/useWatchlist"
+import { ContentDrawer } from "./ContentDrawer"
 
 interface ContentCardProps {
   item: Movie | TVShow
@@ -15,6 +16,7 @@ export function ContentCard({ item, type }: ContentCardProps) {
   const title = "title" in item ? item.title : item.name
   const year = new Date("release_date" in item ? item.release_date : item.first_air_date || "").getFullYear()
   const { isInWatchlist } = useWatchlist()
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   // Use intersection observer to defer image loading until the card is at least 50% visible
   const containerRef = useRef<HTMLDivElement>(null)
@@ -45,55 +47,69 @@ export function ContentCard({ item, type }: ContentCardProps) {
   const isAdded = isInWatchlist(item.id, type)
 
   return (
-    <div className="inspiration-card group" ref={containerRef}>
-      <a href={`/info?id=${item.id}&type=${type}`} className="block w-full h-full">
-        {/* Main Image */}
-        {shouldLoad ? (
-          <Image
-            src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/logo.avif"}
-            alt={title}
-            fill
-            className="inspiration-card-image"
-            sizes="(max-width: 768px) 156px, 208px"
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-            onError={(e) => {
-              const target = e.target as HTMLImageElement
-              target.src = "/logo.avif"
-            }}
-            priority={false}
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-800 animate-pulse rounded-[12px]" />
-        )}
+    <>
+      <div 
+        className="inspiration-card group cursor-pointer" 
+        ref={containerRef}
+        onClick={() => setIsDrawerOpen(true)}
+      >
+        <div className="block w-full h-full relative">
+          {/* Main Image */}
+          {shouldLoad ? (
+            <Image
+              src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/logo.avif"}
+              alt={title}
+              fill
+              className="inspiration-card-image"
+              sizes="(max-width: 768px) 156px, 208px"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.src = "/logo.avif"
+              }}
+              priority={false}
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-800 animate-pulse rounded-[12px]" />
+          )}
 
-        {/* Noise Texture Overlay */}
-        <div className="inspiration-card-noise" />
+          {/* Watchlist Button - Positioned absolute top-right */}
+          <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
+            <WatchlistButton
+              item={item}
+              type={type}
+              size="sm"
+              variant="overlay"
+              className="backdrop-blur-md bg-black/40 hover:bg-purple-600/80 border-white/10 text-white rounded-full p-2 transition-all duration-300 transform hover:scale-110 shadow-lg"
+            />
+          </div>
 
-        {/* Inner Shadow Effect */}
-        <div className="inspiration-card-inner-shadow" />
-
-        {/* Watchlist Button Container */}
-        <div className="inspiration-watchlist-button-container">
-          <div className="inspiration-watchlist-button-bg" />
-          <WatchlistButton
-            item={item}
-            type={type}
-            size="sm"
-            className={`watchlist-btn-inspiration ${isAdded ? 'is-added' : ''}`}
-          />
+          {/* Glass Overlay with Content Info */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+            <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+              <h3 className="text-white font-bold text-base line-clamp-2 mb-1 drop-shadow-md leading-tight">{title}</h3>
+              <div className="flex items-center justify-between text-xs text-gray-300 font-medium">
+                <span className="flex items-center gap-1 text-yellow-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+                    <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                  </svg>
+                  {item.vote_average ? item.vote_average.toFixed(1) : "N/A"}
+                </span>
+                <span>{year}</span>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Glass Overlay with Content Info */}
-        <div className="inspiration-glass-overlay">
-          <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2">{title}</h3>
-          <p className="text-xs text-gray-300 mb-1">
-            ⭐ {item.vote_average ? item.vote_average.toFixed(1) : "N/A"}/10
-          </p>
-          {year && !isNaN(year) && <p className="text-xs text-gray-400">{year}</p>}
-        </div>
-      </a>
-    </div>
+      </div>
+      
+      <ContentDrawer 
+        item={item} 
+        type={type} 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)} 
+      />
+    </>
   )
 }

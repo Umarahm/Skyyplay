@@ -1,0 +1,115 @@
+/* Carousel Animations */
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.carousel-animate-slide {
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.carousel-animate-fade {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Component specific styles */
+.carousel-height {
+    height: 60vh;
+    min-height: 500px;
+    max-height: 800px;
+}
+
+@media (max-width: 768px) {
+    .carousel-height {
+        height: 65vh;
+        min-height: 400px;
+    }
+}
+
+.carousel-background-image {
+    transform-origin: center;
+    transition: transform 10s ease-out;
+}
+
+.carousel-background-image:hover {
+    transform: scale(1.1);
+}
+
+.carousel-content-container {
+    position: relative;
+}
+
+.carousel-buttons {
+    opacity: 0;
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.carousel-poster-container {
+    perspective: 1000px;
+}
+
+.carousel-meta {
+    opacity: 0;
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.carousel-pagination-btn {
+    transition: all 0.3s ease;
+}
+
+/* Glassmorphism utils */
+.backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+}
+
+.backdrop-blur-md {
+    backdrop-filter: blur(12px);
+}
+

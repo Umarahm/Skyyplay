@@ -1,3 +1,5 @@
+import tmdbFetch from "./tmdb-fetch"
+
 const BASE_URL = "/api/tmdb"
 
 export interface Movie {
@@ -168,28 +170,46 @@ export function isMovie(content: Movie | TVShow): content is Movie {
 
 export class TMDBApi {
   static async getPopularMovies(page = 1, language = "en"): Promise<{ results: Movie[]; total_pages: number }> {
-    const response = await fetch(`${BASE_URL}/movies/popular?language=${language}&page=${page}`)
-    return response.json()
+    return tmdbFetch({
+      requestID: "popularMovie",
+      language,
+      page
+    })
   }
 
   static async getPopularTVShows(page = 1, language = "en"): Promise<{ results: TVShow[]; total_pages: number }> {
-    const response = await fetch(`${BASE_URL}/tv/popular?language=${language}&page=${page}`)
-    return response.json()
+    return tmdbFetch({
+      requestID: "popularTv",
+      language,
+      page
+    })
   }
 
-  static async getMovieDetails(id: number, language = "en"): Promise<Movie> {
-    const response = await fetch(`${BASE_URL}/movies/${id}?language=${language}`)
-    return response.json()
+  static async getMovieDetails(id: number, language = "en", append_to_response = "credits,reviews,similar,images"): Promise<Movie> {
+    return tmdbFetch({
+      requestID: "movieDetails",
+      id,
+      language,
+      append_to_response
+    })
   }
 
-  static async getTVShowDetails(id: number, language = "en"): Promise<TVShow> {
-    const response = await fetch(`${BASE_URL}/tv/${id}?language=${language}`)
-    return response.json()
+  static async getTVShowDetails(id: number, language = "en", append_to_response = "credits,reviews,similar,images"): Promise<TVShow> {
+    return tmdbFetch({
+      requestID: "tvDetails",
+      id,
+      language,
+      append_to_response
+    })
   }
 
   static async getSeasonDetails(tvId: number, seasonNumber: number, language = "en"): Promise<Season> {
-    const response = await fetch(`${BASE_URL}/tv/${tvId}/season/${seasonNumber}?language=${language}`)
-    return response.json()
+    return tmdbFetch({
+      requestID: "tvSeason",
+      id: tvId,
+      season: seasonNumber,
+      language
+    })
   }
 
   static async searchMovies(
@@ -197,10 +217,12 @@ export class TMDBApi {
     page = 1,
     language = "en",
   ): Promise<{ results: Movie[]; total_pages: number }> {
-    const response = await fetch(
-      `${BASE_URL}/search/movies?query=${encodeURIComponent(query)}&language=${language}&page=${page}`,
-    )
-    return response.json()
+    return tmdbFetch({
+      requestID: "searchMovie",
+      query,
+      language,
+      page
+    })
   }
 
   static async searchTVShows(
@@ -208,10 +230,12 @@ export class TMDBApi {
     page = 1,
     language = "en",
   ): Promise<{ results: TVShow[]; total_pages: number }> {
-    const response = await fetch(
-      `${BASE_URL}/search/tv?query=${encodeURIComponent(query)}&language=${language}&page=${page}`,
-    )
-    return response.json()
+    return tmdbFetch({
+      requestID: "searchTv",
+      query,
+      language,
+      page
+    })
   }
 
   static async discoverMovies(params: {
@@ -220,15 +244,13 @@ export class TMDBApi {
     page?: number
     sort_by?: string
   }): Promise<{ results: Movie[]; total_pages: number }> {
-    const searchParams = new URLSearchParams({
+    return tmdbFetch({
+      requestID: "discoverMovie",
       language: params.language || "en",
-      page: (params.page || 1).toString(),
-      sort_by: params.sort_by || "popularity.desc",
-      ...(params.with_genres && { with_genres: params.with_genres.toString() }),
+      page: params.page || 1,
+      sortBy: params.sort_by || "popularity.desc",
+      with_genres: params.with_genres?.toString()
     })
-
-    const response = await fetch(`${BASE_URL}/discover/movie?${searchParams}`)
-    return response.json()
   }
 
   static async discoverTVShows(params: {
@@ -237,25 +259,27 @@ export class TMDBApi {
     page?: number
     sort_by?: string
   }): Promise<{ results: TVShow[]; total_pages: number }> {
-    const searchParams = new URLSearchParams({
+    return tmdbFetch({
+      requestID: "discoverTv",
       language: params.language || "en",
-      page: (params.page || 1).toString(),
-      sort_by: params.sort_by || "popularity.desc",
-      ...(params.with_genres && { with_genres: params.with_genres.toString() }),
+      page: params.page || 1,
+      sortBy: params.sort_by || "popularity.desc",
+      with_genres: params.with_genres?.toString()
     })
-
-    const response = await fetch(`${BASE_URL}/discover/tv?${searchParams}`)
-    return response.json()
   }
 
   static async getMovieGenres(language = "en"): Promise<{ genres: Genre[] }> {
-    const response = await fetch(`${BASE_URL}/genre/movie/list?language=${language}`)
-    return response.json()
+    return tmdbFetch({
+      requestID: "movieGenres",
+      language
+    })
   }
 
   static async getTVGenres(language = "en"): Promise<{ genres: Genre[] }> {
-    const response = await fetch(`${BASE_URL}/genre/tv/list?language=${language}`)
-    return response.json()
+    return tmdbFetch({
+      requestID: "tvGenres",
+      language
+    })
   }
 
   static async discoverStreamingContent(params: {
@@ -265,15 +289,95 @@ export class TMDBApi {
     page?: number
     sort_by?: string
   }): Promise<{ results: (Movie | TVShow)[]; total_pages: number }> {
-    const searchParams = new URLSearchParams({
+    return tmdbFetch({
+      requestID: "discoverStreaming",
       service: params.service,
       type: params.type,
-      language: params.language || 'en',
-      page: params.page?.toString() || '1',
-      sort_by: params.sort_by || 'popularity.desc'
+      language: params.language || "en",
+      page: params.page || 1,
+      sortBy: params.sort_by || "popularity.desc"
     })
+  }
 
-    const response = await fetch(`${BASE_URL}/discover/streaming?${searchParams}`)
-    return response.json()
+  // Additional helper methods that match existing usage patterns
+  static async getUpcomingMovies(page = 1, language = "en"): Promise<{ results: Movie[]; total_pages: number }> {
+    return tmdbFetch({
+      requestID: "upcomingMovies",
+      language,
+      page
+    })
+  }
+
+  static async getAiringThisMonth(page = 1, language = "en"): Promise<{ results: TVShow[]; total_pages: number }> {
+    return tmdbFetch({
+      requestID: "airingThisMonth",
+      language,
+      page
+    })
+  }
+
+  static async discover(params: {
+    type: 'movie' | 'tv'
+    with_genres?: string
+    with_keywords?: string
+    with_origin_country?: string
+    without_genres?: string
+    primary_release_date_gte?: string
+    first_air_date_gte?: string
+    vote_count_gte?: number
+    vote_average_gte?: number
+    language?: string
+    page?: number
+    sort_by?: string
+  }): Promise<{ results: (Movie | TVShow)[]; total_pages: number }> {
+    return tmdbFetch({
+      requestID: "discover",
+      type: params.type,
+      with_genres: params.with_genres,
+      with_keywords: params.with_keywords,
+      with_origin_country: params.with_origin_country,
+      without_genres: params.without_genres,
+      primary_release_date_gte: params.primary_release_date_gte,
+      first_air_date_gte: params.first_air_date_gte,
+      vote_count_gte: params.vote_count_gte,
+      vote_average_gte: params.vote_average_gte,
+      language: params.language || "en",
+      page: params.page || 1,
+      sortBy: params.sort_by || "popularity.desc"
+    })
+  }
+
+  static async searchMulti(
+    query: string,
+    page = 1,
+    language = "en",
+  ): Promise<{ results: (Movie | TVShow)[]; total_pages: number }> {
+    return tmdbFetch({
+      requestID: "searchMulti",
+      query,
+      language,
+      page
+    })
+  }
+
+  static async getSearchSuggestions(
+    query: string,
+    type: 'movie' | 'tv' | 'multi' = 'multi',
+    language = "en"
+  ) {
+    return tmdbFetch({
+      requestID: "searchSuggestions",
+      query,
+      type,
+      language
+    })
+  }
+
+  static async getGenres(type: 'movie' | 'tv', language = "en"): Promise<{ genres: Genre[] }> {
+    return tmdbFetch({
+      requestID: "genres",
+      type,
+      language
+    })
   }
 }

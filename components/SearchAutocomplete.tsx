@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useSearchHistory, type SearchHistoryItem } from '@/hooks/useSearchHistory'
+import { TMDBApi } from '@/lib/tmdb'
 import Image from 'next/image'
 
 interface SearchSuggestion {
@@ -58,8 +59,9 @@ function SearchAutocomplete({
 
         setIsLoading(true)
         try {
-            const response = await fetch(`/api/tmdb/search/suggestions?q=${encodeURIComponent(searchQuery)}&type=${searchType}`)
-            const data = await response.json()
+            // Map searchType to supported types
+            const apiSearchType = searchType === 'person' ? 'multi' : searchType
+            const data = await TMDBApi.getSearchSuggestions(searchQuery, apiSearchType)
             setSuggestions(data.suggestions || [])
         } catch (error) {
             console.error('Error fetching suggestions:', error)

@@ -84,7 +84,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'streamed.su',
+        hostname: 'streamed.pk',
         pathname: '/**',
       },
       {

@@ -5,13 +5,15 @@ import type { Metadata } from "next"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar"
 import "./globals.css"
-import { Inter } from "next/font/google"
+import { Inter, Orbitron } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import ClickSpark from "@/components/ClickSpark"
 
 const inter = Inter({ subsets: ["latin"] })
+const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-orbitron" })
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://skyyplay.com"),
   title: "SkyyPlay - Free Movies & TV Shows",
   description:
     "Click, watch, enjoy. SkyyPlay breaks down the paywall, ensuring that quality content is accessible to everyone.",
@@ -60,7 +62,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="SkyyPlay" />
         <link rel="apple-touch-icon" href="/logo.avif" />
       </head>
-      <body className={`${inter.className} bg-black text-white min-h-screen`}>
+      <body className={`${inter.className} ${orbitron.variable} bg-black text-white min-h-screen`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

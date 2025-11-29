@@ -72,15 +72,18 @@
 
 @media (max-width: 768px) {
     .carousel-height {
-        height: 65vh;
-        min-height: 400px;
+        height: 45vh;
+        min-height: 300px;
+        margin-top: 1em;
     }
 }
 
 /* Tablet specific carousel adjustments */
 @media (min-width: 769px) and (max-width: 1024px) {
     .carousel-height {
-        height: 55vh;
+        margin-left: 1em;
+        margin-right: 1em;
+        height: 60vh;
         min-height: 400px;
         max-height: 650px;
     }

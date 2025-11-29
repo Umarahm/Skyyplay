@@ -1,236 +1,310 @@
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import styles from "./style.module.scss";
-import { BsCaretLeftFill, BsCaretRightFill } from "react-icons/bs";
-
-// react-lazy-load-image-component
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import "react-lazy-load-image-component/src/effects/opacity.css";
-
-const Carousel = ({
-  imageArr,
-  setIndex,
-  mobileHeight,
-  desktopHeight,
-  objectFit,
-}: any) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState("");
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [images, setImages] = useState(imageArr);
-  const [imagePlaceholder, setImagePlaceholder] = useState(false);
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--carousel-desktop-height",
-      desktopHeight,
-    );
-    document.documentElement.style.setProperty(
-      "--carousel-mobile-height",
-      mobileHeight,
-    );
-    document.documentElement.style.setProperty(
-      "--carousel-object-fit",
-      objectFit,
-    );
-    // if (imageArr.length === 0) {
-    //   setImages(["/images/logo.svg"]);
-    // }
-    const Interval = setInterval(() => {
-      // setImages(imageArr);
-      handleNext();
-    }, 15000);
-    return () => {
-      clearInterval(Interval);
-    };
-  });
-  useEffect(() => {
-    if (imageArr.length === 0) {
-      setImages(["/images/logo.svg"]);
-    } else {
-      setImages(imageArr);
-    }
-    // console.log({ len: imageArr.length });
-  }, [imageArr]);
-
-  const slideVariants = {
-    hiddenRight: {
-      x: "10%",
-      opacity: 0,
-    },
-    hiddenLeft: {
-      x: "-10%",
-      opacity: 0,
-    },
-    visible: {
-      x: "0",
-      opacity: imageLoaded ? 1 : 0,
-      transition: {
-        duration: 1,
-      },
-    },
-    exit: {
-      opacity: 0,
-      x: "-10%",
-      transition: {
-        duration: 0.7,
-      },
-    },
-  };
-
-  const handleNext = () => {
-    console.log({ images });
-
-    setDirection("right");
-    setCurrentIndex((prevIndex) =>
-      prevIndex === images.length - 1 ? 0 : (prevIndex + 1) % images.length,
-    );
-    setIndex((prevIndex: number) =>
-      prevIndex === images.length - 1 ? 0 : (prevIndex + 1) % images.length,
-    );
-  };
-
-  const handlePrevious = () => {
-    setDirection("left");
-    setCurrentIndex((prevIndex) =>
-      prevIndex - 1 < 0 ? images.length - 1 : prevIndex - 1,
-    );
-    setIndex((prevIndex: number) =>
-      prevIndex - 1 < 0 ? images.length - 1 : prevIndex - 1,
-    );
-  };
-
-  return (
-    <div className={styles.carousel}>
-      <div
-        className={`${styles.carousel_images} ${!imageLoaded ? "skeleton" : null}`}
-      >
-        {/* if rllic package is not available, then start using this code again, and comment/delete the rllic code */}
-        {/* <AnimatePresence mode="sync">
-          <motion.img
-            key={currentIndex}
-            alt={"carousel"}
-            src={`${imagePlaceholder ? "/images/logo.svg" : images[currentIndex]}`}
-            initial={direction === "right" ? "hiddenRight" : "hiddenLeft"}
-            animate="visible"
-            exit="exit"
-            variants={slideVariants}
-            className={`${imageLoaded ? "skeleton" : null}`}
-            // onLoad={() => {
-            //   setImageLoaded(true);
-            // }}
-            onLoad={() => {
-              setTimeout(() => {
-                setImageLoaded(true);
-              }, 100);
-            }}
-            onError={(e) => {
-              // console.log({ e });
-              setImagePlaceholder(true);
-            }}
-            loading="lazy"
-          // style={imageLoaded ? { opacity: 1 } : { opacity: 0 }}
-          />
-        </AnimatePresence> */}
-
-        {/* react-lazy-load-image-component */}
-        <AnimatePresence mode="sync">
-          <motion.div
-            key={currentIndex}
-            initial={direction === "right" ? "hiddenRight" : "hiddenLeft"}
-            animate="visible"
-            exit="exit"
-            variants={slideVariants}
-            className={`${imageLoaded ? "skeleton" : null} ${styles.img}`}
-          >
-            <LazyLoadImage
-              // useIntersectionObserver={true}
-              effect="opacity"
-              key={currentIndex}
-              alt={"carousel"}
-              src={`${imagePlaceholder ? "/images/logo.svg" : images[currentIndex]}`}
-              className={`${!imageLoaded ? "skeleton" : null}`}
-              // onLoad={() => {
-              //   setImageLoaded(true);
-              // }}
-              onLoad={() => {
-                setTimeout(() => {
-                  setImageLoaded(true);
-                }, 100);
-              }}
-              onError={(e) => {
-                // console.log({ e });
-                setImagePlaceholder(true);
-              }}
-              loading="lazy"
-              // style={imageLoaded ? { opacity: 1 } : { opacity: 0 }}
-            />
-          </motion.div>
-        </AnimatePresence>
-        <div className={styles.slide_direction}>
-          <BsCaretLeftFill className={styles.left} onClick={handlePrevious} />
-
-          <BsCaretRightFill className={styles.right} onClick={handleNext} />
-        </div>
-      </div>
-    </div>
-  );
-};
-export default Carousel;
-
-
-
-**********************************
-.carousel_images,
-.carousel_images .img,
-.carousel_images .img span {
-  height: var(--carousel-desktop-height);
-  width: 100%;
-  max-height: 100vh;
-  max-width: 100vw;
-  margin: auto;
-  overflow: hidden;
-  border-radius: 0 0 2rem 2rem;
-  // background-attachment: fixed;
-}
-.carousel_images img {
-  width: 100%;
-  height: 100%;
-  object-position: top;
-  // object-fit: cover;
-  object-fit: var((--carousel-object-fit));
-  border-radius: 0 0 2rem 2rem;
-  transition: opacity 2s ease;
-  border: none;
-}
-.slide_direction {
+.MetaDetailPage {
+  height: 85vh;
+  width: clamp(20rem, 100vw, 25rem);
+  border-radius: 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--primary-1);
+  padding: 1rem;
   display: flex;
-  justify-content: space-between;
-  display: none;
-}
-.left,
-.right {
-  display: none;
-  font-size: 1.5rem;
-  color: var(--ascent-color);
-  z-index: 3;
-}
-.left {
-  left: 0;
-}
-.right {
-  right: 0;
+  justify-content: flex-start;
+  align-items: flex-start;
+  position: absolute;
+  top: 5rem;
+  right: 1.5rem;
+  z-index: 2;
+  .MetaDetails {
+    height: 100%;
+    width: 100%;
+    border-radius: 1rem;
+    background: var(--primary-1);
+    padding: 1rem;
+    overflow: auto;
+    position: relative;
+    padding-top: 0;
+    .category {
+      display: flex;
+      width: 100%;
+      justify-content: space-around;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      // margin: 1rem 0;
+      position: sticky;
+      top: 0;
+      left: 0;
+      background: var(--primary-1);
+      padding: 1rem 0;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--primary-2);
+    }
+    h3,
+    h4 {
+      color: var(--primary-3);
+      margin: 2rem 0 0.3rem 0;
+    }
+    p {
+      color: var(--primary-2);
+    }
+    .casts {
+      h4 {
+        margin-top: 0;
+      }
+      height: 100%;
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      // flex-direction: column;
+      gap: 1rem;
+      flex-wrap: wrap;
+      .header {
+        width: 100%;
+        margin-bottom: 1rem;
+      }
+      .cast {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 10rem;
+        gap: 0.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        h4 {
+          margin: 0;
+        }
+      }
+    }
+    .img {
+      width: 4rem !important;
+      height: 6rem;
+      object-fit: cover;
+      border-radius: 0.5rem;
+    }
+    .MovieList,
+    .ReviewList,
+    .EpisodeList {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      .Review {
+        padding: 1rem;
+        background: var(--bg-color);
+        max-height: 20rem;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0 auto;
+        h4 {
+          margin-top: 0;
+        }
+        .rating {
+          color: var(--primary-3);
+          margin-bottom: 1rem;
+        }
+      }
+      .ReviewDetail {
+        height: unset;
+        max-height: unset !important;
+      }
+    }
+    .EpisodeList {
+      gap: 0.1rem;
+      select {
+        width: clamp(15rem, 50vw, 20rem);
+        padding: 1rem 2rem;
+        background: var(--bg-color);
+        color: var(--primary-3);
+        outline: none;
+        border: 1px solid var(--primary-2);
+        border-radius: 0.5rem;
+        margin: 1rem auto;
+        // &[selected="true"]{
+        //   color: var(--ascent-color);
+        // }
+      }
+
+      .episode {
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        flex-direction: column;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: var(--bg-color);
+        max-height: 12rem;
+        overflow: hidden;
+        cursor: pointer;
+        gap: 0.5rem;
+        border-radius: 0.5rem;
+        h4 {
+          margin-top: 0;
+        }
+        .CardSmall {
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .img {
+          height: 8rem !important;
+          width: 8rem !important;
+          object-fit: cover;
+        }
+        .details {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+
+          .links {
+            margin-bottom: 1rem;
+            // width: clamp(7rem,50%,25rem);
+          }
+        }
+        .episodeHeader {
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+      }
+    }
+  }
+  .pagination {
+    list-style: none;
+    // height: 31.5px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2px;
+    cursor: pointer;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+    svg {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      color: var(--primary-2);
+    }
+  }
+  .page_item {
+    list-style: none;
+    padding: 2px 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
-.loading {
-  opacity: 0 !important;
+.inactive {
+  cursor: pointer;
+  color: var(--primary-2);
+  fill: var(--primary-2);
 }
-.loaded {
-  opacity: 1 !important;
+
+.active {
+  cursor: pointer;
+  color: var(--ascent-color) !important;
+  fill: var(--ascent-color) !important;
 }
+
+.paginateActive {
+  background-color: var(--ascent-color);
+  border-radius: 0.5rem;
+  color: var(--primary-1);
+  a {
+    color: var(--primary-1);
+  }
+}
+.disabled {
+  svg {
+    opacity: 0.5 !important;
+    fill: var(--ascent-color);
+  }
+}
+
+.notAired {
+  opacity: 0.7;
+}
+.notAiredTag {
+  color: var(--primary-3);
+  display: inline-block;
+  width: 100%;
+}
+
+.highlightEpisode {
+  background: var(--primary-1) !important;
+  border: 1px solid var(--primary-2);
+}
+
+.close {
+  display: none;
+  position: absolute;
+  cursor: pointer;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+}
+
 @media (max-width: 769px) {
-  .carousel_images,
-  .carousel_images .img,
-  .carousel_images .img span {
-    height: var(--carousel-mobile-height);
+  .MetaDetailPage {
+    height: 90%;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    // background: var(--bg-color);
+    border-radius: 1rem;
+    top: 0;
+    right: 0;
+    z-index: 3;
+    .MetaDetails {
+      position: relative;
+      padding-top: 4rem;
+      min-height: 50vh;
+      .category {
+        position: absolute;
+        top: -0.5rem;
+        left: 0;
+        justify-content: space-around;
+      }
+      .img {
+        width: 3rem !important;
+        height: 4.5rem !important;
+      }
+      .MovieList,
+      .ReviewList {
+        .Review {
+          max-height: 15rem;
+          .rating {
+            margin-bottom: 0.5rem;
+          }
+        }
+        .ReviewDetail {
+          height: unset;
+          max-height: unset;
+        }
+      }
+    }
+    .EpisodeList {
+      .episode {
+        // display: flex !important;
+        height: 5rem;
+        .img,
+        .CardSmall {
+          display: none;
+        }
+        .details {
+          // margin-top: 0.5rem;
+          justify-content: flex-start;
+          align-items: flex-start;
+        }
+      }
+    }
+  }
+  .close {
+    display: block;
   }
 }

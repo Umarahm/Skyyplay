@@ -1,0 +1,1430 @@
+/* Live Sports Page Styles */
+.live-sports-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.live-sports-particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.live-sports-nav {
+    position: fixed;
+    width: 100%;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.live-sports-mobile-menu {
+    display: block;
+    margin-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+    .live-sports-mobile-menu {
+        display: none;
+    }
+}
+
+.live-sports-notice-banner {
+    background: linear-gradient(145deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.05));
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    z-index: 10;
+    max-width: 64rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.live-sports-carousel-btn {
+    position: relative;
+    transform: translateY(0);
+    left: 0;
+    right: 0;
+    top: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+    background: rgba(23, 23, 23, 0.8);
+    border: 1px solid rgb(64, 64, 64);
+    color: white;
+}
+
+.live-sports-carousel-btn:hover {
+    background: rgba(38, 38, 38, 1);
+}
+
+.live-sports-category-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+    border-width: 2px;
+    border-style: solid;
+}
+
+.live-sports-category-content {
+    position: relative;
+    aspect-ratio: 3 / 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    background: #fde7f3;
+    border-radius: 0.5rem;
+}
+
+.live-sports-matches-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-matches-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-matches-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .live-sports-matches-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (min-width: 1280px) {
+    .live-sports-matches-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+.live-sports-match-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.live-sports-match-card:hover {
+    transform: scale(1.05);
+}
+
+.live-sports-match-card-animated {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    animation: liveMatchSlideIn 0.5s ease-out forwards;
+}
+
+@keyframes liveMatchSlideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.live-sports-live-indicator {
+    animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+.live-sports-no-matches {
+    text-align: center;
+    padding: 2rem;
+    color: rgb(156, 163, 175);
+    background: rgb(17, 24, 39);
+    border-radius: 0.5rem;
+}
+
+.live-sports-loading-matches {
+    text-align: center;
+    padding: 3rem;
+}
+
+.live-sports-no-content {
+    text-align: center;
+    padding: 3rem;
+}
+
+.live-sports-scroll-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    color: white;
+    border-radius: 9999px;
+    padding: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 50;
+    animation: float 3s ease-in-out infinite;
+}
+
+.live-sports-scroll-top:hover {
+    transform: scale(1.1);
+}
+
+/* Modal Styles */
+.live-sports-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-modal-backdrop {
+        padding: 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-modal-backdrop {
+        padding: 1rem;
+    }
+}
+
+.live-sports-modal-container {
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(40px);
+    border-radius: 0.5rem;
+    width: 100%;
+    height: 100%;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(75, 85, 99, 0.5);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 640px) {
+    .live-sports-modal-container {
+        height: auto;
+        max-width: 112rem;
+        border-radius: 1rem;
+    }
+}
+
+.live-sports-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.5);
+    background: linear-gradient(to right, rgb(31, 41, 55), rgb(17, 24, 39));
+    flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-modal-header {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-modal-header {
+        padding: 1.5rem;
+    }
+}
+
+.live-sports-teams-display {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-teams-display {
+        gap: 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-teams-display {
+        gap: 0.75rem;
+    }
+}
+
+.live-sports-team-badge {
+    width: 1.25rem;
+    height: 1.25rem;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-team-badge {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-team-badge {
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+.live-sports-team-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .live-sports-team-name {
+        font-size: 0.875rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-team-name {
+        font-size: 1.125rem;
+    }
+}
+
+.live-sports-vs {
+    color: rgb(156, 163, 175);
+    font-weight: bold;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-vs {
+        font-size: 0.875rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-vs {
+        font-size: 1rem;
+    }
+}
+
+.live-sports-modal-title {
+    font-size: 0.875rem;
+    font-weight: bold;
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .live-sports-modal-title {
+        font-size: 1.125rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-modal-title {
+        font-size: 1.5rem;
+    }
+}
+
+.live-sports-modal-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-modal-badges {
+        gap: 0.5rem;
+    }
+}
+
+.live-sports-live-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgb(239, 68, 68);
+    padding: 0.375rem 0.375rem;
+    border-radius: 9999px;
+}
+
+@media (min-width: 640px) {
+    .live-sports-live-badge {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-live-badge {
+        padding: 0.25rem 0.75rem;
+    }
+}
+
+.live-sports-category-badge {
+    background: rgb(55, 65, 81);
+    color: rgb(209, 213, 219);
+    padding: 0.375rem 0.375rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    display: none;
+}
+
+@media (min-width: 640px) {
+    .live-sports-category-badge {
+        display: block;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-category-badge {
+        padding: 0.25rem 0.75rem;
+    }
+}
+
+.live-sports-modal-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-modal-controls {
+        gap: 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-modal-controls {
+        gap: 0.75rem;
+    }
+}
+
+.live-sports-fullscreen-btn {
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.5rem;
+    background: rgb(55, 65, 81);
+    color: rgb(209, 213, 219);
+    transition: all 0.3s ease;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.live-sports-fullscreen-btn:hover {
+    background: rgb(75, 85, 99);
+    color: white;
+}
+
+@media (min-width: 640px) {
+    .live-sports-fullscreen-btn {
+        display: flex;
+        padding: 0.5rem;
+    }
+}
+
+.live-sports-close-btn {
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.5rem;
+    background: rgb(220, 38, 38);
+    color: white;
+    transition: all 0.3s ease;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.live-sports-close-btn:hover {
+    background: rgb(239, 68, 68);
+}
+
+@media (min-width: 640px) {
+    .live-sports-close-btn {
+        padding: 0.5rem;
+    }
+}
+
+.live-sports-modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+    .live-sports-modal-content {
+        flex-direction: row;
+    }
+}
+
+.live-sports-stream-area {
+    flex: 1;
+    padding: 0.25rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-area {
+        padding: 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-stream-area {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .live-sports-stream-area {
+        padding: 1.5rem;
+    }
+}
+
+.live-sports-stream-container {
+    position: relative;
+    background: black;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgb(75, 85, 99);
+    width: 100%;
+    height: 100%;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-container {
+        border-radius: 0.75rem;
+    }
+}
+
+.live-sports-iframe-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 250px;
+}
+
+@media (min-width: 640px) {
+    .live-sports-iframe-wrapper {
+        min-height: 300px;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-iframe-wrapper {
+        min-height: 400px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .live-sports-iframe-wrapper {
+        min-height: 500px;
+    }
+}
+
+.live-sports-iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0.5rem;
+    touch-action: manipulation;
+}
+
+@media (min-width: 640px) {
+    .live-sports-iframe {
+        border-radius: 0.75rem;
+    }
+}
+
+.live-sports-loading-overlay-stream {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgb(17, 24, 39), rgb(31, 41, 55), rgb(124, 58, 237));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    animation: iframeLoadOut 2s ease-out forwards;
+}
+
+@keyframes iframeLoadOut {
+    0% {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    90% {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    100% {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+.live-sports-loading-content {
+    text-align: center;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    max-width: 20rem;
+    margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+    .live-sports-loading-content {
+        padding: 1rem;
+        max-width: 24rem;
+        border-radius: 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-loading-content {
+        padding: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .live-sports-loading-content {
+        padding: 2rem;
+    }
+}
+
+.live-sports-loading-spinner {
+    position: relative;
+    margin-bottom: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-loading-spinner {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-loading-spinner {
+        margin-bottom: 1.5rem;
+    }
+}
+
+.live-sports-loading-dots {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-loading-dots {
+        margin-top: 1rem;
+    }
+}
+
+.live-sports-stream-info {
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    background: rgba(31, 41, 55, 0.5);
+    border-radius: 0.5rem;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(75, 85, 99, 0.5);
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-info {
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-stream-info {
+        margin-top: 1rem;
+        padding: 1rem;
+    }
+}
+
+.live-sports-stream-info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-info-content {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0;
+    }
+}
+
+.live-sports-stream-status {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-status {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+    }
+}
+
+.live-sports-stream-active {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.live-sports-stream-source {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.live-sports-powered-by {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+    .live-sports-powered-by {
+        display: flex;
+    }
+}
+
+.live-sports-stream-quality {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.live-sports-hd-badge {
+    background: linear-gradient(to right, rgb(59, 130, 246), rgb(37, 99, 235));
+    color: white;
+    padding: 0.375rem 0.375rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+@media (min-width: 640px) {
+    .live-sports-hd-badge {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-hd-badge {
+        padding: 0.25rem 0.75rem;
+    }
+}
+
+.live-sports-quality-badge {
+    background: linear-gradient(to right, rgb(75, 85, 99), rgb(55, 65, 81));
+    color: rgb(209, 213, 219);
+    padding: 0.375rem 0.375rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+@media (min-width: 640px) {
+    .live-sports-quality-badge {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-quality-badge {
+        padding: 0.25rem 0.75rem;
+    }
+}
+
+.live-sports-live-status {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.live-sports-stream-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(31, 41, 55);
+    border-radius: 0.5rem;
+    height: 100%;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-loading {
+        border-radius: 0.75rem;
+    }
+}
+
+.live-sports-sidebar {
+    border-top: 1px solid rgba(75, 85, 99, 0.5);
+    background: rgba(31, 41, 55, 0.3);
+    backdrop-filter: blur(4px);
+    max-height: 12rem;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-sidebar {
+        max-height: 16rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-sidebar {
+        max-height: 20rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .live-sports-sidebar {
+        border-top: none;
+        border-left: 1px solid rgba(75, 85, 99, 0.5);
+        max-height: none;
+        width: 20rem;
+    }
+}
+
+.live-sports-sidebar-content {
+    padding: 0.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-sidebar-content {
+        padding: 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-sidebar-content {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .live-sports-sidebar-content {
+        padding: 1.5rem;
+    }
+}
+
+.live-sports-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-sidebar-header {
+        margin-bottom: 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-sidebar-header {
+        margin-bottom: 1rem;
+    }
+}
+
+.live-sports-sources-count {
+    background: rgb(147, 51, 234);
+    color: white;
+    padding: 0.375rem 0.375rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+@media (min-width: 640px) {
+    .live-sports-sources-count {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+.live-sports-mobile-selector {
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-mobile-selector {
+        display: none;
+    }
+}
+
+.live-sports-mobile-select {
+    width: 100%;
+    background: rgb(31, 41, 55);
+    color: white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border: 1px solid rgb(75, 85, 99);
+    outline: none;
+}
+
+.live-sports-mobile-select:focus {
+    ring: 2px;
+    ring-color: rgb(147, 51, 234);
+}
+
+.live-sports-streams-list {
+    gap: 0.375rem;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(147, 51, 234) rgb(31, 41, 55);
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 640px) {
+    .live-sports-streams-list {
+        gap: 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-streams-list {
+        gap: 0.75rem;
+    }
+}
+
+.live-sports-streams-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.live-sports-streams-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.live-sports-streams-list::-webkit-scrollbar-thumb {
+    background: rgba(168, 85, 247, 0.5);
+    border-radius: 3px;
+}
+
+.live-sports-streams-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(168, 85, 247, 0.7);
+}
+
+.live-sports-stream-option {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    text-align: left;
+    border: 1px solid;
+    flex-shrink: 0;
+    touch-action: manipulation;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-option {
+        padding: 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-stream-option {
+        padding: 1rem;
+        border-radius: 0.75rem;
+    }
+}
+
+.live-sports-stream-selected {
+    background: rgba(147, 51, 234, 0.2);
+    border-color: rgb(147, 51, 234);
+    ring: 2px;
+    ring-color: rgba(147, 51, 234, 0.3);
+    box-shadow: 0 10px 25px rgba(147, 51, 234, 0.2);
+}
+
+.live-sports-stream-unselected {
+    background: rgba(55, 65, 81, 0.5);
+    border-color: rgb(75, 85, 99);
+}
+
+.live-sports-stream-unselected:hover {
+    background: rgba(75, 85, 99, 0.5);
+    border-color: rgb(107, 114, 128);
+}
+
+.live-sports-stream-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.375rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-header {
+        margin-bottom: 0.5rem;
+    }
+}
+
+.live-sports-stream-name {
+    font-weight: 500;
+    color: white;
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-name {
+        font-size: 0.875rem;
+    }
+}
+
+.live-sports-stream-indicators {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.live-sports-stream-hd {
+    font-size: 0.75rem;
+    background: rgb(59, 130, 246);
+    padding: 0.375rem 0.375rem;
+    border-radius: 9999px;
+    color: white;
+    font-weight: 500;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-hd {
+        padding: 0.125rem 0.5rem;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+}
+
+.live-sports-stream-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+}
+
+.live-sports-stream-quality {
+    color: rgb(156, 163, 175);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.live-sports-stream-active-text {
+    color: rgb(34, 197, 94);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.live-sports-stream-tap-text {
+    color: rgb(107, 114, 128);
+    flex-shrink: 0;
+}
+
+.live-sports-sidebar-loading {
+    text-align: center;
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+@media (min-width: 640px) {
+    .live-sports-sidebar-loading {
+        padding: 1.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-sidebar-loading {
+        padding: 2rem;
+    }
+}
+
+.live-sports-stream-stats {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(55, 65, 81, 0.3);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    backdrop-filter: blur(4px);
+    flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stream-stats {
+        margin-top: 1rem;
+        padding: 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-stream-stats {
+        margin-top: 1.5rem;
+        padding: 1rem;
+    }
+}
+
+.live-sports-stats-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stats-header {
+        margin-bottom: 0.75rem;
+    }
+}
+
+.live-sports-stats-content {
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stats-content {
+        gap: 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .live-sports-stats-content {
+        gap: 0.75rem;
+    }
+}
+
+.live-sports-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.375rem 0.5rem;
+    background: rgba(31, 41, 55, 0.4);
+    border-radius: 0.25rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stat-item {
+        padding: 0.5rem;
+    }
+}
+
+.live-sports-stat-label {
+    color: rgb(156, 163, 175);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.live-sports-stat-value {
+    color: white;
+    font-weight: 500;
+}
+
+.live-sports-stat-value-hd {
+    color: rgb(96, 165, 250);
+    font-weight: 500;
+}
+
+.live-sports-stat-value-active {
+    color: rgb(34, 197, 94);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 5rem;
+}
+
+@media (min-width: 640px) {
+    .live-sports-stat-value-active {
+        max-width: 6rem;
+    }
+}
+
+/* Enhanced live indicator */
+.live-indicator-enhanced {
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    animation: livePulseEnhanced 2s infinite;
+}
+
+@keyframes livePulseEnhanced {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .live-sports-modal-container .lg\\:w-80 {
+        width: 100%;
+        max-height: 40vh;
+        border-left: none;
+        border-top: 1px solid rgba(75, 85, 99, 0.5);
+    }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .live-sports-modal-container {
+        height: 100vh !important;
+    }
+
+    .live-sports-modal-container .lg\\:w-80 {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 10;
+        background: rgba(31, 41, 55, 0.95);
+        backdrop-filter: blur(8px);
+        border-left: 1px solid rgba(75, 85, 99, 0.5);
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .live-sports-modal-container {
+        max-width: 95vw;
+        max-height: 90vh;
+        border-radius: 1rem;
+    }
+
+    .live-sports-modal-backdrop {
+        padding: 1rem;
+        align-items: center;
+    }
+}
+
+/* Enhanced glass effect for navbar */
+.glass-effect {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    animation: slideInDown 0.6s ease-out;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    width: 100%;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Add missing animation keyframes */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Add missing loading logo animation */
+.loading-logo {
+    animation: logoGlow 2s ease-in-out infinite;
+}
+
+@keyframes logoGlow {
+    0% {
+        filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.3));
+    }
+
+    100% {
+        filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.8));
+    }
+}
+
+/* Add missing logo text styling */
+.logo-text {
+    font-family: "Orbitron", monospace;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+    animation: logoGlow 3s ease-in-out infinite alternate;
+}
+
+/* Add missing nav-link styling */
+.nav-link {
+    position: relative;
+    transition: all 0.3s ease;
+    padding: 0.5rem 0;
+}
+
+.nav-link::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 50%;
+    background: linear-gradient(to right, #a855f7, #7c3aed);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover {
+    color: #a855f7;
+    transform: translateY(-2px);
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+/* Add missing settings icon animation */
+.settings-icon {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-icon:hover {
+    transform: rotate(180deg);
+}
+
+/* Add missing btn-primary styling */
+.btn-primary {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
+}

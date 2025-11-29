@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 
-// Proxies poster images from streamed.su so that the frontend can load them from the same origin.
+// Proxies poster images from streamed.pk so that the frontend can load them from the same origin.
 // URL format expected by the client: /api/images/proxy/<poster>.webp
 // Using a catch-all route [...poster] to handle filenames with extensions correctly.
 export async function GET(
@@ -13,7 +13,7 @@ export async function GET(
         return new Response("Missing poster parameter", { status: 400 })
     }
 
-    const remoteUrl = `https://streamed.su/api/images/proxy/${posterPath}`
+    const remoteUrl = `https://streamed.pk/api/images/proxy/${posterPath}`
 
     try {
         const upstreamResponse = await fetch(remoteUrl)

@@ -1,7 +1,6 @@
 "use client"
 
 import { useRef } from "react"
-import { motion } from "framer-motion"
 
 interface StreamingService {
     id: string
@@ -87,8 +86,8 @@ const STREAMING_SERVICES: StreamingService[] = [
 
 interface StreamingServiceHubProps {
     currentTab: "movies" | "shows"
-    visibleSections: Set<string>
-    observeSection: (element: HTMLElement | null, sectionId: string) => void
+    visibleSections: Set<string> // Keep for compatibility but not used
+    observeSection: (element: HTMLElement | null, sectionId: string) => void // Keep for compatibility but not used
     scrollSection: (containerId: string, direction: "left" | "right") => void
 }
 
@@ -99,58 +98,8 @@ export function StreamingServiceHub({
     scrollSection
 }: StreamingServiceHubProps) {
 
-    const hubVariants = {
-        hidden: {
-            opacity: 0,
-            y: 20,
-            scale: 0.9
-        },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.4,
-                ease: "easeOut" as const
-            }
-        }
-    }
-
-    const staggerContainerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.2
-            }
-        }
-    }
-
-    const sectionVariants = {
-        hidden: {
-            opacity: 0,
-            y: 50
-        },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.6,
-                ease: "easeOut" as const
-            }
-        }
-    }
-
     return (
-        <motion.div
-            className="category-section container mx-auto mb-8"
-            ref={(el) => observeSection(el, "streaming-hub")}
-            variants={sectionVariants}
-            initial="hidden"
-            animate={visibleSections.has("streaming-hub") ? "visible" : "hidden"}
-            transition={{ duration: 0.6, ease: "easeOut" as const }}
-        >
+        <div className="category-section container mx-auto mb-8 animate-fade-in-up">
             <div className="flex items-center justify-between mb-4 px-4 sm:px-6">
                 <h2 className="text-xl font-bold brand-text">Studios</h2>
                 <div className="flex items-center space-x-2">
@@ -177,12 +126,9 @@ export function StreamingServiceHub({
 
             <div className="relative overflow-hidden">
                 {/* Scrollable Container */}
-                <motion.div
+                <div
                     id="streaming-hub-container"
                     className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-4 px-4 sm:px-6"
-                    variants={staggerContainerVariants}
-                    initial="hidden"
-                    animate={visibleSections.has("streaming-hub") ? "visible" : "hidden"}
                     style={{
                         scrollBehavior: 'smooth',
                         scrollbarWidth: 'none',
@@ -211,10 +157,10 @@ export function StreamingServiceHub({
                         };
 
                         return (
-                            <motion.div
+                            <div
                                 key={service.id}
-                                className="relative flex-shrink-0"
-                                variants={hubVariants}
+                                className={`relative flex-shrink-0 animate-fade-in-up stagger-animation`}
+                                style={{ "--stagger": index } as React.CSSProperties}
                             >
                                 <div
                                     className={`
@@ -272,11 +218,11 @@ export function StreamingServiceHub({
                                 <p className="hidden sm:block text-center text-xs md:text-sm text-gray-400 mt-2">
                                     {service.name}
                                 </p>
-                            </motion.div>
+                            </div>
                         )
                     })}
-                </motion.div>
+                </div>
             </div>
-        </motion.div>
+        </div>
     )
 } 

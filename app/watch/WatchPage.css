@@ -1,0 +1,398 @@
+/* WatchPage.tsx specific styles */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap");
+
+/* Logo styling to match animerealms theme */
+.logo-text {
+    font-family: "Orbitron", monospace;
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+    animation: logoGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+    0% {
+        filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.3));
+    }
+
+    100% {
+        filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.8));
+    }
+}
+
+/* Enhanced buttons */
+.btn-primary {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(55, 65, 81, 0.8);
+    border: 1px solid rgba(107, 114, 128, 0.3);
+    color: #d1d5db;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(75, 85, 99, 0.8);
+    border-color: rgba(168, 85, 247, 0.4);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Enhanced content sections */
+.content-section {
+    background: linear-gradient(145deg, rgba(15, 15, 15, 0.9), rgba(25, 25, 25, 0.8));
+    border: 1px solid rgba(168, 85, 247, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+/* Section toggle animations */
+.section-content {
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-content.expanded {
+    max-height: 1000px;
+    opacity: 1;
+}
+
+.section-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+.section-header {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.section-header:hover {
+    color: #a855f7;
+    transform: translateY(-2px);
+}
+
+/* Enhanced episode selector */
+.episode-card {
+    background: linear-gradient(145deg, rgba(25, 25, 25, 0.9), rgba(35, 35, 35, 0.8));
+    border: 1px solid rgba(168, 85, 247, 0.1);
+    transition: all 0.3s ease;
+}
+
+.episode-card:hover {
+    border-color: rgba(168, 85, 247, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(168, 85, 247, 0.2);
+}
+
+.episode-card.selected {
+    border-color: rgba(168, 85, 247, 0.6);
+    background: linear-gradient(145deg, rgba(168, 85, 247, 0.1), rgba(139, 92, 246, 0.1));
+}
+
+/* Episode loading and entrance animations */
+.episodes-container {
+    position: relative;
+}
+
+.episodes-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.episodes-loading::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.3), transparent);
+    animation: episodeShimmer 1.2s ease-in-out infinite;
+    z-index: 10;
+}
+
+@keyframes episodeShimmer {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* Individual episode card animations */
+.episode-card-animated {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    animation: episodeSlideIn 0.5s ease-out forwards;
+}
+
+.episode-card-animated:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.episode-card-animated:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.episode-card-animated:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.episode-card-animated:nth-child(4) {
+    animation-delay: 0.25s;
+}
+
+.episode-card-animated:nth-child(5) {
+    animation-delay: 0.3s;
+}
+
+.episode-card-animated:nth-child(6) {
+    animation-delay: 0.35s;
+}
+
+.episode-card-animated:nth-child(7) {
+    animation-delay: 0.4s;
+}
+
+.episode-card-animated:nth-child(8) {
+    animation-delay: 0.45s;
+}
+
+.episode-card-animated:nth-child(n + 9) {
+    animation-delay: 0.5s;
+}
+
+@keyframes episodeSlideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Season button loading animation */
+.season-btn-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.season-btn-loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: buttonSweep 1s ease-in-out;
+}
+
+@keyframes buttonSweep {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* Container fade transition */
+.episodes-fade-enter {
+    animation: containerFadeIn 0.6s ease-out;
+}
+
+@keyframes containerFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading skeleton for episodes */
+.episode-skeleton {
+    background: linear-gradient(90deg, rgba(30, 30, 30, 0.8) 25%, rgba(50, 50, 50, 0.8) 50%, rgba(30, 30, 30, 0.8) 75%);
+    background-size: 200% 100%;
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Floating animation */
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.floating-button {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Brand gradient and text styles */
+.brand-gradient {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+}
+
+/* Enhanced animations */
+@keyframes textColorAnimation {
+    0% {
+        color: #a855f7;
+    }
+
+    50% {
+        color: #7c3aed;
+    }
+
+    100% {
+        color: #a855f7;
+    }
+}
+
+.animated-text {
+    animation: textColorAnimation 2s ease-in-out infinite;
+}
+
+/* Enhanced loading animation */
+.loading-logo {
+    animation: logoGlow 2s ease-in-out infinite;
+}
+
+/* Skeleton loading animations */
+.shimmer {
+    background: linear-gradient(90deg, rgba(30, 30, 30, 0.8) 25%, rgba(50, 50, 50, 0.8) 50%, rgba(30, 30, 30, 0.8) 75%);
+    background-size: 200% 100%;
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.animate-shimmer {
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes loading-progress {
+    0% {
+        width: 0%;
+    }
+
+    50% {
+        width: 70%;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+.animate-loading-progress {
+    animation: loading-progress 2s ease-in-out infinite;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+/* Mobile iframe optimizations */
+@media (max-width: 768px) {
+    .mobile-iframe {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        will-change: transform;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        overflow: hidden;
+        transition: opacity 0.3s ease;
+    }
+
+    .mobile-video-container {
+        contain: strict;
+        will-change: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

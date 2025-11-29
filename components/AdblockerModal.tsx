@@ -1106,6 +1106,7 @@ export const AdblockerModal: React.FC<AdblockerModalProps> = ({ iframeSrc, class
                 scrolling="no"
                 allowFullScreen
                 referrerPolicy="no-referrer"
+                sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-orientation-lock"
             />
         </div>
     );

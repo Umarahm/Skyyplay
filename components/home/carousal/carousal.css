@@ -5,6 +5,7 @@
         opacity: 0;
         transform: translateX(-50px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -16,6 +17,7 @@
         opacity: 0;
         transform: translateX(50px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -26,6 +28,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -36,6 +39,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -70,6 +74,15 @@
     .carousel-height {
         height: 65vh;
         min-height: 400px;
+    }
+}
+
+/* Tablet specific carousel adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .carousel-height {
+        height: 55vh;
+        min-height: 400px;
+        max-height: 650px;
     }
 }
 
@@ -112,4 +125,3 @@
 .backdrop-blur-md {
     backdrop-filter: blur(12px);
 }
-

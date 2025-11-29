@@ -678,6 +678,7 @@ export default function WatchPage() {
                       scrolling="no"
                       allowFullScreen
                       referrerPolicy="no-referrer"
+                      sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-orientation-lock"
                       allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                       style={{
                         border: 'none',

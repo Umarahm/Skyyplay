@@ -830,6 +830,37 @@ select:focus {
   }
 }
 
+/* Tablet specific layout adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+  /* Reduce container padding for tablets - more balanced */
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  /* Moderate carousel spacing on tablets */
+  .pt-24 {
+    padding-top: 5.5rem;
+  }
+
+  /* Adjust section spacing - less aggressive */
+  .py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .py-6 {
+    padding-top: 1.75rem;
+    padding-bottom: 1.75rem;
+  }
+
+  /* Better spacing for category sections */
+  .category-section {
+    margin-bottom: 2rem;
+  }
+}
+
 /* Mobile optimizations for better touch scrolling */
 @media (max-width: 768px) {
 

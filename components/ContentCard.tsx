@@ -89,7 +89,7 @@ export function ContentCard({ item, type }: ContentCardProps) {
           {/* Glass Overlay with Content Info */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
             <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-              <h3 className="text-white font-bold text-base line-clamp-2 mb-1 drop-shadow-md leading-tight">{title}</h3>
+              <h3 className="text-white font-bold text-base mb-1 drop-shadow-md leading-tight overflow-hidden text-ellipsis" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'}}>{title}</h3>
               <div className="flex items-center justify-between text-xs text-gray-300 font-medium">
                 <span className="flex items-center gap-1 text-yellow-400">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">

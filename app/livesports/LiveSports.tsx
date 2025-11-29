@@ -1014,7 +1014,6 @@ export default function LiveSportsPage() {
                               className="absolute inset-0 w-full h-full rounded-lg sm:rounded-xl touch-manipulation mobile-iframe"
                               frameBorder="0"
                               allowFullScreen
-                              sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-orientation-lock"
                               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                               loading="lazy"
                               title={`Live stream: ${selectedMatch?.title || 'Sports'}`}

@@ -548,7 +548,7 @@ export default function HomePage() {
 
                     {/* Genre Results - Same size as Top 10 with Static Animation */}
                     {selectedGenre && genreResults.length > 0 && (
-                        <div className="py-4 md:py-6 px-0 sm:px-6 animate-fade-in-up">
+                        <div className="py-4 md:py-6 px-0 sm:px-1.25 animate-fade-in-up">
                             <div className="container mx-auto">
                                 <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
                                     <h2 className="text-2xl font-bold brand-text">
@@ -585,7 +585,7 @@ export default function HomePage() {
                     )}
 
                     {/* Top 10 Section */}
-                    <div className="py-4 md:py-6 px-0 sm:px-6 animate-fade-in-up">
+                    <div className="py-4 md:py-6 px-0 sm:px-1 animate-fade-in-up">
                         <div className="container mx-auto">
                             <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
                                 <h2 className="text-2xl font-bold brand-text">
@@ -661,7 +661,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Category Sections with Static Animation */}
-                    <div className="px-0 sm:px-6 py-3 md:py-4 overflow-hidden">
+                    <div className="px-0 sm:px-0 py-3 md:py-4 overflow-hidden">
                         {isLoadingCategories ? (
                             // Show skeleton loading for categories
                             [...Array(5)].map((_, categoryIndex) => (

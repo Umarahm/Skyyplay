@@ -222,9 +222,9 @@ export function Carousel({ items, isLoading = false, onRefresh, isAnimating = fa
                                         <Image
                                             src={
                                                 item.backdrop_path
-                                                    ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
+                                                    ? `https://image.tmdb.org/t/p/${isMobile ? 'original' : 'w780'}${item.backdrop_path}`
                                                     : item.poster_path
-                                                        ? `https://image.tmdb.org/t/p/w780${item.poster_path}`
+                                                        ? `https://image.tmdb.org/t/p/${isMobile ? 'original' : 'w780'}${item.poster_path}`
                                                         : "/logo.avif"
                                             }
                                             alt={`${"title" in item ? item.title : item.name} background`}
@@ -280,7 +280,7 @@ export function Carousel({ items, isLoading = false, onRefresh, isAnimating = fa
                                                                     transition={{ duration: 0.5, ease: "easeOut" }}
                                                                 >
                                                                     <img
-                                                                        src={`https://image.tmdb.org/t/p/w500${logo.file_path}`}
+                                                                        src={`https://image.tmdb.org/t/p/original${logo.file_path}`}
                                                                         alt={`${"title" in item ? item.title : item.name} logo`}
                                                                         className="h-full object-contain object-left hidden md:block"
                                                                     />
@@ -382,7 +382,7 @@ export function Carousel({ items, isLoading = false, onRefresh, isAnimating = fa
                                                 {/* Poster Image */}
                                                 <div className="relative h-full">
                                                     <LazyPoster
-                                                        src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/logo.avif"}
+                                                        src={item.poster_path ? `https://image.tmdb.org/t/p/${isMobile ? 'w780' : 'w500'}${item.poster_path}` : "/logo.avif"}
                                                         alt="Featured Content"
                                                         className="w-full h-full"
                                                         imgClassName="object-cover"
@@ -400,7 +400,7 @@ export function Carousel({ items, isLoading = false, onRefresh, isAnimating = fa
                         <div className="absolute bottom-4 md:bottom-6 left-4 right-4 z-20 flex items-center justify-between">
                             {/* Pagination "Pills" - Limited to 4 on mobile */}
                             <div className="flex items-center space-x-1 md:space-x-2">
-                                {items.slice(0, isMobile ? 4 : items.length).map((_, index) => (
+                                {items.slice(0, isMobile ? 8 : items.length).map((_, index) => (
                                     <div
                                         key={index}
                                         onClick={() => goToSlide(index)}

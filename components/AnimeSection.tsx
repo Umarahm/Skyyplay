@@ -149,10 +149,10 @@ export function AnimeSection({ title, items, type }: AnimeSectionProps) {
                 </div>
 
                 {/* Scrollable Content Area - Reduced Padding */}
-                <div className="px-1 py-4 md:px-1 md:py-6 bg-gradient-to-b from-black/10 to-black/30 relative z-10 pt-8">
+                <div className="px-1 py-4 md:px-1 md:py-6 bg-gradient-to-b from-black/10 to-black/30 relative z-10 pt-4">
                     <div
                         ref={scrollRef}
-                        className="flex gap-3 md:gap-4 overflow-x-auto pb-2 scrollbar-hide scroll-smooth relative z-20"
+                        className="flex gap-0.5 md:gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth relative z-20"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                         {items.map((item, index) => (

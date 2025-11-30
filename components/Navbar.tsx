@@ -66,9 +66,9 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
   return (
     <>
       <nav className="fixed w-full z-50 glass-effect">
-        <div className="container mx-auto px-6 py-3">
+        <div className="container mx-auto px-3 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 md:space-x-8">
+            <div className="flex items-center space-x-2 md:space-x-8">
               <Link href="/" className="flex items-center space-x-3">
                 <Image src="/logo.avif" alt="Logo" width={40} height={40} className="animate-pulse" />
                 <span className="hidden sm:inline text-2xl md:text-3xl font-bold logo-text">SkyyPlay</span>

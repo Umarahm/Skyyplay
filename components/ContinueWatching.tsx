@@ -18,7 +18,7 @@ export function ContinueWatching({ isVisible, onScrollSection }: ContinueWatchin
     // The logic below was relying on 'isVisible' prop which might be false initially or not updating correctly
 
     return (
-        <div className="py-6 px-0 sm:px-6 animate-fade-in-up">
+        <div className="py-1.5 md:py-6 px-0 sm:px-6 animate-fade-in-up">
             <div className="container mx-auto">
                 {continueWatchingItems.length > 0 && (
                     <>

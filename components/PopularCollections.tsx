@@ -185,9 +185,9 @@ export function PopularCollections({ currentTab }: PopularCollectionsProps) {
                     </div>
 
                     {/* Scrollable Content Area */}
-                    <div className="px-1 py-4 md:px-1 md:py-6 bg-gradient-to-b from-black/10 to-black/30 relative pt-8">
+                    <div className="px-1 py-4 md:px-1 md:py-6 bg-gradient-to-b from-black/10 to-black/30 relative pt-4">
                         {isLoading ? (
-                            <div className="flex gap-3 md:gap-4 overflow-hidden pb-2 px-2">
+                            <div className="flex gap-0.5 md:gap-3 overflow-hidden pb-2 px-2">
                                 {[...Array(6)].map((_, i) => (
                                     <div key={i} className="flex-shrink-0 w-[160px] md:w-[200px] aspect-[2/3] rounded-xl bg-gray-800 animate-pulse" />
                                 ))}

@@ -576,8 +576,8 @@ export default function HomePage() {
                     {selectedGenre && genreResults.length > 0 && (
                         <div className="py-4 md:py-6 px-0 sm:px-1 animate-fade-in-up">
                             <div className="container mx-auto">
-                                <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
-                                    <h2 className="text-2xl font-bold brand-text ml-4">
+                                <div className="flex items-center justify-between mb-6 px-1 sm:px-0">
+                                    <h2 className="text-2xl font-bold brand-text ml-1">
                                         {genres.find(g => g.id === selectedGenre)?.name} {currentTab === "movies" ? "Movies" : "TV Shows"}
                                     </h2>
                                     <div className="flex space-x-2">
@@ -632,7 +632,7 @@ export default function HomePage() {
                     )}
 
                     {/* Continue Watching Section */}
-                    <div>
+                    <div className="pt-2 md:pt-6">
                         <ContinueWatching
                             isVisible={true}
                             onScrollSection={scrollSection}
@@ -640,10 +640,10 @@ export default function HomePage() {
                     </div>
 
                     {/* Top 10 Section */}
-                    <div className="py-4 md:py-6 px-0 sm:px-1 animate-fade-in-up">
+                    <div className="py-1.5 md:py-6 px-0 sm:px-1 animate-fade-in-up">
                         <div className="container mx-auto">
-                            <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
-                                <h2 className="text-2xl font-bold brand-text ml-4">
+                            <div className="flex items-center justify-between mb-6 px-1 sm:px-0">
+                                <h2 className="text-2xl font-bold brand-text ml-1">
                                     Top 20 {currentTab === "movies" ? "Movies" : "TV Shows"} Today
                                 </h2>
                                 <div className="flex space-x-2">
@@ -721,7 +721,7 @@ export default function HomePage() {
                             // Show skeleton loading for categories
                             [...Array(5)].map((_, categoryIndex) => (
                                 <div key={`category-skeleton-${categoryIndex}`} className="category-section container mx-auto mb-8 animate-fade-in-up">
-                                    <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
+                                    <div className="flex items-center justify-between mb-6 px-1 sm:px-0">
                                         <div className="h-8 w-48 bg-gray-600 rounded animate-pulse skeleton-shimmer" />
                                         <div className="flex space-x-2">
                                             <div className="w-8 h-8 bg-gray-600 rounded animate-pulse" />
@@ -759,8 +759,8 @@ export default function HomePage() {
                                 return (
                                     <React.Fragment key={categoryName}>
                                         <div className="category-section container mx-auto mb-8 animate-fade-in-up">
-                                            <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
-                                                <h2 className="text-2xl font-bold brand-text ml-4">{categoryName}</h2>
+                                            <div className="flex items-center justify-between mb-6 px-1 sm:px-0">
+                                                <h2 className="text-2xl font-bold brand-text ml-1">{categoryName}</h2>
                                                 <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "left")}

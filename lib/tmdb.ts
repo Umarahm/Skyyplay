@@ -11,6 +11,7 @@ export interface Movie {
   release_date: string
   vote_average: number
   vote_count: number
+  original_language?: string
   genre_ids: number[]
   genres?: Genre[]
   adult: boolean
@@ -44,6 +45,8 @@ export interface TVShow {
   first_air_date: string
   vote_average: number
   vote_count: number
+  original_language?: string
+  tagline?: string
   genre_ids: number[]
   genres?: Genre[]
   number_of_seasons?: number
@@ -142,6 +145,15 @@ export interface Season {
   episodes?: Episode[]
 }
 
+export interface Collection {
+  id: number
+  name: string
+  overview: string
+  poster_path: string
+  backdrop_path: string
+  parts: Movie[]
+}
+
 export interface Episode {
   id: number
   episode_number: number
@@ -208,6 +220,14 @@ export class TMDBApi {
       requestID: "tvSeason",
       id: tvId,
       season: seasonNumber,
+      language
+    })
+  }
+
+  static async getCollectionDetails(id: number, language = "en"): Promise<Collection> {
+    return tmdbFetch({
+      requestID: "collectionDetails",
+      id,
       language
     })
   }

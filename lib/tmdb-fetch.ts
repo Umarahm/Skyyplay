@@ -74,6 +74,7 @@ export default async function tmdbFetch({
         // Details for specific content (with ID)
         movieDetails: `${baseURL}?requestID=movieDetails&id=${id}&language=${language}${append_to_response ? `&append_to_response=${append_to_response}` : ''}`,
         tvDetails: `${baseURL}?requestID=tvDetails&id=${id}&language=${language}${append_to_response ? `&append_to_response=${append_to_response}` : ''}`,
+        collectionDetails: `${baseURL}?requestID=collectionDetails&id=${id}&language=${language}`,
 
         // Season/Episode specific
         tvSeason: `${baseURL}?requestID=tvSeason&id=${id}&season=${season}&language=${language}`,

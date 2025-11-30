@@ -101,7 +101,7 @@ export function StreamingServiceHub({
     return (
         <div className="category-section container mx-auto mb-8 animate-fade-in-up">
             <div className="flex items-center justify-between mb-4 px-4 sm:px-6">
-                <h2 className="text-xl font-bold brand-text">Studios</h2>
+                <h2 className="text-xl font-bold brand-text">Studio Hubs</h2>
                 <div className="flex items-center space-x-2">
                     <button
                         onClick={() => scrollSection("streaming-hub-container", "left")}
@@ -128,7 +128,7 @@ export function StreamingServiceHub({
                 {/* Scrollable Container */}
                 <div
                     id="streaming-hub-container"
-                    className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-4 px-4 sm:px-6"
+                    className="flex gap-4 md:gap-4 overflow-x-auto scrollbar-hide pb-4 px-4 sm:px-6"
                     style={{
                         scrollBehavior: 'smooth',
                         scrollbarWidth: 'none',
@@ -164,8 +164,8 @@ export function StreamingServiceHub({
                             >
                                 <div
                                     className={`
-                                        relative bg-gradient-to-br ${service.bgColor} 
-                                        rounded-2xl p-6 md:p-8 w-48 h-28 md:w-52 md:h-32
+                                        relative bg-gradient-to-br ${service.bgColor}
+                                        rounded-lg p-8 md:p-12 w-40 h-24 md:w-52 md:h-28
                                         flex items-center justify-center
                                         border border-white/10
                                         cursor-pointer
@@ -203,8 +203,8 @@ export function StreamingServiceHub({
                                             alt={service.name}
                                             className="max-w-full max-h-full object-contain brightness-0 invert"
                                             style={{
-                                                maxHeight: '55px',
-                                                maxWidth: '85%'
+                                                maxHeight: '80px',
+                                                maxWidth: '90%'
                                             }}
                                             onError={(e) => {
                                                 const target = e.target as HTMLImageElement

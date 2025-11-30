@@ -88,6 +88,22 @@ const Carousel = dynamic(() => import("@/components/home/carousal/carousal").the
     )
 })
 
+const PopularCollections = dynamic(() => import("@/components/PopularCollections").then(mod => ({ default: mod.PopularCollections })), {
+    ssr: false,
+    loading: () => (
+        <div className="container mx-auto px-4 md:px-6 py-6">
+            <div className="h-8 w-56 bg-gray-600 rounded mb-6 animate-pulse" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {[...Array(6)].map((_, i) => (
+                    <div key={i} className="aspect-[2/3] bg-gray-700 rounded-lg animate-pulse" />
+                ))}
+            </div>
+        </div>
+    )
+})
+
+import { AnimeSection } from "@/components/AnimeSection"
+
 import { TMDBApi, type Movie, type TVShow, type Genre, type Images } from "@/lib/tmdb"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -298,7 +314,7 @@ export default function HomePage() {
                 ? await TMDBApi.getPopularMovies(1)
                 : await TMDBApi.getPopularTVShows(1)
 
-            setTop10Items(data.results.slice(0, 10))
+            setTop10Items(data.results.slice(0, 20))
         } catch (error) {
             console.error("Error fetching top 10 content:", error)
             setTop10Items([])
@@ -388,9 +404,22 @@ export default function HomePage() {
                 }).then(data => ({ name: genre.name, items: data.results?.slice(0, 15) || [] }))
             })
 
+            // Add Anime category specifically for TV Shows (id: 16 for Animation + Japanese origin/keyword)
+            // Using keyword 210024 (anime) to be more specific than just Animation genre
+            let animePromise = Promise.resolve({ name: "Anime", items: [] as (Movie | TVShow)[] })
+            if (currentTab === "shows" || currentTab === "movies") {
+                animePromise = TMDBApi.discover({
+                    type: currentTab === "movies" ? 'movie' : 'tv',
+                    with_keywords: '210024', // Anime keyword
+                    sort_by: 'popularity.desc',
+                    page: 1
+                }).then(data => ({ name: currentTab === "movies" ? "Anime Movies" : "Anime Series", items: data.results?.slice(0, 15) || [] }))
+            }
+
             // Execute all requests in parallel
-            const [trendingData, ...genreData] = await Promise.all([
+            const [trendingData, animeData, ...genreData] = await Promise.all([
                 trendingPromise,
+                animePromise,
                 ...genrePromises
             ])
 
@@ -398,6 +427,11 @@ export default function HomePage() {
             const trendingTitle = currentTab === "movies" ? "Upcoming Movies" : "Airing This Month"
             if (trendingData.results?.length > 0) {
                 newCategories[trendingTitle] = trendingData.results.slice(0, 15)
+            }
+
+            // Add Anime category if we have items
+            if (animeData.items.length > 0) {
+                newCategories[animeData.name] = animeData.items
             }
 
             genreData.forEach(category => {
@@ -538,35 +572,48 @@ export default function HomePage() {
                         </div>
                     </div>
 
-                    {/* Continue Watching Section */}
-                    <div>
-                        <ContinueWatching
-                            isVisible={true}
-                            onScrollSection={scrollSection}
-                        />
-                    </div>
-
                     {/* Genre Results - Same size as Top 10 with Static Animation */}
                     {selectedGenre && genreResults.length > 0 && (
-                        <div className="py-4 md:py-6 px-0 sm:px-1.25 animate-fade-in-up">
+                        <div className="py-4 md:py-6 px-0 sm:px-1 animate-fade-in-up">
                             <div className="container mx-auto">
                                 <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
-                                    <h2 className="text-2xl font-bold brand-text">
+                                    <h2 className="text-2xl font-bold brand-text ml-4">
                                         {genres.find(g => g.id === selectedGenre)?.name} {currentTab === "movies" ? "Movies" : "TV Shows"}
                                     </h2>
-                                    <button
-                                        onClick={() => {
-                                            setSelectedGenre(null)
-                                            setGenreResults([])
-                                        }}
-                                        className="text-gray-400 hover:text-white transition-colors"
-                                    >
-                                        Clear
-                                    </button>
+                                    <div className="flex space-x-2">
+                                        <button
+                                            onClick={() => scrollSection("genreResultsContainer", "left")}
+                                            className="section-nav-button prev"
+                                            aria-label="Scroll left"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => scrollSection("genreResultsContainer", "right")}
+                                            className="section-nav-button next"
+                                            aria-label="Scroll right"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedGenre(null)
+                                                setGenreResults([])
+                                            }}
+                                            className="text-gray-400 hover:text-white transition-colors ml-2"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="relative overflow-hidden">
                                     <div
-                                        className="flex space-x-3 md:space-x-6 overflow-x-auto scrollbar-hide scroll-smooth"
+                                        id="genreResultsContainer"
+                                        className="flex space-x-3 md:space-x-4 overflow-x-auto scrollbar-hide scroll-smooth"
                                         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                                     >
                                         {genreResults.map((item, index) => (
@@ -584,12 +631,20 @@ export default function HomePage() {
                         </div>
                     )}
 
+                    {/* Continue Watching Section */}
+                    <div>
+                        <ContinueWatching
+                            isVisible={true}
+                            onScrollSection={scrollSection}
+                        />
+                    </div>
+
                     {/* Top 10 Section */}
                     <div className="py-4 md:py-6 px-0 sm:px-1 animate-fade-in-up">
                         <div className="container mx-auto">
                             <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
-                                <h2 className="text-2xl font-bold brand-text">
-                                    Top 10 {currentTab === "movies" ? "Movies" : "TV Shows"} Today
+                                <h2 className="text-2xl font-bold brand-text ml-4">
+                                    Top 20 {currentTab === "movies" ? "Movies" : "TV Shows"} Today
                                 </h2>
                                 <div className="flex space-x-2">
                                     <button
@@ -615,12 +670,12 @@ export default function HomePage() {
                             <div className="relative overflow-hidden">
                                 <div
                                     id="top10Container"
-                                    className="flex space-x-3 md:space-x-6 overflow-x-auto overflow-y-hidden scrollbar-hide scroll-smooth"
+                                    className="flex space-x-3 md:space-x-4 overflow-x-auto overflow-y-hidden scrollbar-hide scroll-smooth"
                                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                                 >
                                     {isLoadingTop10 ? (
                                         // Show skeleton loading cards
-                                        [...Array(10)].map((_, index) => (
+                                        [...Array(20)].map((_, index) => (
                                             <div
                                                 key={`skeleton-${index}`}
                                                 className="flex-shrink-0 relative top10-item animate-fade-in-up stagger-animation"
@@ -674,7 +729,7 @@ export default function HomePage() {
                                         </div>
                                     </div>
                                     <div className="relative overflow-hidden">
-                                        <div className="flex space-x-3 md:space-x-6 overflow-x-auto scrollbar-hide scroll-smooth category-container" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+                                        <div className="flex space-x-3 md:space-x-4 overflow-x-auto scrollbar-hide scroll-smooth category-container" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
                                             {[...Array(8)].map((_, index) => (
                                                 <div
                                                     key={`skeleton-card-${index}`}
@@ -690,67 +745,86 @@ export default function HomePage() {
                             ))
                         ) : (
                             // Show actual category content
-                            Object.entries(categories).map(([categoryName, items], categoryIndex) => (
-                                <React.Fragment key={categoryName}>
-                                    <div className="category-section container mx-auto mb-8 animate-fade-in-up">
-                                        <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
-                                            <h2 className="text-2xl font-bold brand-text">{categoryName}</h2>
-                                            <div className="flex space-x-2">
-                                                <button
-                                                    onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "left")}
-                                                    className="section-nav-button prev"
-                                                    aria-label="Scroll left"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "right")}
-                                                    className="section-nav-button next"
-                                                    aria-label="Scroll right"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className="relative overflow-hidden">
-                                            <div
-                                                id={`category-${categoryName.replace(/\s+/g, "")}`}
-                                                className="flex space-x-3 md:space-x-6 overflow-x-auto scrollbar-hide scroll-smooth category-container"
-                                                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                            >
-                                                {items.map((item, index) => (
-                                                    <div
-                                                        key={item.id}
-                                                        className={`flex-shrink-0 category-item animate-fade-in-up stagger-animation`}
-                                                        style={{ "--stagger": index } as React.CSSProperties}
-                                                    >
-                                                        <ContentCard
-                                                            item={item}
-                                                            type={currentTab === "movies" ? "movie" : "tv"}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Insert Streaming Service Hubs after Romance category */}
-                                    {categoryName === "Romance" && (
-                                        <StreamingServiceHub
-                                            currentTab={currentTab}
-                                            visibleSections={new Set()} // No longer using observer
-                                            observeSection={() => { }} // No longer using observer
-                                            scrollSection={scrollSection}
+                            Object.entries(categories).map(([categoryName, items], categoryIndex) => {
+                                if (categoryName === "Anime" || categoryName === "Anime Movies" || categoryName === "Anime Series") {
+                                    return (
+                                        <AnimeSection
+                                            key={categoryName}
+                                            title={categoryName}
+                                            items={items}
+                                            type={currentTab === "movies" ? "movie" : "tv"}
                                         />
-                                    )}
-                                </React.Fragment>
-                            ))
+                                    )
+                                }
+                                return (
+                                    <React.Fragment key={categoryName}>
+                                        <div className="category-section container mx-auto mb-8 animate-fade-in-up">
+                                            <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
+                                                <h2 className="text-2xl font-bold brand-text ml-4">{categoryName}</h2>
+                                                <div className="flex space-x-2">
+                                                    <button
+                                                        onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "left")}
+                                                        className="section-nav-button prev"
+                                                        aria-label="Scroll left"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => scrollSection(`category-${categoryName.replace(/\s+/g, "")}`, "right")}
+                                                        className="section-nav-button next"
+                                                        aria-label="Scroll right"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="relative overflow-hidden">
+                                                <div
+                                                    id={`category-${categoryName.replace(/\s+/g, "")}`}
+                                                    className="flex space-x-3 md:space-x-4 overflow-x-auto scrollbar-hide scroll-smooth category-container"
+                                                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                                                >
+                                                    {items.map((item, index) => (
+                                                        <div
+                                                            key={item.id}
+                                                            className="flex-shrink-0 category-item animate-fade-in-up stagger-animation"
+                                                            style={{ "--stagger": index } as React.CSSProperties}
+                                                        >
+                                                            <ContentCard
+                                                                item={item}
+                                                                type={currentTab === "movies" ? "movie" : "tv"}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Insert Streaming Service Hubs after Romance category */}
+                                        {categoryName === "Romance" && (
+                                            <StreamingServiceHub
+                                                currentTab={currentTab}
+                                                visibleSections={new Set()} // No longer using observer
+                                                observeSection={() => { }} // No longer using observer
+                                                scrollSection={scrollSection}
+                                            />
+                                        )}
+                                    </React.Fragment>
+                                )
+                            })
                         )}
                     </div>
+
+                    {/* Popular Collections Section - Only for Movies (moved near bottom) */}
+                    {currentTab === "movies" && (
+                        <div className="px-0 sm:px-0 pb-3 md:pb-6">
+                            <PopularCollections currentTab={currentTab} />
+                        </div>
+                    )}
 
                     {/* Footer */}
                     <footer className="text-gray-400 py-3 md:py-6 mt-6 md:mt-12 animate-fade-in-up">
@@ -760,9 +834,7 @@ export default function HomePage() {
                                 This is a personal project and not affiliated with any streaming service.
                             </p>
                             <p className="mt-2 text-xs">Made with Next.js, Tailwind CSS, and TMDB API.</p>
-                            <p className="mt-2 text-xs text-purple-400 hover:text-purple-300 transition-colors">
-                                Made with ❤️ by nubDRAKE
-                            </p>
+
                         </div>
                     </footer>
                 </>

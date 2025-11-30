@@ -208,7 +208,7 @@ export function StreamingServiceClient({ service, serviceConfig }: StreamingServ
                                         {/* Content Cards */}
                                         <div
                                             id={`${category.id}-container`}
-                                            className="flex space-x-3 md:space-x-6 overflow-x-auto scrollbar-hide scroll-smooth"
+                                            className="flex space-x-3 md:space-x-4 overflow-x-auto scrollbar-hide scroll-smooth"
                                             style={{
                                                 scrollbarWidth: 'none',
                                                 msOverflowStyle: 'none'

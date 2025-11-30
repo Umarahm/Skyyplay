@@ -283,7 +283,6 @@ export default function LiveSportsPage() {
     setCategorizedMatches(categories)
   }
 
-  // ... existing code ...
   const togglePopular = () => {
     setShowPopular(!showPopular)
   }
@@ -595,8 +594,8 @@ export default function LiveSportsPage() {
           </button>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   if (isLoading) {
     return (
@@ -609,7 +608,7 @@ export default function LiveSportsPage() {
           <p className="text-gray-400">Please wait while we fetch live matches...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -856,7 +855,7 @@ export default function LiveSportsPage() {
 
                   {category.matches.length > 0 ? (
                     <motion.div
-                      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+                      className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4"
                       variants={staggerContainerVariants}
                       initial="hidden"
                       animate="visible"
@@ -1211,7 +1210,7 @@ export default function LiveSportsPage() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>
 
       {/* Scroll to top button */}
       <button

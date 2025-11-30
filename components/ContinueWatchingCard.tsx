@@ -74,9 +74,14 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
     const isAdded = isInWatchlist(item.id, item.type)
     const year = new Date(item.release_date || "").getFullYear()
 
+    // Construct URL with season and episode parameters for TV shows
+    const watchUrl = item.type === 'tv' && item.season && item.episode
+        ? `/watch?id=${item.id}&type=${item.type}&season=${item.season}&episode=${item.episode}`
+        : `/watch?id=${item.id}&type=${item.type}`
+
     return (
         <div className="inspiration-card group relative" ref={containerRef}>
-            <Link href={`/watch?id=${item.id}&type=${item.type}`} className="block w-full h-full relative">
+            <Link href={watchUrl} className="block w-full h-full relative">
                 {/* Main Image */}
                 {shouldLoad ? (
                     <Image
@@ -84,18 +89,18 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
                         alt={item.title}
                         fill
                         className="inspiration-card-image"
-                        sizes="(max-width: 768px) 156px, 208px"
+                        sizes="(max-width: 768px) 120px, 160px"
                         placeholder="blur"
-                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
                         onError={(e) => {
                             const target = e.target as HTMLImageElement
-                            target.src = "/logo.avif"
+                            target.src = "/placeholder_poster.png"
                         }}
                         priority={false}
                         loading="lazy"
                     />
                 ) : (
-                    <div className="w-full h-full bg-gray-800 animate-pulse rounded-[12px]" />
+                    <div className="w-full h-full bg-gray-800 animate-pulse rounded-lg" />
                 )}
 
                 {/* Remove Button - Positioned absolute top-right */}
@@ -151,3 +156,4 @@ export function ContinueWatchingCard({ item, onRemove }: ContinueWatchingCardPro
         </div>
     )
 }
+

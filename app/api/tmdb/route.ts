@@ -194,6 +194,13 @@ export async function GET(request: NextRequest) {
                 endpoint = `tv/${id}/season/${season}`
                 break
 
+            // Collection details
+            case 'collectionDetails':
+                if (!id) throw new Error('ID parameter is required for collection details')
+                endpoint = `collection/${id}`
+                apiParams.append('append_to_response', 'parts')
+                break
+
             // Genres
             case 'movieGenres':
                 endpoint = 'genre/movie/list'

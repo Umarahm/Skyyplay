@@ -216,7 +216,7 @@ function SearchAutocomplete({
             {isOpen && (showHistory || suggestions.length > 0) && (
                 <div
                     ref={suggestionsRef}
-                    className="absolute z-50 w-full mt-2 bg-gray-900 border border-purple-500/20 rounded-xl shadow-2xl max-h-80 md:max-h-96 overflow-y-auto"
+                    className="absolute z-50 w-full mt-2 bg-gray-900 border border-purple-500/20 rounded-lg shadow-2xl max-h-80 md:max-h-96 overflow-y-auto"
                 >
                     {showHistory && (
                         <>
@@ -228,7 +228,7 @@ function SearchAutocomplete({
                                         <button
                                             key={item.id}
                                             onClick={() => executeSearch(item.query)}
-                                            className={`w-full text-left px-2 md:px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors ${selectedIndex === index ? 'bg-gray-800' : ''
+                                            className={`w-full text-left px-2 md:px-3 py-2 rounded-md hover:bg-gray-800 transition-colors ${selectedIndex === index ? 'bg-gray-800' : ''
                                                 }`}
                                         >
                                             <div className="flex items-center space-x-2 md:space-x-3">
@@ -251,7 +251,7 @@ function SearchAutocomplete({
                                         <button
                                             key={item.id}
                                             onClick={() => executeSearch(item.query)}
-                                            className={`w-full text-left px-2 md:px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors ${selectedIndex === recentSearches.length + index ? 'bg-gray-800' : ''
+                                            className={`w-full text-left px-2 md:px-3 py-2 rounded-md hover:bg-gray-800 transition-colors ${selectedIndex === recentSearches.length + index ? 'bg-gray-800' : ''
                                                 }`}
                                         >
                                             <div className="flex items-center space-x-2 md:space-x-3">
@@ -274,12 +274,12 @@ function SearchAutocomplete({
                                 <button
                                     key={`${suggestion.type}-${suggestion.id}`}
                                     onClick={() => executeSearch(suggestion.title, suggestion)}
-                                    className={`w-full text-left p-2 md:p-3 rounded-lg hover:bg-gray-800 transition-colors ${selectedIndex === index ? 'bg-gray-800' : ''
+                                    className={`w-full text-left p-2 md:p-3 rounded-md hover:bg-gray-800 transition-colors ${selectedIndex === index ? 'bg-gray-800' : ''
                                         }`}
                                 >
                                     <div className="flex items-center space-x-2 md:space-x-3">
                                         {/* Poster/Profile Image */}
-                                        <div className="w-10 h-14 md:w-12 md:h-16 bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
+                                        <div className="w-10 h-14 md:w-12 md:h-16 bg-gray-700 rounded-sm overflow-hidden flex-shrink-0">
                                             {suggestion.image ? (
                                                 <Image
                                                     src={suggestion.image}

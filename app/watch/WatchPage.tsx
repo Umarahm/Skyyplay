@@ -39,6 +39,11 @@ export default function WatchPage() {
   const [isWatching, setIsWatching] = useState(false)
   const [watchStartTime, setWatchStartTime] = useState<number | null>(null)
   const [totalWatchTime, setTotalWatchTime] = useState(0)
+  const [theatreMode, setTheatreMode] = useState(false)
+  const [dimMode, setDimMode] = useState(false)
+  const [showControls, setShowControls] = useState(false)
+  const [tooltipText, setTooltipText] = useState("")
+  const [showTooltip, setShowTooltip] = useState(false)
 
   const { addToContinueWatching } = useContinueWatching()
 
@@ -91,7 +96,7 @@ export default function WatchPage() {
       }
 
       if (data.similar?.results) {
-        setSimilarContent(data.similar.results.slice(0, 6))
+        setSimilarContent(data.similar.results.slice(0, 8))
       }
     } catch (error) {
       console.error("Error fetching content:", error)
@@ -173,6 +178,14 @@ export default function WatchPage() {
       ...prev,
       [section]: !prev[section],
     }))
+  }
+
+  const toggleTheatreMode = () => {
+    setTheatreMode((prev) => !prev)
+  }
+
+  const toggleDimMode = () => {
+    setDimMode((prev) => !prev)
   }
 
   const handleSeasonChange = async (season: number) => {
@@ -286,6 +299,33 @@ export default function WatchPage() {
       setTotalWatchTime(0)
     }
   }, [selectedSeason, selectedEpisode])
+
+  // Controls auto-hide functionality
+  const showControlsWithTimeout = () => {
+    setShowControls(true)
+  }
+
+  const hideControls = () => {
+    setShowControls(false)
+    setShowTooltip(false)
+  }
+
+  // Controls auto-hide timer
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout
+
+    if (showControls) {
+      timeoutId = setTimeout(() => {
+        setShowControls(false)
+      }, 3000)
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
+  }, [showControls])
 
   if (isLoading) {
     return (
@@ -544,6 +584,11 @@ export default function WatchPage() {
     <div className="min-h-screen">
       <Navbar showSearch={false} />
 
+      {/* Dim Mode Overlay */}
+      {dimMode && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 pointer-events-none transition-all duration-300" />
+      )}
+
       <div className="pt-16">
         {/* Backdrop */}
         <div className="relative h-[30vh] sm:h-[40vh] md:h-[60vh]">
@@ -622,12 +667,19 @@ export default function WatchPage() {
         </div>
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className={`transition-all duration-500 ${theatreMode
+          ? 'w-full px-0 py-0 relative z-20'
+          : 'container mx-auto px-4 md:px-6 py-6 md:py-8 relative z-10'
+          } ${dimMode ? '!z-auto' : ''}`}>
+          <div className={`grid gap-6 md:gap-8 transition-all duration-500 ${theatreMode
+            ? 'grid-cols-1'
+            : 'grid-cols-1 lg:grid-cols-3'
+            }`}>
             {/* Left Column - Video Player */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className={`space-y-6 transition-all duration-500 ${theatreMode ? '' : 'lg:col-span-2'
+              }`}>
               {/* We Recommend Section */}
-              <div className="content-section rounded-lg p-4 md:p-6 space-y-4">
+              <div className={`content-section rounded-lg p-4 md:p-6 space-y-4 ${theatreMode ? 'hidden' : ''}`}>
                 <div className="flex items-center space-x-3">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -663,14 +715,98 @@ export default function WatchPage() {
               </div>
 
               {/* Video Player with Purple Backdrop */}
-              <div className="rounded-lg overflow-hidden relative">
+              <div className={`rounded-lg overflow-hidden relative transition-all duration-300 ${dimMode ? 'z-50' : ''
+                } ${theatreMode ? 'rounded-none' : ''}`}>
                 {/* Purple backdrop */}
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-purple-700/30 pointer-events-none z-0"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30 pointer-events-none z-0"></div>
 
+                {/* Video Player Controls - Moved inside player */}
+                <div
+                  className={`absolute top-4 right-4 z-30 flex items-center space-x-2 bg-black/70 rounded-lg p-2 backdrop-blur-sm border border-gray-600 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  onMouseEnter={showControlsWithTimeout}
+                >
+                  <button
+                    onClick={() => {
+                      toggleDimMode()
+                      showControlsWithTimeout()
+                    }}
+                    onMouseEnter={() => {
+                      setTooltipText(dimMode ? 'Disable Dim Mode' : 'Enable Dim Mode')
+                      setShowTooltip(true)
+                    }}
+                    onMouseLeave={() => setShowTooltip(false)}
+                    className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${dimMode ? 'text-purple-400' : 'text-gray-300 hover:text-white'
+                      }`}
+                    title={dimMode ? 'Disable Dim Mode' : 'Enable Dim Mode'}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => {
+                      toggleTheatreMode()
+                      showControlsWithTimeout()
+                    }}
+                    onMouseEnter={() => {
+                      setTooltipText(theatreMode ? 'Exit Theatre Mode' : 'Enter Theatre Mode')
+                      setShowTooltip(true)
+                    }}
+                    onMouseLeave={() => setShowTooltip(false)}
+                    className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${theatreMode ? 'text-purple-400' : 'text-gray-300 hover:text-white'
+                      }`}
+                    title={theatreMode ? 'Exit Theatre Mode' : 'Enter Theatre Mode'}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d={theatreMode
+                          ? "M9 9L4 4m0 0l5 5M4 4h9m-9 0v9m11 11l5 5m0 0l-5-5m5 5v-9m0 9h-9"
+                          : "M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"}
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Custom Tooltip */}
+                {showTooltip && tooltipText && (
+                  <div className="absolute top-16 right-4 z-40 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-lg border border-gray-700 whitespace-nowrap animate-in fade-in-0 zoom-in-95 duration-200">
+                    {tooltipText}
+                    <div className="absolute -top-1 right-6 w-2 h-2 bg-gray-900 border-l border-t border-gray-700 rotate-45"></div>
+                  </div>
+                )}
+
                 {/* Responsive iframe container with mobile optimizations */}
-                <div className="relative w-full z-10">
-                  <div className="relative w-full aspect-video min-h-[250px] sm:min-h-[300px]">
+                <div
+                  className={`relative w-full z-10 ${theatreMode ? 'h-[85vh]' : ''}`}
+                  onMouseEnter={showControlsWithTimeout}
+                  onMouseLeave={() => {
+                    // Small delay before hiding to prevent flickering
+                    setTimeout(hideControls, 100)
+                  }}
+                >
+                  <div className={`relative w-full ${theatreMode ? 'h-full' : 'aspect-video min-h-[250px] sm:min-h-[300px]'}`}>
                     <iframe
                       src={currentVideoUrl}
                       className="absolute top-0 left-0 w-full h-full rounded-lg touch-manipulation"
@@ -696,6 +832,9 @@ export default function WatchPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Video Player Controls - Removed old placement */}
+
                 <div className="p-3 md:p-4 relative z-10">
                   <div className="flex items-center justify-between text-xs md:text-sm text-gray-400">
                     <div className="text-center mx-auto animated-text">
@@ -858,7 +997,7 @@ export default function WatchPage() {
                                     src={
                                       episode.still_path
                                         ? `https://image.tmdb.org/t/p/w300${episode.still_path}`
-                                        : "/placeholder.svg?height=169&width=300"
+                                        : "/placeholder_thumbnail.png"
                                     }
                                     alt={episode.name}
                                     className="w-full h-full object-cover"
@@ -881,7 +1020,7 @@ export default function WatchPage() {
                                     src={
                                       episode.still_path
                                         ? `https://image.tmdb.org/t/p/w300${episode.still_path}`
-                                        : "/placeholder.svg?height=169&width=300"
+                                        : "/placeholder_thumbnail.png"
                                     }
                                     alt={episode.name}
                                     className="w-full aspect-video object-cover rounded"
@@ -973,7 +1112,8 @@ export default function WatchPage() {
             </div>
 
             {/* Right Column - Content Details */}
-            <div className="space-y-6">
+            <div className={`space-y-6 transition-all duration-500 ${theatreMode ? 'hidden lg:hidden' : ''
+              }`}>
               {/* Overview */}
               <div className="content-section rounded-lg p-6">
                 <div
@@ -1326,7 +1466,7 @@ export default function WatchPage() {
           {/* Similar Content */}
           <div className="mt-8 md:mt-12">
             <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 logo-text">Similar Content</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-3 md:gap-4">
               {similarContent.map((item) => (
                 <ContentCard key={item.id} item={item} type={contentType!} />
               ))}
@@ -1335,34 +1475,7 @@ export default function WatchPage() {
         </div>
       </div>
 
-      {/* Streaming Services */}
-      <div className="container mx-auto px-6 py-12">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-300">Content Available From</h2>
-          <p className="text-gray-400 mt-2">SkyyPlay aggregates content from various premium streaming platforms</p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-center justify-items-center opacity-80">
-          {[
-            { name: "Netflix", logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" },
-            {
-              name: "Prime Video",
-              logo: "https://upload.wikimedia.org/wikipedia/commons/1/11/Amazon_Prime_Video_logo.svg",
-            },
-            { name: "Disney+", logo: "https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg" },
-            { name: "Hulu", logo: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Hulu_logo_%282018%29.svg" },
-            { name: "HBO Max", logo: "https://upload.wikimedia.org/wikipedia/commons/1/17/HBO_Max_Logo.svg" },
-            { name: "Apple TV+", logo: "https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg" },
-          ].map((service) => (
-            <div key={service.name} className="transform transition-transform hover:scale-105">
-              <img
-                src={service.logo || "/placeholder.svg"}
-                alt={service.name}
-                className="h-6 md:h-8 w-auto grayscale hover:grayscale-0 hover:scale-110 hover:brightness-125 transition-all duration-300"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       {/* Footer */}
       <footer className="text-gray-400 py-4 md:py-6 mt-8 md:mt-12">
@@ -1372,7 +1485,7 @@ export default function WatchPage() {
             This is a personal project and not affiliated with any streaming service.
           </p>
           <p className="mt-2 text-xs">Made with Next.js, Tailwind CSS, and TMDB API.</p>
-          <p className="mt-2 text-xs text-purple-400">Made with ❤️ by nubDRAKE</p>
+
         </div>
       </footer>
 

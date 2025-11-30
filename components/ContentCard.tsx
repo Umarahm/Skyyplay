@@ -48,31 +48,44 @@ export function ContentCard({ item, type }: ContentCardProps) {
 
   return (
     <>
-      <div 
-        className="inspiration-card group cursor-pointer" 
+      <div
+        className="inspiration-card group cursor-pointer"
         ref={containerRef}
         onClick={() => setIsDrawerOpen(true)}
       >
         <div className="block w-full h-full relative">
           {/* Main Image */}
           {shouldLoad ? (
-            <Image
-              src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "/logo.avif"}
-              alt={title}
-              fill
-              className="inspiration-card-image"
-              sizes="(max-width: 768px) 156px, 208px"
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.src = "/logo.avif"
-              }}
-              priority={false}
-              loading="lazy"
-            />
+            item.poster_path ? (
+              <Image
+                src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                alt={title}
+                fill
+                className="inspiration-card-image"
+                sizes="(max-width: 768px) 120px, 160px"
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = "/placeholder_poster.png"
+                }}
+                priority={false}
+                loading="lazy"
+              />
+            ) : (
+              <Image
+                src="/placeholder_poster.png"
+                alt={title}
+                fill
+                className="object-cover w-full h-full"
+                sizes="(max-width: 768px) 120px, 160px"
+                priority={false}
+                loading="lazy"
+                quality={100}
+              />
+            )
           ) : (
-            <div className="w-full h-full bg-gray-800 animate-pulse rounded-[12px]" />
+            <div className="w-full h-full bg-gray-800 animate-pulse rounded-lg" />
           )}
 
           {/* Watchlist Button - Positioned absolute top-right */}
@@ -89,7 +102,7 @@ export function ContentCard({ item, type }: ContentCardProps) {
           {/* Glass Overlay with Content Info */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
             <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-              <h3 className="text-white font-bold text-base mb-1 drop-shadow-md leading-tight overflow-hidden text-ellipsis" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'}}>{title}</h3>
+              <h3 className="text-white font-bold text-base mb-1 drop-shadow-md leading-tight overflow-hidden text-ellipsis" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{title}</h3>
               <div className="flex items-center justify-between text-xs text-gray-300 font-medium">
                 <span className="flex items-center gap-1 text-yellow-400">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
@@ -103,12 +116,12 @@ export function ContentCard({ item, type }: ContentCardProps) {
           </div>
         </div>
       </div>
-      
-      <ContentDrawer 
-        item={item} 
-        type={type} 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)} 
+
+      <ContentDrawer
+        item={item}
+        type={type}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
       />
     </>
   )

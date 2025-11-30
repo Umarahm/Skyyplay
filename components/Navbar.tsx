@@ -9,6 +9,8 @@ import dynamic from "next/dynamic"
 
 import { useWatchlist } from "@/hooks/useWatchlist"
 import { WatchlistModal } from "./WatchlistModal"
+import { ContentDrawer } from "./ContentDrawer"
+import type { Movie, TVShow } from "@/lib/tmdb"
 
 const SearchAutocomplete = dynamic(() => import("./SearchAutocomplete"), {
   ssr: false,
@@ -45,7 +47,16 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
   const [mobileMenu, setMobileMenu] = useState(false)
   const [watchlistOpen, setWatchlistOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<Movie | TVShow | null>(null)
+  const [selectedItemType, setSelectedItemType] = useState<'movie' | 'tv' | null>(null)
   const { watchlistCount } = useWatchlist()
+
+  const handleDrawerOpen = (item: Movie | TVShow, type: 'movie' | 'tv') => {
+    setSelectedItem(item)
+    setSelectedItemType(type)
+    setDrawerOpen(true)
+  }
 
   // Mark as hydrated after component mounts
   useEffect(() => {
@@ -69,6 +80,7 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
                   <SearchAutocomplete
                     placeholder="Search..."
                     size="sm"
+                    onDrawerOpen={handleDrawerOpen}
                   />
                 </div>
               )}
@@ -79,7 +91,7 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
                     onClick={() => onTabChange(currentTab === "movies" ? "shows" : "movies")}
                     className="nav-link"
                   >
-                    {currentTab === "movies" ? "Switch to TV Shows" : "Switch to Movies"}
+                    {currentTab === "movies" ? "TV-Hub" : "Movies-Hub"}
                   </button>
                 )}
                 <Link href="/livesports" className="nav-link">
@@ -115,6 +127,7 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
                   <SearchAutocomplete
                     placeholder="Search..."
                     size="md"
+                    onDrawerOpen={handleDrawerOpen}
                   />
                 </div>
               )}
@@ -235,6 +248,16 @@ export function Navbar({ showSearch = true, showTabSwitcher = false, currentTab 
             />
           </div>
         </div>
+      )}
+
+      {/* Content Drawer for search results */}
+      {selectedItem && selectedItemType && (
+        <ContentDrawer
+          item={selectedItem}
+          type={selectedItemType}
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+        />
       )}
     </>
   )

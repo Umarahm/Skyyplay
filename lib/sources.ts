@@ -34,8 +34,8 @@ export const availableSources: StreamingSource[] = [
     name: 'RiveStream',
     isFrench: false,
     urls: {
-      movie: 'https://rivestream.org/embed?type=movie&id={id}',
-      tv: 'https://rivestream.org/embed?type=tv&id={id}&season={season}&episode={episode}'
+      movie: 'https://www.rivestream.app/embed?type=movie&id={id}',
+      tv: 'https://www.rivestream.app/embed?type=tv&id={id}&season={season}&episode={episode}'
     },
   },
 
